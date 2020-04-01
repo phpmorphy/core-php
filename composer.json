@@ -1,0 +1,27 @@
+{
+    "name": "umi-top/umi-core-php",
+    "description": "UMI Core PHP Library",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Umi Dev",
+            "email": "dev@umi.top"
+        }
+    ],
+    "minimum-stability": "stable",
+    "autoload": {
+        "psr-4": {
+            "UmiTop\\UmiCore\\": "src/"
+        }
+    },
+    "require": {
+        "php": ">=7.1",
+        "bitwasp/bech32": "^0.0.1",
+        "bitwasp/bitcoin": "^1.0",
+        "ext-sodium": "*"
+    },
+    "config": {
+        "sort-packages": true
+    }
+}
