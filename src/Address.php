@@ -6,52 +6,104 @@ declare(strict_types=1);
 namespace UmiTop\UmiCore;
 
 
-use BitWasp\Bitcoin\Mnemonic\Bip39\Bip39SeedGenerator;
 use BitWasp\Bech32;
 
-
+/**
+ * Class Address
+ * @package UmiTop\UmiCore
+ */
 class Address implements AddressInterface
 {
-    private /*string*/ $publicKey;
-    private /*int*/ $type;
+    /** @var string */
+    private $publicKey;
 
-    public static function fromMnemonic(string $mnemonic, int $type = self::TYPE_UMI): AddressInterface
+    /** @var string */
+    private $tag;
+
+    /** @var int */
+    private $type;
+
+    /**
+     * Address constructor.
+     * @param int $type
+     * @param string $publicKey
+     */
+    public function __construct(int $type = null, string $publicKey = null)
     {
-        // Преобразуем мнемонику в 512 битный (64 байта) сид как описано в bip39
-        // https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki
-        $seed64 = (new Bip39SeedGenerator())->getSeed($mnemonic);
-
-        // Сжимаем 512 битный сид до 256 битного
-        $seed32 = hash('sha3-256', $seed64->getBinary(), true);
-
-        // Получаем публичный ключ из сида
-        $signPair = sodium_crypto_sign_seed_keypair($seed32);
-        $publicKey = sodium_crypto_sign_publickey($signPair);
-
-        return new Address($type, $publicKey);
+        $this->tag = self::TAG_UMI;
+        $this->type = $type ?? self::TYPE_UMI;
+        $this->publicKey = $publicKey ?? str_repeat('0', 32);
     }
 
-    public function __construct(int $type = self::TYPE_UMI, string $publicKey = '')
+    /**
+     * @param string $bech32
+     * @return AddressInterface
+     * @throws Bech32\Exception\Bech32Exception
+     */
+    public static function fromBech32(string $bech32): AddressInterface
     {
-        $this->type = $type;
-        $this->publicKey = $publicKey;
+        $arr = Bech32\decode($bech32);
+        $data = Bech32\convertBits($arr[1], count($arr[1]), 5, 8, false);
+
+        $raw = array_map(
+            function (int $value): string {
+                return chr($value);
+            },
+            $data
+        );
+
+        $address = self::fromRaw(implode('', $raw));
+        $address->tag = $arr[0];
+
+        return $address;
     }
 
-    public function withType(int $type = self::TYPE_UMI): AddressInterface
+    /**
+     * @param string $hex
+     * @return AddressInterface
+     */
+    public static function fromHex(string $hex): AddressInterface
     {
-        $new = clone $this;
-        $new->type = $type;
-        return $new;
+        return self::fromRaw(hex2bin($hex));
     }
 
-    public function withPublicKey(string $publicKey): AddressInterface
+    /**
+     * @param string $mnemonic
+     * @param int $type
+     * @return AddressInterface
+     * @throws \Exception
+     */
+    public static function fromMnemonic(string $mnemonic, int $type = null): AddressInterface
     {
-        $new = clone $this;
-        $new->publicKey = $publicKey;
-        return $new;
+        return new Address($type ?? self::TYPE_UMI, Mnemonic::toPublicKey($mnemonic));
     }
 
-    public function getBech32(string $tag = self::TAG_UMI): string
+    /**
+     * @param string $raw
+     * @return AddressInterface
+     */
+    public static function fromRaw(string $raw): AddressInterface
+    {
+        return new Address(
+            unpack('n', substr($raw, 0, 2))[1],
+            substr($raw, 2, 32)
+        );
+    }
+
+    /**
+     * @return string
+     */
+    public function getPublicKey(): string
+    {
+        return $this->publicKey;
+    }
+
+    /**
+     * @param string $tag
+     * @return string
+     * @throws Bech32\Exception\Bech32Exception
+     */
+    public function toBech32(string $tag = null): string
     {
         $address = pack('n', $this->type) . $this->publicKey;
 
@@ -62,6 +114,44 @@ class Address implements AddressInterface
             str_split($address)
         );
 
-        return Bech32\encode($tag, Bech32\convertBits($data, count($data), 8, 5, true));
+        return Bech32\encode($tag ?? $this->tag, Bech32\convertBits($data, count($data), 8, 5, true));
+    }
+
+    /**
+     * @return string
+     */
+    public function toHex(): string
+    {
+        return bin2hex($this->toRaw());
+    }
+
+    /**
+     * @return string
+     */
+    public function toRaw(): string
+    {
+        return pack('n', $this->type) . $this->publicKey;
+    }
+
+    /**
+     * @param string $publicKey
+     * @return AddressInterface
+     */
+    public function withPublicKey(string $publicKey): AddressInterface
+    {
+        $new = clone $this;
+        $new->publicKey = $publicKey;
+        return $new;
+    }
+
+    /**
+     * @param int $type
+     * @return AddressInterface
+     */
+    public function withType(int $type = null): AddressInterface
+    {
+        $new = clone $this;
+        $new->type = $type ?? self::TYPE_UMI;
+        return $new;
     }
 }

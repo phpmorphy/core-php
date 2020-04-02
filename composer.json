@@ -19,7 +19,8 @@
         "php": ">=7.1",
         "bitwasp/bech32": "^0.0.1",
         "bitwasp/bitcoin": "^1.0",
-        "ext-sodium": "*"
+        "ext-sodium": "*",
+        "ext-gmp": "*"
     },
     "config": {
         "sort-packages": true

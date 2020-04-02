@@ -6,31 +6,89 @@ declare(strict_types=1);
 namespace UmiTop\UmiCore;
 
 
+/**
+ * Interface AddressInterface
+ * @package UmiTop\UmiCore
+ */
 interface AddressInterface
 {
     public const TYPE_GENESIS = 0x0000;
     public const TYPE_UMI = 0x0001;
     public const TYPE_ROY = 0x0002;
-    public const AVALIABLE_TYPES = [
-        self::TYPE_GENESIS,
+    public const AVAILABLE_TYPES = [
         self::TYPE_UMI,
         self::TYPE_ROY,
     ];
 
     public const TAG_UMI = 'umi';
     public const TAG_ROY = 'roy';
-    public const AVALIABLE_TAGS = [
+    public const AVAILABLE_TAGS = [
         self::TAG_UMI,
         self::TAG_ROY,
     ];
 
-    public static function fromMnemonic(string $mnemonic, int $type = self::TYPE_UMI): AddressInterface;
-
+    /**
+     * AddressInterface constructor.
+     * @param int $type
+     * @param string $publicKey
+     */
     public function __construct(int $type, string $publicKey);
 
-    public function withType(int $type = self::TYPE_UMI): AddressInterface;
+    /**
+     * @param string $bech32
+     * @return AddressInterface
+     */
+    public static function fromBech32(string $bech32): AddressInterface;
 
+    /**
+     * @param string $hex
+     * @return AddressInterface
+     */
+    public static function fromHex(string $hex): AddressInterface;
+
+    /**
+     * @param string $mnemonic
+     * @param int $type
+     * @return AddressInterface
+     */
+    public static function fromMnemonic(string $mnemonic, int $type = self::TYPE_UMI): AddressInterface;
+
+    /**
+     * @param string $raw
+     * @return AddressInterface
+     */
+    public static function fromRaw(string $raw): AddressInterface;
+
+    /**
+     * @return string
+     */
+    public function getPublicKey(): string;
+
+    /**
+     * @param string $tag
+     * @return string
+     */
+    public function toBech32(string $tag = self::TAG_UMI): string;
+
+    /**
+     * @return string
+     */
+    public function toHex(): string;
+
+    /**
+     * @return string
+     */
+    public function toRaw(): string;
+
+    /**
+     * @param string $publicKey
+     * @return AddressInterface
+     */
     public function withPublicKey(string $publicKey): AddressInterface;
 
-    public function getBech32(string $tag = self::TAG_UMI): string;
+    /**
+     * @param int $type
+     * @return AddressInterface
+     */
+    public function withType(int $type = self::TYPE_UMI): AddressInterface;
 }
