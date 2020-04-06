@@ -75,7 +75,17 @@ class Address implements AddressInterface
      */
     public static function fromMnemonic(string $mnemonic, int $type = null): AddressInterface
     {
-        return new Address($type ?? self::TYPE_UMI, Mnemonic::toPublicKey($mnemonic));
+        return self::fromPublicKey(Mnemonic::toPublicKey($mnemonic), $type ?? self::TYPE_UMI);
+    }
+
+    /**
+     * @param string $publicKey
+     * @param int $type
+     * @return AddressInterface
+     */
+    public static function fromPublicKey(string $publicKey, int $type = null): AddressInterface
+    {
+        return new Address($type ?? self::TYPE_UMI, $publicKey);
     }
 
     /**
@@ -88,6 +98,16 @@ class Address implements AddressInterface
             unpack('n', substr($raw, 0, 2))[1],
             substr($raw, 2, 32)
         );
+    }
+
+    /**
+     * @param string $secretKey
+     * @param int $type
+     * @return AddressInterface
+     */
+    public static function fromSecretKey(string $secretKey, int $type = null): AddressInterface
+    {
+        return self::fromPublicKey(sodium_crypto_sign_publickey_from_secretkey($secretKey), $type ?? self::TYPE_UMI);
     }
 
     /**
@@ -148,10 +168,10 @@ class Address implements AddressInterface
      * @param int $type
      * @return AddressInterface
      */
-    public function withType(int $type = null): AddressInterface
+    public function withType(int $type): AddressInterface
     {
         $new = clone $this;
-        $new->type = $type ?? self::TYPE_UMI;
+        $new->type = $type;
         return $new;
     }
 }

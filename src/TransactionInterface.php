@@ -53,6 +53,12 @@ interface TransactionInterface
     public function signWithMnemonic(string $mnemonic): TransactionInterface;
 
     /**
+     * @param string $secretKey
+     * @return TransactionInterface
+     */
+    public function signWithSecretKey(string $secretKey): TransactionInterface;
+
+    /**
      * @return string
      */
     public function toHex(): string;

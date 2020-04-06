@@ -107,10 +107,20 @@ class Transaction implements TransactionInterface
      */
     public function signWithMnemonic(string $mnemonic): TransactionInterface
     {
+        return $this->signWithSecretKey(Mnemonic::toSecretKey($mnemonic));
+    }
+
+    /**
+     * @param string $secretKey
+     * @return TransactionInterface
+     * @throws \Exception
+     */
+    public function signWithSecretKey(string $secretKey): TransactionInterface
+    {
         return $this->withSignature(
             sodium_crypto_sign_detached(
                 substr($this->toRaw(), 0, 85),
-                Mnemonic::toSecretKey($mnemonic)
+                $secretKey
             )
         );
     }

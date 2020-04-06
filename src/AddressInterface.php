@@ -51,13 +51,27 @@ interface AddressInterface
      * @param int $type
      * @return AddressInterface
      */
-    public static function fromMnemonic(string $mnemonic, int $type = self::TYPE_UMI): AddressInterface;
+    public static function fromMnemonic(string $mnemonic, int $type = nullI): AddressInterface;
+
+    /**
+     * @param string $publicKey
+     * @param int $type
+     * @return AddressInterface
+     */
+    public static function fromPublicKey(string $publicKey, int $type = null): AddressInterface;
 
     /**
      * @param string $raw
      * @return AddressInterface
      */
     public static function fromRaw(string $raw): AddressInterface;
+
+    /**
+     * @param string $secretKey
+     * @param int $type
+     * @return AddressInterface
+     */
+    public static function fromSecretKey(string $secretKey, int $type = null): AddressInterface;
 
     /**
      * @return string
@@ -90,5 +104,5 @@ interface AddressInterface
      * @param int $type
      * @return AddressInterface
      */
-    public function withType(int $type = self::TYPE_UMI): AddressInterface;
+    public function withType(int $type): AddressInterface;
 }
