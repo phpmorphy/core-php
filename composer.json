@@ -15,14 +15,31 @@
             "UmiTop\\UmiCore\\": "src/"
         }
     },
+    "autoload-dev": {
+        "psr-4": {
+            "UmiTop\\UmiCore\\Tests\\": "tests/"
+        }
+    },
     "require": {
-        "php": ">=7.1",
+        "php": ">=7.4",
         "bitwasp/bech32": "^0.0.1",
-        "bitwasp/bitcoin": "^1.0",
         "ext-sodium": "*",
         "ext-gmp": "*"
     },
     "config": {
         "sort-packages": true
+    },
+    "require-dev": {
+        "phpstan/phpstan": "^0.12.25",
+        "phpunit/phpunit": "^9",
+        "squizlabs/php_codesniffer": "*",
+        "vimeo/psalm": "^3.11"
+    },
+    "scripts": {
+        "test": "phpunit --testdox",
+        "psalm": "psalm --no-cache --show-info=true",
+        "phpstan": "phpstan analyse --level max src tests",
+        "phpcs": "phpcs --standard=PSR12 src tests",
+        "lint": ["@phpcs", "@psalm", "@phpstan"]
     }
 }
