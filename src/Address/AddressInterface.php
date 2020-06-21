@@ -1,21 +1,39 @@
 <?php
 
+/**
+ * Copyright (c) 2020 UMI
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
 declare(strict_types=1);
 
 namespace UmiTop\UmiCore\Address;
 
 use UmiTop\UmiCore\Key\PublicKeyInterface;
 
+/**
+ * Interface AddressInterface
+ * @package UmiTop\UmiCore\Address
+ */
 interface AddressInterface
 {
-    public const ADDRESS_LENGTH = 34;
-    public const VERSION_UMI_BASIC = 0x55A9;
-    public const VERSION_UMI_HD = 0xD5A9;
-
-    public function getVersion(): int;
-
-    public function setVersion(int $version): AddressInterface;
-
     public function getPrefix(): string;
 
     public function setPrefix(string $prefix): AddressInterface;
@@ -24,9 +42,11 @@ interface AddressInterface
 
     public function setPublicKey(PublicKeyInterface $publicKey): AddressInterface;
 
-    public function fromBech32(string $address): AddressInterface;
+    public function getVersion(): int;
 
-    public function toBytes(): string;
+    public function setVersion(int $version): AddressInterface;
 
     public function toBech32(): string;
+
+    public function toBytes(): string;
 }

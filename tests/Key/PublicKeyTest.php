@@ -1,8 +1,6 @@
 <?php
 
-declare(strict_types=1);
-
-namespace UmiTop\UmiCore\Tests\Key;
+namespace Tests\Key;
 
 use Exception;
 use PHPUnit\Framework\TestCase;
@@ -11,43 +9,59 @@ use UmiTop\UmiCore\Key\PublicKeyInterface;
 
 class PublicKeyTest extends TestCase
 {
-    public function testCanBeCreatedFromValidString(): void
+    public function testConstructor()
     {
-        $this->assertInstanceOf(
-            PublicKeyInterface::class,
-            new PublicKey(
-                str_repeat("\x0", SODIUM_CRYPTO_SIGN_PUBLICKEYBYTES)
+        $bytes = str_repeat('a', PublicKey::LENGTH);
+        $key = new PublicKey($bytes);
+
+        $this->assertEquals($bytes, $key->toBytes());
+    }
+
+    public function testConstructorException()
+    {
+        $this->expectException('Exception');
+
+        $bytes = str_repeat('a', PublicKey::LENGTH - 1);
+        new PublicKey($bytes);
+    }
+
+    public function testGetPublicKey()
+    {
+        $bytes = str_repeat('a', PublicKey::LENGTH);
+        $key = new PublicKey($bytes);
+
+        $this->assertInstanceOf('UmiTop\UmiCore\Key\PublicKey', $key->getPublicKey());
+    }
+
+    /**
+     * @dataProvider signatureProvider
+     */
+    public function testVerifySignature($key, $message, $signature, $expected)
+    {
+        $key = new PublicKey($key);
+        $actual = $key->verifySignature($signature, $message);
+        $this->assertEquals($expected, $actual);
+    }
+
+    public function signatureProvider()
+    {
+        return array(
+            'valid' => array(
+                'key' => base64_decode('oD7CzMxo3UYjXg/URrZPluOSOjAbzYVxIXDyONlR5pI='),
+                'msg' => base64_decode('K7B3Y9MILKseAlBDkjuwjc48NT3vMWrhixyh7diP8O8B'),
+                'sig' => base64_decode(
+                    '7mVMWMzqHgy+I9GSlS0XFAXV1IjGmeZhlDQOBMjrwua7EULygNIKgkiQ2h6kSeDq76tBomoaPbc8faFYwNO0Dg=='
+                ),
+                'exp' => true
+            ),
+            'invalid' => array(
+                'key' => base64_decode('MUAmRXK6+YHhASTdWN7Xx2keYPG1V+VoVIXN3RNIBSE='),
+                'msg' => base64_decode('UGffQxqOxfMcTcWRVaRklCS/MNme5j2IzUh0J8ksbPTd'),
+                'sig' => base64_decode(
+                    'kQ7z0+PDJBaQeihqd0hForqdBTVr8mrAO0Sg6RWMi3EbFSdHMVVicqSZVthcr+gjpnjjdOiKbxembcCoXAieCQ=='
+                ),
+                'exp' => false
             )
-        );
-    }
-
-    public function testCannotBeCreatedFromInvalidString(): void
-    {
-        $this->expectException(Exception::class);
-        new PublicKey(
-            str_repeat("\x0", (SODIUM_CRYPTO_SIGN_PUBLICKEYBYTES + 1))
-        );
-    }
-
-    public function testMustReturnValidKey(): void
-    {
-        $rnd = random_bytes(SODIUM_CRYPTO_SIGN_PUBLICKEYBYTES);
-        $this->assertEquals(
-            $rnd,
-            (new PublicKey($rnd))->toBytes()
-        );
-    }
-
-    public function testMustVerifyValidKey(): void
-    {
-        $keyPair = sodium_crypto_sign_keypair();
-        $secKey = sodium_crypto_sign_secretkey($keyPair);
-        $pubKey = sodium_crypto_sign_publickey($keyPair);
-        $message = random_bytes(85);
-        $signature = sodium_crypto_sign_detached($message, $secKey);
-
-        $this->assertTrue(
-            (new PublicKey($pubKey))->verifySignature($message, $signature)
         );
     }
 }

@@ -1,11 +1,16 @@
 {
     "name": "umi-top/umi-core-php",
     "description": "UMI Core PHP Library",
+    "keywords": [
+        "UMI",
+        "umi.top"
+    ],
     "type": "library",
     "license": "MIT",
+    "homepage": "https://umi.top",
     "authors": [
         {
-            "name": "Umi Dev",
+            "name": "UMI",
             "email": "dev@umi.top"
         }
     ],
@@ -15,31 +20,21 @@
             "UmiTop\\UmiCore\\": "src/"
         }
     },
-    "autoload-dev": {
-        "psr-4": {
-            "UmiTop\\UmiCore\\Tests\\": "tests/"
-        }
-    },
     "require": {
-        "php": ">=7.4",
-        "bitwasp/bech32": "^0.0.1",
-        "ext-sodium": "*",
-        "ext-gmp": "*"
+        "php-64bit": ">=7.4",
+        "ext-hash": "*",
+        "ext-sodium": "*"
     },
-    "config": {
-        "sort-packages": true
-    },
-    "require-dev": {
-        "phpstan/phpstan": "^0.12.25",
-        "phpunit/phpunit": "^9",
-        "squizlabs/php_codesniffer": "*",
-        "vimeo/psalm": "^3.11"
+    "suggest": {
+        "ext-sodium": "*"
     },
     "scripts": {
         "test": "phpunit --testdox",
+        "coverage": "phpunit --coverage-html coverage",
         "psalm": "psalm --no-cache --show-info=true",
-        "phpstan": "phpstan analyse --level max src tests",
-        "phpcs": "phpcs --standard=PSR12 src tests",
-        "lint": ["@phpcs", "@psalm", "@phpstan"]
+        "phpstan": "phpstan analyse",
+        "phpcs": "phpcs",
+        "phpmd": "phpmd ./src text cleancode,codesize,controversial,design,naming,unusedcode",
+        "lint": ["@phpmd", "@phpcs", "@psalm", "@phpstan"]
     }
 }

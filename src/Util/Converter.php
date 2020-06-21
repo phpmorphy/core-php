@@ -1,62 +1,100 @@
 <?php
 
+/**
+ * Copyright (c) 2020 UMI
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
 declare(strict_types=1);
 
 namespace UmiTop\UmiCore\Util;
 
 use Exception;
 
+/**
+ * Class Converter
+ * @package UmiTop\UmiCore\Util
+ */
 class Converter
 {
-    private const ASCII_SHIFT = 96;
-    private const VERSION_GENESIS = 0x0000;
-    private const FIFTEEN_BITS = 0x7FFF;
-
-    public static function versionToPrefix(int $version): string
+    /**
+     * @param int $version
+     * @return string
+     * @throws Exception
+     */
+    public function versionToPrefix(int $version): string
     {
-        if ($version === self::VERSION_GENESIS) {
+        if ($version === 0) {
             return 'genesis';
         }
 
-        if (!self::validateVersion($version)) {
-            throw new Exception();
+        $ch1 = $version >> 10 & 0x1F;
+        $ch2 = $version >> 5 & 0x1F;
+        $ch3 = $version & 0x1F;
+
+        if ($ch1 < 1 || $ch1 > 26) {
+            throw new Exception('invalid version [1]');
         }
 
-        return sprintf(
-            '%c%c%c',
-            (($version & 0x7C00) >> 10) + self::ASCII_SHIFT,
-            (($version & 0x03E0) >> 5) + self::ASCII_SHIFT,
-            ($version & 0x001F) + self::ASCII_SHIFT
-        );
+        if ($ch2 < 1 || $ch2 > 26) {
+            throw new Exception('invalid version [2]');
+        }
+
+        if ($ch3 < 1 || $ch3 > 26) {
+            throw new Exception('invalid version [3]');
+        }
+
+        return chr($ch1 + 96) . chr($ch2 + 96) . chr($ch3 + 96);
     }
 
-    public static function prefixToVersion(string $prefix): int
+    /**
+     * @param string $prefix
+     * @return int
+     * @throws Exception
+     */
+    public function prefixToVersion(string $prefix): int
     {
         if ($prefix === 'genesis') {
-            return self::VERSION_GENESIS;
+            return 0;
         }
 
-        if (!self::validatePrefix($prefix)) {
-            throw new Exception();
+        if (strlen($prefix) !== 3) {
+            throw new Exception('invalid prefix length');
         }
 
-        $ver = (ord($prefix[0]) - self::ASCII_SHIFT) << 10;
-        $ver += (ord($prefix[1]) - self::ASCII_SHIFT) << 5;
-        $ver += (ord($prefix[2]) - self::ASCII_SHIFT);
+        $ch1 = ord($prefix[0]) - 96;
+        $ch2 = ord($prefix[1]) - 96;
+        $ch3 = ord($prefix[2]) - 96;
 
-        return $ver;
-    }
+        if ($ch1 < 1 || $ch1 > 26) {
+            throw new Exception('invalid prefix [1]');
+        }
 
-    public static function validatePrefix(string $prefix): bool
-    {
-        return (bool)preg_match('/^(genesis|[a-z]{3})$/', $prefix);
-    }
+        if ($ch2 < 1 || $ch2 > 26) {
+            throw new Exception('invalid prefix [2]');
+        }
 
-    public static function validateVersion(int $version): bool
-    {
-        return ($version !== self::FIFTEEN_BITS)
-            && ($version & 0x001F) < 27
-            && (($version & 0x03E0) >> 5) < 27
-            && (($version & 0x7C00) >> 10) < 27;
+        if ($ch3 < 1 || $ch3 > 26) {
+            throw new Exception('invalid prefix [3]');
+        }
+
+        return ($ch1 << 10) + ($ch2 << 5) + $ch3;
     }
 }

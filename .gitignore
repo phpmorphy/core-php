@@ -1,5 +1,7 @@
 .idea
-vendor
+/vendor
 composer.phar
 composer.lock
 phpunit.xml
+phpunit-9.phar
+phpcs.xml
