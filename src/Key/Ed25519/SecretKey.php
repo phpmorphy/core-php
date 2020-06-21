@@ -68,6 +68,14 @@ class SecretKey implements SecretKeyInterface
             $seed = hash('sha256', $seed, true);
         }
 
+        if (function_exists('sodium_crypto_sign_seed_keypair')) {
+            $bytes = sodium_crypto_sign_secretkey(
+                sodium_crypto_sign_seed_keypair($seed)
+            );
+
+            return new SecretKey($bytes);
+        }
+
         $ed25519 = new Ed25519();
         $bytes = $ed25519->secretKeyFromSeed($seed);
 
@@ -80,8 +88,7 @@ class SecretKey implements SecretKeyInterface
      */
     public function getPublicKey(): PublicKeyInterface
     {
-        $ed25519 = new Ed25519();
-        $bytes = $ed25519->publicKeyFromSecretKey($this->bytes);
+        $bytes = substr($this->bytes, 32, 32);
 
         return new PublicKey($bytes);
     }
@@ -93,6 +100,10 @@ class SecretKey implements SecretKeyInterface
      */
     public function sign(string $message): string
     {
+        if (function_exists('sodium_crypto_sign_detached')) {
+            return sodium_crypto_sign_detached($message, $this->bytes);
+        }
+
         $ed25519 = new Ed25519();
 
         return $ed25519->sign($message, $this->bytes);

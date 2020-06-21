@@ -27,12 +27,11 @@ declare(strict_types=1);
 namespace UmiTop\UmiCore\Util;
 
 use Exception;
-use SplFixedArray;
 
 /**
  * Class Ed25519
  * @package UmiTop\UmiCore\Util
- * @SuppressWarnings(PHPMD.UnusedLocalVariable)
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
  */
 class Ed25519
 {
@@ -59,7 +58,7 @@ class Ed25519
             throw new Exception('length must be 64 bytes');
         }
 
-        return substr($secretKey, 32);
+        return substr($secretKey, 32, 32);
     }
 
     /**
@@ -73,13 +72,7 @@ class Ed25519
             throw new Exception('seed length must be 32 bytes');
         }
 
-        if (function_exists('sodium_crypto_sign_seed_keypair') && !defined('PHPUNIT')) {
-            return sodium_crypto_sign_secretkey(
-                sodium_crypto_sign_seed_keypair($seed)
-            );
-        }
-
-        $ppp = $this->gfN(4);
+        $ppp = array_fill(0, 4, array_fill(0, 16, 0));
 
         $ddd = hash('sha512', $seed, true);
         $ddd[0] = chr(ord($ddd[0]) & 248);   // d[0] &= 248;
@@ -106,10 +99,6 @@ class Ed25519
             throw new Exception('secretKey length must be 64 bytes');
         }
 
-        if (function_exists('sodium_crypto_sign_detached') && !defined('PHPUNIT')) {
-            return sodium_crypto_sign_detached($message, $secretKey);
-        }
-
         $msgLen = strlen($message);
         $sigMsg = str_pad($message, 64 + $msgLen, "\x0", STR_PAD_LEFT);
 
@@ -127,7 +116,7 @@ class Ed25519
         $rrr = hash('sha512', substr($sigMsg, 32), true);
         $this->reduce($rrr);
 
-        $ppp = $this->gfN(4);
+        $ppp = array_fill(0, 4, array_fill(0, 16, 0));
         $this->scalarbase($ppp, $rrr);
         $this->pack($sigMsg, $ppp);
 
@@ -139,10 +128,7 @@ class Ed25519
         $hhh = hash('sha512', $sigMsg, true);
         $this->reduce($hhh);
 
-        $xxx = new SplFixedArray(64);
-        for ($i = 0; $i < 64; $i++) {
-            $xxx[$i] = 0;
-        }
+        $xxx = array_fill(0, 64, 0);
         for ($i = 0; $i < 32; $i++) {
             $xxx[$i] = ord($rrr[$i]);
         }
@@ -175,13 +161,9 @@ class Ed25519
             throw new Exception('publicKey length must be 32 bytes');
         }
 
-        if (function_exists('sodium_crypto_sign_verify_detached') && !defined('PHPUNIT')) {
-            return sodium_crypto_sign_verify_detached($signature, $message, $publicKey);
-        }
-
-        $qqq = $this->gfN(4);
+        $qqq = array_fill(0, 4, array_fill(0, 16, 0));
         if (!$this->unpackneg($qqq, $publicKey)) {
-            return false;
+            return false; // @codeCoverageIgnore
         }
 
         $msg = $sigMsg = $signature . $message;
@@ -193,7 +175,7 @@ class Ed25519
         $hhh = hash('sha512', $msg, true);
         $this->reduce($hhh);
 
-        $ppp = $this->gfN(4);
+        $ppp = array_fill(0, 4, array_fill(0, 16, 0));
         $this->scalarmult($ppp, $qqq, $hhh);
         $this->scalarbase($qqq, substr($sigMsg, 32));
         $this->add($ppp, $qqq);
@@ -205,40 +187,38 @@ class Ed25519
     }
 
     /**
-     * @param SplFixedArray $ppp
-     * @param SplFixedArray $qqq
+     * @param array<int, array<int, int>> $ppp
+     * @param array<int, array<int, int>> $qqq
      */
-    private function add(SplFixedArray $ppp, SplFixedArray $qqq): void
+    private function add(array &$ppp, array $qqq): void
     {
-        $dD2 = SplFixedArray::fromArray(
-            [
-                0xf159,
-                0x26b2,
-                0x9b94,
-                0xebd6,
-                0xb156,
-                0x8283,
-                0x149a,
-                0x00e0,
-                0xd130,
-                0xeef3,
-                0x80f2,
-                0x198e,
-                0xfce7,
-                0x56df,
-                0xd9dc,
-                0x2406
-            ]
-        );
-        $aaa = new SplFixedArray(16);
-        $bbb = new SplFixedArray(16);
-        $ccc = new SplFixedArray(16);
-        $ddd = new SplFixedArray(16);
-        $ttt = new SplFixedArray(16);
-        $eee = new SplFixedArray(16);
-        $fff = new SplFixedArray(16);
-        $ggg = new SplFixedArray(16);
-        $hhh = new SplFixedArray(16);
+        $dD2 = [
+            0xf159,
+            0x26b2,
+            0x9b94,
+            0xebd6,
+            0xb156,
+            0x8283,
+            0x149a,
+            0x00e0,
+            0xd130,
+            0xeef3,
+            0x80f2,
+            0x198e,
+            0xfce7,
+            0x56df,
+            0xd9dc,
+            0x2406
+        ];
+        $aaa = array_fill(0, 16, 0);
+        $bbb = array_fill(0, 16, 0);
+        $ccc = array_fill(0, 16, 0);
+        $ddd = array_fill(0, 16, 0);
+        $ttt = array_fill(0, 16, 0);
+        $eee = array_fill(0, 16, 0);
+        $fff = array_fill(0, 16, 0);
+        $ggg = array_fill(0, 16, 0);
+        $hhh = array_fill(0, 16, 0);
 
         $this->fnZ($aaa, $ppp[1], $ppp[0]);
         $this->fnZ($ttt, $qqq[1], $qqq[0]);
@@ -262,14 +242,14 @@ class Ed25519
     }
 
     /**
-     * @param SplFixedArray $out
+     * @param array<int, int> $out
      */
-    private function car25519(SplFixedArray $out): void
+    private function car25519(array &$out): void
     {
         for ($i = 0; $i < 16; $i++) {
             $out[$i] += (1 << 16);
             $ccc = $out[$i] >> 16;
-            $out[($i + 1) * ($i < 15)] += $ccc - 1 + 37 * ($ccc - 1) * ($i == 15);
+            $out[($i + 1) * (int)($i < 15)] += $ccc - 1 + 37 * ($ccc - 1) * (int)($i === 15);
             $out[$i] -= $ccc << 16;
         }
     }
@@ -290,11 +270,11 @@ class Ed25519
     }
 
     /**
-     * @param SplFixedArray $ppp
-     * @param SplFixedArray $qqq
+     * @param array<int, array<int, int>> $ppp
+     * @param array<int, array<int, int>> $qqq
      * @param int $bbb
      */
-    private function cswap(SplFixedArray $ppp, SplFixedArray $qqq, int $bbb): void
+    private function cswap(array &$ppp, array &$qqq, int $bbb): void
     {
         for ($i = 0; $i < 4; $i++) {
             $this->sel25519($ppp[$i], $qqq[$i], $bbb);
@@ -302,11 +282,11 @@ class Ed25519
     }
 
     /**
-     * @param SplFixedArray $out
-     * @param SplFixedArray $in1
-     * @param SplFixedArray $in2
+     * @param array<int, int> $out
+     * @param array<int, int> $in1
+     * @param array<int, int> $in2
      */
-    private function fnA(SplFixedArray $out, SplFixedArray $in1, SplFixedArray $in2): void
+    private function fnA(array &$out, array $in1, array $in2): void
     {
         for ($i = 0; $i < 16; $i++) {
             $out[$i] = $in1[$i] + $in2[$i];
@@ -314,18 +294,13 @@ class Ed25519
     }
 
     /**
-     * @param SplFixedArray $out
-     * @param SplFixedArray $aaa
-     * @param SplFixedArray $bbb
+     * @param array<int, int> $out
+     * @param array<int, int> $aaa
+     * @param array<int, int> $bbb
      */
-    private function fnM(SplFixedArray $out, SplFixedArray $aaa, SplFixedArray $bbb): void
+    private function fnM(array &$out, array $aaa, array $bbb): void
     {
-        $ttt = new SplFixedArray(31);
-
-        // заполняем нулям
-        for ($i = 0; $i < 31; $i++) {
-            $ttt[$i] = 0;
-        }
+        $ttt = array_fill(0, 31, 0);
 
         for ($i = 0; $i < 16; $i++) {
             for ($j = 0; $j < 16; $j++) {
@@ -344,11 +319,11 @@ class Ed25519
     }
 
     /**
-     * @param SplFixedArray $out
-     * @param SplFixedArray $in1
-     * @param SplFixedArray $in2
+     * @param array<int, int> $out
+     * @param array<int, int> $in1
+     * @param array<int, int> $in2
      */
-    private function fnZ(SplFixedArray $out, SplFixedArray $in1, SplFixedArray $in2): void
+    private function fnZ(array &$out, array $in1, array $in2): void
     {
         for ($i = 0; $i < 16; $i++) {
             $out[$i] = $in1[$i] - $in2[$i];
@@ -356,25 +331,12 @@ class Ed25519
     }
 
     /**
-     * @param int $nnn
-     * @return SplFixedArray
+     * @param array<int, int> $out
+     * @param array<int, int> $inp
      */
-    private function gfN(int $nnn): SplFixedArray
+    private function inv25519(array &$out, array $inp): void
     {
-        $gfn = new SplFixedArray($nnn);
-        for ($i = 0; $i < $nnn; $i++) {
-            $gfn[$i] = new SplFixedArray(16);
-        }
-        return $gfn;
-    }
-
-    /**
-     * @param SplFixedArray $out
-     * @param SplFixedArray $inp
-     */
-    private function inv25519(SplFixedArray $out, SplFixedArray $inp): void
-    {
-        $ccc = new SplFixedArray(16);
+        $ccc = array_fill(0, 16, 0);
 
         for ($a = 0; $a < 16; $a++) {
             $ccc[$a] = $inp[$a];
@@ -394,46 +356,44 @@ class Ed25519
 
     /**
      * @param string $rrr
-     * @param SplFixedArray $xxx
+     * @param array<int, int> $xxx
      */
-    private function modL(string &$rrr, SplFixedArray $xxx): void
+    private function modL(string &$rrr, array &$xxx): void
     {
-        $llL = SplFixedArray::fromArray(
-            [
-                0xed,
-                0xd3,
-                0xf5,
-                0x5c,
-                0x1a,
-                0x63,
-                0x12,
-                0x58,
-                0xd6,
-                0x9c,
-                0xf7,
-                0xa2,
-                0xde,
-                0xf9,
-                0xde,
-                0x14,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0x10
-            ]
-        );
+        $llL = [
+            0xed,
+            0xd3,
+            0xf5,
+            0x5c,
+            0x1a,
+            0x63,
+            0x12,
+            0x58,
+            0xd6,
+            0x9c,
+            0xf7,
+            0xa2,
+            0xde,
+            0xf9,
+            0xde,
+            0x14,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0x10
+        ];
 
         for ($i = 63; $i >= 32; --$i) {
             $carry = 0;
@@ -464,11 +424,11 @@ class Ed25519
     }
 
     /**
-     * @param SplFixedArray $aaa
-     * @param SplFixedArray $bbb
+     * @param array<int, int> $aaa
+     * @param array<int, int> $bbb
      * @return bool
      */
-    private function neq25519(SplFixedArray $aaa, SplFixedArray $bbb): bool
+    private function neq25519(array $aaa, array $bbb): bool
     {
         $ccc = str_repeat("\x0", 32);
         $ddd = str_repeat("\x0", 32);
@@ -481,13 +441,13 @@ class Ed25519
 
     /**
      * @param string $rrr
-     * @param SplFixedArray $ppp
+     * @param array<int, array<int, int>> $ppp
      */
-    private function pack(string &$rrr, SplFixedArray $ppp): void
+    private function pack(string &$rrr, array $ppp): void
     {
-        $tx0 = new SplFixedArray(16);
-        $ty0 = new SplFixedArray(16);
-        $zi0 = new SplFixedArray(16);
+        $tx0 = array_fill(0, 16, 0);
+        $ty0 = array_fill(0, 16, 0);
+        $zi0 = array_fill(0, 16, 0);
 
         $this->inv25519($zi0, $ppp[2]);
         $this->fnM($tx0, $ppp[0], $zi0);
@@ -499,12 +459,12 @@ class Ed25519
 
     /**
      * @param string $out
-     * @param SplFixedArray $nnn
+     * @param array<int, int> $nnn
      */
-    private function pack25519(string &$out, SplFixedArray $nnn): void
+    private function pack25519(string &$out, array $nnn): void
     {
-        $mmm = new SplFixedArray(16);
-        $ttt = new SplFixedArray(16);
+        $mmm = array_fill(0, 16, 0);
+        $ttt = array_fill(0, 16, 0);
 
         for ($i = 0; $i < 16; $i++) {
             $ttt[$i] = $nnn[$i];
@@ -533,10 +493,10 @@ class Ed25519
     }
 
     /**
-     * @param SplFixedArray $aaa
+     * @param array<int, int> $aaa
      * @return int
      */
-    private function par25519(SplFixedArray $aaa): int
+    private function par25519(array $aaa): int
     {
         $ddd = str_repeat("\x0", 32);
         $this->pack25519($ddd, $aaa);
@@ -545,12 +505,12 @@ class Ed25519
     }
 
     /**
-     * @param SplFixedArray $out
-     * @param SplFixedArray $inp
+     * @param array<int, int> $out
+     * @param array<int, int> $inp
      */
-    private function pow2523(SplFixedArray $out, SplFixedArray $inp): void
+    private function pow2523(array &$out, array $inp): void
     {
-        $ccc = new SplFixedArray(16);
+        $ccc = array_fill(0, 16, 0);
 
         for ($a = 0; $a < 16; $a++) {
             $ccc[$a] = $inp[$a];
@@ -573,7 +533,7 @@ class Ed25519
      */
     private function reduce(string &$rrr): void
     {
-        $xxx = new SplFixedArray(64); // int64[64]
+        $xxx = array_fill(0, 64, 0); // new SplFixedArray(64); // int64[64]
 
         for ($i = 0; $i < 64; $i++) {
             $xxx[$i] = ord($rrr[$i]);
@@ -587,53 +547,49 @@ class Ed25519
     }
 
     /**
-     * @param SplFixedArray $ppp
+     * @param array<int, array<int, int>> $ppp
      * @param string $sss
      */
-    private function scalarbase(SplFixedArray $ppp, string $sss): void
+    private function scalarbase(array &$ppp, string $sss): void
     {
-        $qqq = $this->gfN(4);
-        $gf1 = SplFixedArray::fromArray([1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
-        $xxX = SplFixedArray::fromArray(
-            [
-                0xd51a,
-                0x8f25,
-                0x2d60,
-                0xc956,
-                0xa7b2,
-                0x9525,
-                0xc760,
-                0x692c,
-                0xdc5c,
-                0xfdd6,
-                0xe231,
-                0xc0a4,
-                0x53fe,
-                0xcd6e,
-                0x36d3,
-                0x2169
-            ]
-        );
-        $yyY = SplFixedArray::fromArray(
-            [
-                0x6658,
-                0x6666,
-                0x6666,
-                0x6666,
-                0x6666,
-                0x6666,
-                0x6666,
-                0x6666,
-                0x6666,
-                0x6666,
-                0x6666,
-                0x6666,
-                0x6666,
-                0x6666,
-                0x6666,
-                0x6666
-            ]
-        );
+        $qqq = array_fill(0, 4, array_fill(0, 16, 0));
+        $gf1 = [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+        $xxX = [
+            0xd51a,
+            0x8f25,
+            0x2d60,
+            0xc956,
+            0xa7b2,
+            0x9525,
+            0xc760,
+            0x692c,
+            0xdc5c,
+            0xfdd6,
+            0xe231,
+            0xc0a4,
+            0x53fe,
+            0xcd6e,
+            0x36d3,
+            0x2169
+        ];
+        $yyY = [
+            0x6658,
+            0x6666,
+            0x6666,
+            0x6666,
+            0x6666,
+            0x6666,
+            0x6666,
+            0x6666,
+            0x6666,
+            0x6666,
+            0x6666,
+            0x6666,
+            0x6666,
+            0x6666,
+            0x6666,
+            0x6666
+        ];
 
         $this->set25519($qqq[0], $xxX);
         $this->set25519($qqq[1], $yyY);
@@ -643,14 +599,14 @@ class Ed25519
     }
 
     /**
-     * @param SplFixedArray $ppp
-     * @param SplFixedArray $qqq
+     * @param array<int, array<int, int>> $ppp
+     * @param array<int, array<int, int>> $qqq
      * @param string $sss
      */
-    private function scalarmult(SplFixedArray $ppp, SplFixedArray $qqq, string $sss): void
+    private function scalarmult(array &$ppp, array &$qqq, string $sss): void
     {
-        $gf0 = new SplFixedArray(16);
-        $gf1 = SplFixedArray::fromArray([1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+        $gf0 = array_fill(0, 16, 0);
+        $gf1 = [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 
         $this->set25519($ppp[0], $gf0);
         $this->set25519($ppp[1], $gf1);
@@ -658,7 +614,7 @@ class Ed25519
         $this->set25519($ppp[3], $gf0);
 
         for ($i = 255; $i >= 0; --$i) {
-            $bbb = (ord($sss[($i / 8) | 0]) >> ($i & 7)) & 1;
+            $bbb = (ord($sss[(int)($i / 8)]) >> ($i & 7)) & 1;
             $this->cswap($ppp, $qqq, $bbb);
             $this->add($qqq, $ppp);
             $this->add($ppp, $ppp);
@@ -667,11 +623,11 @@ class Ed25519
     }
 
     /**
-     * @param SplFixedArray $ppp
-     * @param SplFixedArray $qqq
+     * @param array<int, int> $ppp
+     * @param array<int, int> $qqq
      * @param int $bbb
      */
-    private function sel25519(SplFixedArray $ppp, SplFixedArray $qqq, int $bbb): void
+    private function sel25519(array &$ppp, array &$qqq, int $bbb): void
     {
         $ccc = ~($bbb - 1);
         for ($i = 0; $i < 16; $i++) {
@@ -682,21 +638,21 @@ class Ed25519
     }
 
     /**
-     * @param SplFixedArray $rrr
-     * @param SplFixedArray $aaa
+     * @param array<int, int> $rrr
+     * @param array<int, int> $aaa
      */
-    private function set25519(SplFixedArray $rrr, SplFixedArray $aaa): void
+    private function set25519(array &$rrr, array $aaa): void
     {
         for ($i = 0; $i < 16; $i++) {
-            $rrr[$i] = $aaa[$i]; // | 0; ??
+            $rrr[$i] = $aaa[$i];
         }
     }
 
     /**
-     * @param SplFixedArray $out
+     * @param array<int, int> $out
      * @param string $nnn
      */
-    private function unpack25519(SplFixedArray $out, string $nnn): void
+    private function unpack25519(array &$out, string $nnn): void
     {
         for ($i = 0; $i < 16; $i++) {
             $out[$i] = ord($nnn[2 * $i]) + (ord($nnn[2 * $i + 1]) << 8);
@@ -705,61 +661,57 @@ class Ed25519
     }
 
     /**
-     * @param SplFixedArray $rrr
+     * @param array<int, array<int, int>> $rrr
      * @param string $ppp
      * @return bool
      */
-    private function unpackneg(SplFixedArray $rrr, string $ppp): bool
+    private function unpackneg(array &$rrr, string $ppp): bool
     {
-        $gf0 = new SplFixedArray(16);
-        $gf1 = SplFixedArray::fromArray([1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
-        $ddD = SplFixedArray::fromArray(
-            [
-                0x78a3,
-                0x1359,
-                0x4dca,
-                0x75eb,
-                0xd8ab,
-                0x4141,
-                0x0a4d,
-                0x0070,
-                0xe898,
-                0x7779,
-                0x4079,
-                0x8cc7,
-                0xfe73,
-                0x2b6f,
-                0x6cee,
-                0x5203
-            ]
-        );
-        $iiI = SplFixedArray::fromArray(
-            [
-                0xa0b0,
-                0x4a0e,
-                0x1b27,
-                0xc4ee,
-                0xe478,
-                0xad2f,
-                0x1806,
-                0x2f43,
-                0xd7a7,
-                0x3dfb,
-                0x0099,
-                0x2b4d,
-                0xdf0b,
-                0x4fc1,
-                0x2480,
-                0x2b83
-            ]
-        );
-        $ttt = new SplFixedArray(16);
-        $chk = new SplFixedArray(16);
-        $num = new SplFixedArray(16);
-        $den = new SplFixedArray(16);
-        $den2 = new SplFixedArray(16);
-        $den4 = new SplFixedArray(16);
-        $den6 = new SplFixedArray(16);
+        $gf0 = array_fill(0, 16, 0);
+        $gf1 = [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+        $ddD = [
+            0x78a3,
+            0x1359,
+            0x4dca,
+            0x75eb,
+            0xd8ab,
+            0x4141,
+            0x0a4d,
+            0x0070,
+            0xe898,
+            0x7779,
+            0x4079,
+            0x8cc7,
+            0xfe73,
+            0x2b6f,
+            0x6cee,
+            0x5203
+        ];
+        $iiI = [
+            0xa0b0,
+            0x4a0e,
+            0x1b27,
+            0xc4ee,
+            0xe478,
+            0xad2f,
+            0x1806,
+            0x2f43,
+            0xd7a7,
+            0x3dfb,
+            0x0099,
+            0x2b4d,
+            0xdf0b,
+            0x4fc1,
+            0x2480,
+            0x2b83
+        ];
+        $ttt = array_fill(0, 16, 0);
+        $chk = array_fill(0, 16, 0);
+        $num = array_fill(0, 16, 0);
+        $den = array_fill(0, 16, 0);
+        $den2 = array_fill(0, 16, 0);
+        $den4 = array_fill(0, 16, 0);
+        $den6 = array_fill(0, 16, 0);
 
         $this->set25519($rrr[2], $gf1);
         $this->unpack25519($rrr[1], $ppp);
@@ -792,7 +744,7 @@ class Ed25519
         $this->fnM($chk, $chk, $den);
 
         if (!$this->neq25519($chk, $num)) {
-            return false;
+            return false; // @codeCoverageIgnore
         }
 
         if ($this->par25519($rrr[0]) === (ord($ppp[31]) >> 7)) {

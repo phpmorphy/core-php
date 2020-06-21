@@ -54,9 +54,10 @@ class SecretKeyTest extends TestCase
     /**
      * @dataProvider signProvider
      */
-    public function testSign($seed, $message, $expected)
+    public function testSign($key, $message, $expected)
     {
-        $actual = SecretKey::fromSeed($seed)->sign($message);
+        $obj = new SecretKey($key);
+        $actual = $obj->sign($message);
         $this->assertEquals($actual, $expected);
     }
 
@@ -64,10 +65,12 @@ class SecretKeyTest extends TestCase
     {
         return array(
             array(
-                'seed' => base64_decode('Jg7S6tOU82oXVCpHhQ8TVQ+5VdQGMA+AJS4IcBB7mTo='),
-                'msg' => base64_decode('rfJMjOmtp2iaB7tp9SkpmKE5zI6EBZW3KXr42qZG3xPS'),
+                'key' => base64_decode(
+                    'u1mzvCnmyIbgs8RNM9GGGHOWcBdMvD7GIKC0m9zTFcaGXaAPQMbuPdZ1oAnTCfR/1rHTyC3J5n7x+dlFimHM8w=='
+                ),
+                'msg' => base64_decode('9tJbOqCDGGU0E4F0hYQR88MExTleIverV4iYgQs1bzn+gKmf7HMO3A=='),
                 'sig' => base64_decode(
-                    'uURMdnx1MrafIDh/TauY96NSRmjFmkLcdqragAN55Eqa3cOL8+YZD+J3z+9XCeYWOfuEi8fjGSfQR225X0WVDA=='
+                    '5a+mePEJlbUzTrqM5uxtVklI4KK+wtxBgkt4jiregPLmqasQ+4kTMu2KQfAJd7IlFYZqH2yM6lZDufXVY6ooBQ=='
                 ),
             )
         );

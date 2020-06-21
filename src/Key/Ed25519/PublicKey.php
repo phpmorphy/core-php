@@ -80,6 +80,10 @@ class PublicKey implements PublicKeyInterface
      */
     public function verifySignature(string $signature, string $message): bool
     {
+        if (function_exists('sodium_crypto_sign_verify_detached')) {
+            return sodium_crypto_sign_verify_detached($signature, $message, $this->bytes);
+        }
+
         $ed25519 = new Ed25519();
 
         return $ed25519->verify($signature, $message, $this->bytes);

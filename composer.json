@@ -22,8 +22,7 @@
     },
     "require": {
         "php-64bit": ">=7.4",
-        "ext-hash": "*",
-        "ext-sodium": "*"
+        "ext-hash": "*"
     },
     "suggest": {
         "ext-sodium": "*"

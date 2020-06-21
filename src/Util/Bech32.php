@@ -103,11 +103,11 @@ class Bech32
     ];
 
     /**
-     * @param int[] $values
+     * @param array<int, int> $values
      * @param int $numValues
      * @return int
      */
-    private function polyMod(array $values, $numValues)
+    private function polyMod(array $values, int $numValues): int
     {
         $chk = 1;
         for ($i = 0; $i < $numValues; $i++) {
@@ -127,9 +127,9 @@ class Bech32
      * Expands the human readable part into a character array for checksumming.
      * @param string $hrp
      * @param int $hrpLen
-     * @return int[]
+     * @return array<int, int>
      */
-    private function hrpExpand($hrp, $hrpLen)
+    private function hrpExpand(string $hrp, int $hrpLen): array
     {
         $expand1 = [];
         $expand2 = [];
@@ -150,10 +150,11 @@ class Bech32
      * @param int $fromBits - word (bit count) size of provided data
      * @param int $toBits - requested word size (bit count)
      * @param bool $pad - whether to pad (only when encoding)
-     * @return int[]
+     * @return array<int, int>
      * @throws Exception
+     * @SuppressWarnings(PHPMD.BooleanArgumentFlag)
      */
-    private function convertBits(array $data, $inLen, $fromBits, $toBits, $pad = true)
+    private function convertBits(array $data, int $inLen, int $fromBits, int $toBits, bool $pad = true): array
     {
         $acc = 0;
         $bits = 0;
@@ -163,10 +164,6 @@ class Bech32
 
         for ($i = 0; $i < $inLen; $i++) {
             $value = $data[$i];
-            if ($value < 0 || $value >> $fromBits) {
-                throw new Exception('Invalid value for convert bits');
-            }
-
             $acc = (($acc << $fromBits) | $value) & $maxacc;
             $bits += $fromBits;
 
@@ -180,7 +177,7 @@ class Bech32
             if ($bits) {
                 $ret[] = ($acc << $toBits - $bits) & $maxv;
             }
-        } else if ($bits >= $fromBits || ((($acc << ($toBits - $bits))) & $maxv)) {
+        } elseif ($bits >= $fromBits || ((($acc << ($toBits - $bits))) & $maxv)) {
             throw new Exception('Invalid data');
         }
 
@@ -189,10 +186,10 @@ class Bech32
 
     /**
      * @param string $hrp
-     * @param int[] $convertedDataChars
-     * @return int[]
+     * @param array<int, int> $convertedDataChars
+     * @return array<int, int>
      */
-    private function createChecksum($hrp, array $convertedDataChars)
+    private function createChecksum(string $hrp, array $convertedDataChars): array
     {
         $values = array_merge($this->hrpExpand($hrp, strlen($hrp)), $convertedDataChars);
         $polyMod = $this->polyMod(array_merge($values, [0, 0, 0, 0, 0, 0]), count($values) + 6) ^ 1;
@@ -208,23 +205,24 @@ class Bech32
      * Verifies the checksum given $hrp and $convertedDataChars.
      *
      * @param string $hrp
-     * @param int[] $convertedDataChars
+     * @param array<int, int> $convertedDataChars
      * @return bool
      */
-    private function verifyChecksum($hrp, array $convertedDataChars)
+    private function verifyChecksum(string $hrp, array $convertedDataChars): bool
     {
         $expandHrp = $this->hrpExpand($hrp, strlen($hrp));
         $arr = array_merge($expandHrp, $convertedDataChars);
         $poly = $this->polyMod($arr, count($arr));
+
         return $poly === 1;
     }
 
     /**
      * @param string $hrp
-     * @param array $combinedDataChars
+     * @param array<int, int> $combinedDataChars
      * @return string
      */
-    private function encoder($hrp, array $combinedDataChars)
+    private function encoder(string $hrp, array $combinedDataChars): string
     {
         $checksum = $this->createChecksum($hrp, $combinedDataChars);
         $characters = array_merge($combinedDataChars, $checksum);
@@ -238,17 +236,20 @@ class Bech32
     }
 
     /**
-     * @param $sBech - the bech32 encoded string
-     * @return array - returns [$hrp, $dataChars]
+     * @param string $sBech - the bech32 encoded string
+     * @return array<int, string|array> - returns [$hrp, $dataChars]
      * @throws Exception
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
+     * @SuppressWarnings(PHPMD.NPathComplexity)
      */
-    private function decodeRaw($sBech)
+    private function decodeRaw(string $sBech): array
     {
         $length = strlen($sBech);
         if ($length < 8) {
             throw new Exception("Bech32 string is too short");
         }
 
+        /** @var array<int, int> $chars */
         $chars = array_values(unpack('C*', $sBech));
 
         $haveUpper = false;
