@@ -32,6 +32,8 @@ use Exception;
  * Class Ed25519
  * @package UmiTop\UmiCore\Util
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
+ * @SuppressWarnings(PHPMD.ShortMethodName)
+ * @SuppressWarnings(PHPMD.ShortVariable)
  */
 class Ed25519
 {
@@ -47,152 +49,93 @@ class Ed25519
     /** @var int */
     public const SIGNATURE_BYTES = 64;
 
-    /**
-     * @param string $secretKey
-     * @return string
-     * @throws Exception
-     */
-    public function publicKeyFromSecretKey(string $secretKey): string
-    {
-        if (strlen($secretKey) !== self::SECRET_KEY_BYTES) {
-            throw new Exception('length must be 64 bytes');
-        }
+    /** @var array<int, int> */
+    private array $gf0;
 
-        return substr($secretKey, 32, 32);
-    }
+    /** @var array<int, int> */
+    private array $gf1;
 
-    /**
-     * @param string $seed
-     * @return string
-     * @throws Exception
-     */
-    public function secretKeyFromSeed(string $seed): string
-    {
-        if (strlen($seed) !== self::SEED_BYTES) {
-            throw new Exception('seed length must be 32 bytes');
-        }
+    /** @var array<int, int> */
+    private array $D;
 
-        $ppp = array_fill(0, 4, array_fill(0, 16, 0));
+    /** @var array<int, int> */
+    private array $D2;
 
-        $ddd = hash('sha512', $seed, true);
-        $ddd[0] = chr(ord($ddd[0]) & 248);   // d[0] &= 248;
-        $ddd[31] = chr(ord($ddd[31]) & 127); // d[31] &= 127;
-        $ddd[31] = chr(ord($ddd[31]) | 64);  // d[31] |= 64;
+    /** @var array<int, int> */
+    private array $X;
 
-        $pub = str_repeat("\x0", 32);
+    /** @var array<int, int> */
+    private array $Y;
 
-        $this->scalarbase($ppp, $ddd);
-        $this->pack($pub, $ppp);
+    /** @var array<int, int> */
+    private array $I;
 
-        return $seed . $pub;
-    }
+    /** @var array<int, int> */
+    private array $L;
 
     /**
-     * @param string $message
-     * @param string $secretKey
-     * @return string
-     * @throws Exception
+     * Ed25519 constructor.
+     * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
      */
-    public function sign(string $message, string $secretKey): string
+    public function __construct()
     {
-        if (strlen($secretKey) !== self::SECRET_KEY_BYTES) {
-            throw new Exception('secretKey length must be 64 bytes');
-        }
-
-        $msgLen = strlen($message);
-        $sigMsg = str_pad($message, 64 + $msgLen, "\x0", STR_PAD_LEFT);
-
-        // хэшируем приватный ключик (32байта)
-        $ddd = hash('sha512', substr($secretKey, 0, 32), true);
-        $ddd[0] = chr(ord($ddd[0]) & 248); // d[0] &= 248
-        $ddd[31] = chr(ord($ddd[31]) & 127); // d[31] &= 127
-        $ddd[31] = chr(ord($ddd[31]) | 64); // d[31] |= 64
-
-        // добавляем вторую половинку хэша к подписанному сообщению
-        for ($i = 32; $i < 64; $i++) {
-            $sigMsg[$i] = $ddd[$i];
-        }
-
-        $rrr = hash('sha512', substr($sigMsg, 32), true);
-        $this->reduce($rrr);
-
-        $ppp = array_fill(0, 4, array_fill(0, 16, 0));
-        $this->scalarbase($ppp, $rrr);
-        $this->pack($sigMsg, $ppp);
-
-        // добавляем публичный ключик?
-        for ($i = 32; $i < 64; $i++) {
-            $sigMsg[$i] = $secretKey[$i];
-        }
-
-        $hhh = hash('sha512', $sigMsg, true);
-        $this->reduce($hhh);
-
-        $xxx = array_fill(0, 64, 0);
-        for ($i = 0; $i < 32; $i++) {
-            $xxx[$i] = ord($rrr[$i]);
-        }
-        for ($i = 0; $i < 32; $i++) {
-            for ($j = 0; $j < 32; $j++) {
-                $xxx[$i + $j] += ord($hhh[$i]) * ord($ddd[$j]);
-            }
-        }
-
-        $sm2 = substr($sigMsg, 32);
-        $this->modL($sm2, $xxx);
-
-        return substr($sigMsg, 0, 32) . substr($sm2, 0, 32);
-    }
-
-    /**
-     * @param string $signature
-     * @param string $message
-     * @param string $publicKey
-     * @return bool
-     * @throws Exception
-     */
-    public function verify(string $signature, string $message, string $publicKey): bool
-    {
-        if (strlen($signature) !== self::SIGNATURE_BYTES) {
-            throw new Exception('signature length must be 64 bytes');
-        }
-
-        if (strlen($publicKey) !== self::PUBLIC_KEY_BYTES) {
-            throw new Exception('publicKey length must be 32 bytes');
-        }
-
-        $qqq = array_fill(0, 4, array_fill(0, 16, 0));
-        if (!$this->unpackneg($qqq, $publicKey)) {
-            return false; // @codeCoverageIgnore
-        }
-
-        $msg = $sigMsg = $signature . $message;
-
-        for ($i = 0; $i < 32; $i++) {
-            $msg[$i + 32] = $publicKey[$i];
-        }
-
-        $hhh = hash('sha512', $msg, true);
-        $this->reduce($hhh);
-
-        $ppp = array_fill(0, 4, array_fill(0, 16, 0));
-        $this->scalarmult($ppp, $qqq, $hhh);
-        $this->scalarbase($qqq, substr($sigMsg, 32));
-        $this->add($ppp, $qqq);
-
-        $ttt = str_repeat("\x0", 32);
-        $this->pack($ttt, $ppp);
-
-        return $this->cryptoVerify32($sigMsg, $ttt);
-    }
-
-    /**
-     * @param array<int, array<int, int>> $ppp
-     * @param array<int, array<int, int>> $qqq
-     */
-    private function add(array &$ppp, array $qqq): void
-    {
-        $dD2 = [
+        $this->gf0 = array_fill(0, 16, 0);
+        $this->gf1 = [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+        $this->X = [
+            0xd51a,
+            0x8f25,
+            0x2d60,
+            0xc956,
+            0xa7b2,
+            0x9525,
+            0xc760,
+            0x692c,
+            0xdc5c,
+            0xfdd6,
+            0xe231,
+            0xc0a4,
+            0x53fe,
+            0xcd6e,
+            0x36d3,
+            0x2169
+        ];
+        $this->Y = [
+            0x6658,
+            0x6666,
+            0x6666,
+            0x6666,
+            0x6666,
+            0x6666,
+            0x6666,
+            0x6666,
+            0x6666,
+            0x6666,
+            0x6666,
+            0x6666,
+            0x6666,
+            0x6666,
+            0x6666,
+            0x6666
+        ];
+        $this->D = [
+            0x78a3,
+            0x1359,
+            0x4dca,
+            0x75eb,
+            0xd8ab,
+            0x4141,
+            0x0a4d,
+            0x0070,
+            0xe898,
+            0x7779,
+            0x4079,
+            0x8cc7,
+            0xfe73,
+            0x2b6f,
+            0x6cee,
+            0x5203
+        ];
+        $this->D2 = [
             0xf159,
             0x26b2,
             0x9b94,
@@ -210,157 +153,25 @@ class Ed25519
             0xd9dc,
             0x2406
         ];
-        $aaa = array_fill(0, 16, 0);
-        $bbb = array_fill(0, 16, 0);
-        $ccc = array_fill(0, 16, 0);
-        $ddd = array_fill(0, 16, 0);
-        $ttt = array_fill(0, 16, 0);
-        $eee = array_fill(0, 16, 0);
-        $fff = array_fill(0, 16, 0);
-        $ggg = array_fill(0, 16, 0);
-        $hhh = array_fill(0, 16, 0);
-
-        $this->fnZ($aaa, $ppp[1], $ppp[0]);
-        $this->fnZ($ttt, $qqq[1], $qqq[0]);
-        $this->fnM($aaa, $aaa, $ttt);
-        $this->fnA($bbb, $ppp[0], $ppp[1]);
-        $this->fnA($ttt, $qqq[0], $qqq[1]);
-        $this->fnM($bbb, $bbb, $ttt);
-        $this->fnM($ccc, $ppp[3], $qqq[3]);
-        $this->fnM($ccc, $ccc, $dD2);
-        $this->fnM($ddd, $ppp[2], $qqq[2]);
-        $this->fnA($ddd, $ddd, $ddd);
-        $this->fnZ($eee, $bbb, $aaa);
-        $this->fnZ($fff, $ddd, $ccc);
-        $this->fnA($ggg, $ddd, $ccc);
-        $this->fnA($hhh, $bbb, $aaa);
-
-        $this->fnM($ppp[0], $eee, $fff);
-        $this->fnM($ppp[1], $hhh, $ggg);
-        $this->fnM($ppp[2], $ggg, $fff);
-        $this->fnM($ppp[3], $eee, $hhh);
-    }
-
-    /**
-     * @param array<int, int> $out
-     */
-    private function car25519(array &$out): void
-    {
-        for ($i = 0; $i < 16; $i++) {
-            $out[$i] += (1 << 16);
-            $ccc = $out[$i] >> 16;
-            $out[($i + 1) * (int)($i < 15)] += $ccc - 1 + 37 * ($ccc - 1) * (int)($i === 15);
-            $out[$i] -= $ccc << 16;
-        }
-    }
-
-    /**
-     * @param string $xxx
-     * @param string $yyy
-     * @return bool
-     */
-    private function cryptoVerify32(string $xxx, string $yyy): bool
-    {
-        $ddd = 0;
-        for ($i = 0; $i < 32; $i++) {
-            $ddd |= ord($xxx[$i]) ^ ord($yyy[$i]);
-        }
-
-        return (1 & (($ddd - 1) >> 8)) === 1;
-    }
-
-    /**
-     * @param array<int, array<int, int>> $ppp
-     * @param array<int, array<int, int>> $qqq
-     * @param int $bbb
-     */
-    private function cswap(array &$ppp, array &$qqq, int $bbb): void
-    {
-        for ($i = 0; $i < 4; $i++) {
-            $this->sel25519($ppp[$i], $qqq[$i], $bbb);
-        }
-    }
-
-    /**
-     * @param array<int, int> $out
-     * @param array<int, int> $in1
-     * @param array<int, int> $in2
-     */
-    private function fnA(array &$out, array $in1, array $in2): void
-    {
-        for ($i = 0; $i < 16; $i++) {
-            $out[$i] = $in1[$i] + $in2[$i];
-        }
-    }
-
-    /**
-     * @param array<int, int> $out
-     * @param array<int, int> $aaa
-     * @param array<int, int> $bbb
-     */
-    private function fnM(array &$out, array $aaa, array $bbb): void
-    {
-        $ttt = array_fill(0, 31, 0);
-
-        for ($i = 0; $i < 16; $i++) {
-            for ($j = 0; $j < 16; $j++) {
-                $ttt[$i + $j] += $aaa[$i] * $bbb[$j];
-            }
-        }
-        for ($i = 0; $i < 15; $i++) {
-            $ttt[$i] += 38 * $ttt[$i + 16];
-        }
-        for ($i = 0; $i < 16; $i++) {
-            $out[$i] = $ttt[$i];
-        }
-
-        $this->car25519($out);
-        $this->car25519($out);
-    }
-
-    /**
-     * @param array<int, int> $out
-     * @param array<int, int> $in1
-     * @param array<int, int> $in2
-     */
-    private function fnZ(array &$out, array $in1, array $in2): void
-    {
-        for ($i = 0; $i < 16; $i++) {
-            $out[$i] = $in1[$i] - $in2[$i];
-        }
-    }
-
-    /**
-     * @param array<int, int> $out
-     * @param array<int, int> $inp
-     */
-    private function inv25519(array &$out, array $inp): void
-    {
-        $ccc = array_fill(0, 16, 0);
-
-        for ($a = 0; $a < 16; $a++) {
-            $ccc[$a] = $inp[$a];
-        }
-
-        for ($a = 253; $a >= 0; $a--) {
-            $this->fnM($ccc, $ccc, $ccc);
-            if ($a != 2 && $a != 4) {
-                $this->fnM($ccc, $ccc, $inp);
-            }
-        }
-
-        for ($a = 0; $a < 16; $a++) {
-            $out[$a] = $ccc[$a];
-        }
-    }
-
-    /**
-     * @param string $rrr
-     * @param array<int, int> $xxx
-     */
-    private function modL(string &$rrr, array &$xxx): void
-    {
-        $llL = [
+        $this->I = [
+            0xa0b0,
+            0x4a0e,
+            0x1b27,
+            0xc4ee,
+            0xe478,
+            0xad2f,
+            0x1806,
+            0x2f43,
+            0xd7a7,
+            0x3dfb,
+            0x0099,
+            0x2b4d,
+            0xdf0b,
+            0x4fc1,
+            0x2480,
+            0x2b83
+        ];
+        $this->L = [
             0xed,
             0xd3,
             0xf5,
@@ -394,318 +205,534 @@ class Ed25519
             0,
             0x10
         ];
+    }
 
+    /**
+     * @param string $secretKey
+     * @return string
+     * @throws Exception
+     */
+    public function publicKeyFromSecretKey(string $secretKey): string
+    {
+        if (strlen($secretKey) !== self::SECRET_KEY_BYTES) {
+            throw new Exception('length must be 64 bytes');
+        }
+
+        return substr($secretKey, 32, 32);
+    }
+
+    /**
+     * @param string $seed
+     * @return string
+     * @throws Exception
+     */
+    public function secretKeyFromSeed(string $seed): string
+    {
+        if (strlen($seed) !== self::SEED_BYTES) {
+            throw new Exception('seed length must be 32 bytes');
+        }
+
+        $p = array_fill(0, 4, array_fill(0, 16, 0));
+
+        $d = hash('sha512', $seed, true);
+        $d[0] = chr(ord($d[0]) & 248);   // d[0] &= 248;
+        $d[31] = chr(ord($d[31]) & 127); // d[31] &= 127;
+        $d[31] = chr(ord($d[31]) | 64);  // d[31] |= 64;
+
+        $pub = str_repeat("\x0", 32);
+
+        $this->scalarbase($p, $d);
+        $this->pack($pub, $p);
+
+        return $seed . $pub;
+    }
+
+    /**
+     * @param string $message
+     * @param string $secretKey
+     * @return string
+     * @throws Exception
+     */
+    public function sign(string $message, string $secretKey): string
+    {
+        if (strlen($secretKey) !== self::SECRET_KEY_BYTES) {
+            throw new Exception('secretKey length must be 64 bytes');
+        }
+
+        $sm = str_pad($message, 64 + strlen($message), "\x0", STR_PAD_LEFT);
+
+        // хэшируем приватный ключик (32байта)
+        $d = hash('sha512', substr($secretKey, 0, 32), true);
+        $d[0] = chr(ord($d[0]) & 248); // d[0] &= 248
+        $d[31] = chr(ord($d[31]) & 127); // d[31] &= 127
+        $d[31] = chr(ord($d[31]) | 64); // d[31] |= 64
+
+        // добавляем вторую половинку хэша к подписанному сообщению
+        for ($i = 32; $i < 64; $i++) {
+            $sm[$i] = $d[$i];
+        }
+
+        $r = hash('sha512', substr($sm, 32), true);
+        $this->reduce($r);
+
+        $p = array_fill(0, 4, array_fill(0, 16, 0));
+        $this->scalarbase($p, $r);
+        $this->pack($sm, $p);
+
+        // добавляем публичный ключик?
+        for ($i = 32; $i < 64; $i++) {
+            $sm[$i] = $secretKey[$i];
+        }
+
+        $h = hash('sha512', $sm, true);
+        $this->reduce($h);
+
+        $x = array_fill(0, 64, 0);
+        for ($i = 0; $i < 32; $i++) {
+            $x[$i] = ord($r[$i]);
+        }
+        for ($i = 0; $i < 32; $i++) {
+            for ($j = 0; $j < 32; $j++) {
+                $x[$i + $j] += ord($h[$i]) * ord($d[$j]);
+            }
+        }
+
+        $sm2 = substr($sm, 32);
+        $this->modL($sm2, $x);
+
+        return substr($sm, 0, 32) . substr($sm2, 0, 32);
+    }
+
+    /**
+     * @param string $signature
+     * @param string $message
+     * @param string $publicKey
+     * @return bool
+     * @throws Exception
+     */
+    public function verify(string $signature, string $message, string $publicKey): bool
+    {
+        if (strlen($signature) !== self::SIGNATURE_BYTES) {
+            throw new Exception('signature length must be 64 bytes');
+        }
+
+        if (strlen($publicKey) !== self::PUBLIC_KEY_BYTES) {
+            throw new Exception('publicKey length must be 32 bytes');
+        }
+
+        $q = array_fill(0, 4, array_fill(0, 16, 0));
+        if (!$this->unpackneg($q, $publicKey)) {
+            return false; // @codeCoverageIgnore
+        }
+
+        $m = $sm = $signature . $message;
+
+        for ($i = 0; $i < 32; $i++) {
+            $m[$i + 32] = $publicKey[$i];
+        }
+
+        $h = hash('sha512', $m, true);
+        $this->reduce($h);
+
+        $p = array_fill(0, 4, array_fill(0, 16, 0));
+        $this->scalarmult($p, $q, $h);
+        $this->scalarbase($q, substr($sm, 32));
+        $this->add($p, $q);
+
+        $t = str_repeat("\x0", 32);
+        $this->pack($t, $p);
+
+        return $this->cryptoVerify32($sm, $t);
+    }
+
+    /**
+     * @param array<int, array<int, int>> $p
+     * @param array<int, array<int, int>> $q
+     */
+    private function add(array &$p, array $q): void
+    {
+        $a = array_fill(0, 16, 0);
+        $b = array_fill(0, 16, 0);
+        $c = array_fill(0, 16, 0);
+        $d = array_fill(0, 16, 0);
+        $t = array_fill(0, 16, 0);
+        $e = array_fill(0, 16, 0);
+        $f = array_fill(0, 16, 0);
+        $g = array_fill(0, 16, 0);
+        $h = array_fill(0, 16, 0);
+
+        $this->fnZ($a, $p[1], $p[0]);
+        $this->fnZ($t, $q[1], $q[0]);
+        $this->fnM($a, $a, $t);
+        $this->fnA($b, $p[0], $p[1]);
+        $this->fnA($t, $q[0], $q[1]);
+        $this->fnM($b, $b, $t);
+        $this->fnM($c, $p[3], $q[3]);
+        $this->fnM($c, $c, $this->D2);
+        $this->fnM($d, $p[2], $q[2]);
+        $this->fnA($d, $d, $d);
+        $this->fnZ($e, $b, $a);
+        $this->fnZ($f, $d, $c);
+        $this->fnA($g, $d, $c);
+        $this->fnA($h, $b, $a);
+
+        $this->fnM($p[0], $e, $f);
+        $this->fnM($p[1], $h, $g);
+        $this->fnM($p[2], $g, $f);
+        $this->fnM($p[3], $e, $h);
+    }
+
+    /**
+     * @param array<int, int> $o
+     */
+    private function car25519(array &$o): void
+    {
+        for ($i = 0; $i < 16; $i++) {
+            $o[$i] += (1 << 16);
+            $c = $o[$i] >> 16;
+            $o[($i + 1) * (int)($i < 15)] += $c - 1 + 37 * ($c - 1) * (int)($i === 15);
+            $o[$i] -= $c << 16;
+        }
+    }
+
+    /**
+     * @param string $x
+     * @param string $y
+     * @return bool
+     */
+    private function cryptoVerify32(string $x, string $y): bool
+    {
+        $d = 0;
+        for ($i = 0; $i < 32; $i++) {
+            $d |= ord($x[$i]) ^ ord($y[$i]);
+        }
+
+        return (1 & (($d - 1) >> 8)) === 1;
+    }
+
+    /**
+     * @param array<int, array<int, int>> $p
+     * @param array<int, array<int, int>> $q
+     * @param int $b
+     */
+    private function cswap(array &$p, array &$q, int $b): void
+    {
+        for ($i = 0; $i < 4; $i++) {
+            $this->sel25519($p[$i], $q[$i], $b);
+        }
+    }
+
+    /**
+     * @param array<int, int> $o
+     * @param array<int, int> $a
+     * @param array<int, int> $b
+     */
+    private function fnA(array &$o, array $a, array $b): void
+    {
+        for ($i = 0; $i < 16; $i++) {
+            $o[$i] = $a[$i] + $b[$i];
+        }
+    }
+
+    /**
+     * @param array<int, int> $o
+     * @param array<int, int> $a
+     * @param array<int, int> $b
+     */
+    private function fnM(array &$o, array $a, array $b): void
+    {
+        $t = array_fill(0, 31, 0);
+
+        for ($i = 0; $i < 16; $i++) {
+            for ($j = 0; $j < 16; $j++) {
+                $t[$i + $j] += $a[$i] * $b[$j];
+            }
+        }
+        for ($i = 0; $i < 15; $i++) {
+            $t[$i] += 38 * $t[$i + 16];
+        }
+        for ($i = 0; $i < 16; $i++) {
+            $o[$i] = $t[$i];
+        }
+
+        $this->car25519($o);
+        $this->car25519($o);
+    }
+
+    /**
+     * @param array<int, int> $o
+     * @param array<int, int> $a
+     * @param array<int, int> $b
+     */
+    private function fnZ(array &$o, array $a, array $b): void
+    {
+        for ($i = 0; $i < 16; $i++) {
+            $o[$i] = $a[$i] - $b[$i];
+        }
+    }
+
+    /**
+     * @param array<int, int> $o
+     * @param array<int, int> $i
+     */
+    private function inv25519(array &$o, array $i): void
+    {
+        $c = array_fill(0, 16, 0);
+
+        for ($a = 0; $a < 16; $a++) {
+            $c[$a] = $i[$a];
+        }
+
+        for ($a = 253; $a >= 0; $a--) {
+            $this->fnM($c, $c, $c);
+            if ($a != 2 && $a != 4) {
+                $this->fnM($c, $c, $i);
+            }
+        }
+
+        for ($a = 0; $a < 16; $a++) {
+            $o[$a] = $c[$a];
+        }
+    }
+
+    /**
+     * @param string $r
+     * @param array<int, int> $x
+     */
+    private function modL(string &$r, array &$x): void
+    {
         for ($i = 63; $i >= 32; --$i) {
             $carry = 0;
             for ($j = $i - 32; $j < $i - 12; ++$j) {
-                $xxx[$j] += $carry - 16 * $xxx[$i] * $llL[$j - ($i - 32)];
-                $carry = ($xxx[$j] + 128) >> 8;
-                $xxx[$j] -= $carry << 8;
+                $x[$j] += $carry - 16 * $x[$i] * $this->L[$j - ($i - 32)];
+                $carry = ($x[$j] + 128) >> 8;
+                $x[$j] -= $carry << 8;
             }
-            $xxx[$j] += $carry;
-            $xxx[$i] = 0;
+            $x[$j] += $carry;
+            $x[$i] = 0;
         }
 
         $carry = 0;
         for ($j = 0; $j < 32; $j++) {
-            $xxx[$j] += $carry - ($xxx[31] >> 4) * $llL[$j];
-            $carry = $xxx[$j] >> 8;
-            $xxx[$j] &= 255;
+            $x[$j] += $carry - ($x[31] >> 4) * $this->L[$j];
+            $carry = $x[$j] >> 8;
+            $x[$j] &= 255;
         }
 
         for ($j = 0; $j < 32; $j++) {
-            $xxx[$j] -= $carry * $llL[$j];
+            $x[$j] -= $carry * $this->L[$j];
         }
 
         for ($i = 0; $i < 32; $i++) {
-            $xxx[$i + 1] += $xxx[$i] >> 8;
-            $rrr[$i] = chr($xxx[$i] & 255);
+            $x[$i + 1] += $x[$i] >> 8;
+            $r[$i] = chr($x[$i] & 255);
         }
     }
 
     /**
-     * @param array<int, int> $aaa
-     * @param array<int, int> $bbb
+     * @param array<int, int> $a
+     * @param array<int, int> $b
      * @return bool
      */
-    private function neq25519(array $aaa, array $bbb): bool
+    private function neq25519(array $a, array $b): bool
     {
-        $ccc = str_repeat("\x0", 32);
-        $ddd = str_repeat("\x0", 32);
+        $c = str_repeat("\x0", 32);
+        $d = str_repeat("\x0", 32);
 
-        $this->pack25519($ccc, $aaa);
-        $this->pack25519($ddd, $bbb);
+        $this->pack25519($c, $a);
+        $this->pack25519($d, $b);
 
-        return $this->cryptoVerify32($ccc, $ddd);
+        return $this->cryptoVerify32($c, $d);
     }
 
     /**
-     * @param string $rrr
-     * @param array<int, array<int, int>> $ppp
+     * @param string $r
+     * @param array<int, array<int, int>> $p
      */
-    private function pack(string &$rrr, array $ppp): void
+    private function pack(string &$r, array $p): void
     {
-        $tx0 = array_fill(0, 16, 0);
-        $ty0 = array_fill(0, 16, 0);
-        $zi0 = array_fill(0, 16, 0);
+        $tx = array_fill(0, 16, 0);
+        $ty = array_fill(0, 16, 0);
+        $zi = array_fill(0, 16, 0);
 
-        $this->inv25519($zi0, $ppp[2]);
-        $this->fnM($tx0, $ppp[0], $zi0);
-        $this->fnM($ty0, $ppp[1], $zi0);
-        $this->pack25519($rrr, $ty0);
+        $this->inv25519($zi, $p[2]);
+        $this->fnM($tx, $p[0], $zi);
+        $this->fnM($ty, $p[1], $zi);
+        $this->pack25519($r, $ty);
 
-        $rrr[31] = chr(ord($rrr[31]) ^ $this->par25519($tx0) << 7); // r[31] ^= par25519(tx) << 7;
+        $r[31] = chr(ord($r[31]) ^ $this->par25519($tx) << 7); // r[31] ^= par25519(tx) << 7;
     }
 
     /**
-     * @param string $out
-     * @param array<int, int> $nnn
+     * @param string $o
+     * @param array<int, int> $n
      */
-    private function pack25519(string &$out, array $nnn): void
+    private function pack25519(string &$o, array $n): void
     {
-        $mmm = array_fill(0, 16, 0);
-        $ttt = array_fill(0, 16, 0);
+        $m = array_fill(0, 16, 0);
+        $t = array_fill(0, 16, 0);
 
         for ($i = 0; $i < 16; $i++) {
-            $ttt[$i] = $nnn[$i];
+            $t[$i] = $n[$i];
         }
 
-        $this->car25519($ttt);
-        $this->car25519($ttt);
-        $this->car25519($ttt);
+        $this->car25519($t);
+        $this->car25519($t);
+        $this->car25519($t);
 
         for ($j = 0; $j < 2; $j++) {
-            $mmm[0] = $ttt[0] - 0xffed;
+            $m[0] = $t[0] - 0xffed;
             for ($i = 1; $i < 15; $i++) {
-                $mmm[$i] = $ttt[$i] - 0xffff - (($mmm[$i - 1] >> 16) & 1);
-                $mmm[$i - 1] &= 0xffff;
+                $m[$i] = $t[$i] - 0xffff - (($m[$i - 1] >> 16) & 1);
+                $m[$i - 1] &= 0xffff;
             }
-            $mmm[15] = $ttt[15] - 0x7fff - (($mmm[14] >> 16) & 1);
-            $bbb = ($mmm[15] >> 16) & 1;
-            $mmm[14] &= 0xffff;
-            $this->sel25519($ttt, $mmm, 1 - $bbb);
+            $m[15] = $t[15] - 0x7fff - (($m[14] >> 16) & 1);
+            $bbb = ($m[15] >> 16) & 1;
+            $m[14] &= 0xffff;
+            $this->sel25519($t, $m, 1 - $bbb);
         }
 
         for ($i = 0; $i < 16; $i++) {
-            $out[2 * $i] = chr($ttt[$i] & 0xff);
-            $out[2 * $i + 1] = chr($ttt[$i] >> 8);
+            $o[2 * $i] = chr($t[$i] & 0xff);
+            $o[2 * $i + 1] = chr($t[$i] >> 8);
         }
     }
 
     /**
-     * @param array<int, int> $aaa
+     * @param array<int, int> $a
      * @return int
      */
-    private function par25519(array $aaa): int
+    private function par25519(array $a): int
     {
-        $ddd = str_repeat("\x0", 32);
-        $this->pack25519($ddd, $aaa);
+        $d = str_repeat("\x0", 32);
+        $this->pack25519($d, $a);
 
-        return ord($ddd[0]) & 1;
+        return ord($d[0]) & 1;
     }
 
     /**
-     * @param array<int, int> $out
-     * @param array<int, int> $inp
+     * @param array<int, int> $o
+     * @param array<int, int> $i
      */
-    private function pow2523(array &$out, array $inp): void
+    private function pow2523(array &$o, array $i): void
     {
-        $ccc = array_fill(0, 16, 0);
+        $c = array_fill(0, 16, 0);
 
         for ($a = 0; $a < 16; $a++) {
-            $ccc[$a] = $inp[$a];
+            $c[$a] = $i[$a];
         }
 
         for ($a = 250; $a >= 0; $a--) {
-            $this->fnM($ccc, $ccc, $ccc);
+            $this->fnM($c, $c, $c);
             if ($a != 1) {
-                $this->fnM($ccc, $ccc, $inp);
+                $this->fnM($c, $c, $i);
             }
         }
 
         for ($a = 0; $a < 16; $a++) {
-            $out[$a] = $ccc[$a];
+            $o[$a] = $c[$a];
         }
     }
 
     /**
-     * @param string $rrr
+     * @param string $r
      */
-    private function reduce(string &$rrr): void
+    private function reduce(string &$r): void
     {
-        $xxx = array_fill(0, 64, 0); // new SplFixedArray(64); // int64[64]
+        $x = array_fill(0, 64, 0);
 
         for ($i = 0; $i < 64; $i++) {
-            $xxx[$i] = ord($rrr[$i]);
+            $x[$i] = ord($r[$i]);
         }
 
         for ($i = 0; $i < 64; $i++) {
-            $rrr[$i] = chr(0);
+            $r[$i] = chr(0);
         }
 
-        $this->modL($rrr, $xxx);
+        $this->modL($r, $x);
     }
 
     /**
-     * @param array<int, array<int, int>> $ppp
-     * @param string $sss
+     * @param array<int, array<int, int>> $p
+     * @param string $s
      */
-    private function scalarbase(array &$ppp, string $sss): void
+    private function scalarbase(array &$p, string $s): void
     {
-        $qqq = array_fill(0, 4, array_fill(0, 16, 0));
-        $gf1 = [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-        $xxX = [
-            0xd51a,
-            0x8f25,
-            0x2d60,
-            0xc956,
-            0xa7b2,
-            0x9525,
-            0xc760,
-            0x692c,
-            0xdc5c,
-            0xfdd6,
-            0xe231,
-            0xc0a4,
-            0x53fe,
-            0xcd6e,
-            0x36d3,
-            0x2169
-        ];
-        $yyY = [
-            0x6658,
-            0x6666,
-            0x6666,
-            0x6666,
-            0x6666,
-            0x6666,
-            0x6666,
-            0x6666,
-            0x6666,
-            0x6666,
-            0x6666,
-            0x6666,
-            0x6666,
-            0x6666,
-            0x6666,
-            0x6666
-        ];
-
-        $this->set25519($qqq[0], $xxX);
-        $this->set25519($qqq[1], $yyY);
-        $this->set25519($qqq[2], $gf1);
-        $this->fnM($qqq[3], $xxX, $yyY);
-        $this->scalarmult($ppp, $qqq, $sss);
+        $q = array_fill(0, 4, array_fill(0, 16, 0));
+        $this->set25519($q[0], $this->X);
+        $this->set25519($q[1], $this->Y);
+        $this->set25519($q[2], $this->gf1);
+        $this->fnM($q[3], $this->X, $this->Y);
+        $this->scalarmult($p, $q, $s);
     }
 
     /**
-     * @param array<int, array<int, int>> $ppp
-     * @param array<int, array<int, int>> $qqq
-     * @param string $sss
+     * @param array<int, array<int, int>> $p
+     * @param array<int, array<int, int>> $q
+     * @param string $s
      */
-    private function scalarmult(array &$ppp, array &$qqq, string $sss): void
+    private function scalarmult(array &$p, array &$q, string $s): void
     {
-        $gf0 = array_fill(0, 16, 0);
-        $gf1 = [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-
-        $this->set25519($ppp[0], $gf0);
-        $this->set25519($ppp[1], $gf1);
-        $this->set25519($ppp[2], $gf1);
-        $this->set25519($ppp[3], $gf0);
+        $this->set25519($p[0], $this->gf0);
+        $this->set25519($p[1], $this->gf1);
+        $this->set25519($p[2], $this->gf1);
+        $this->set25519($p[3], $this->gf0);
 
         for ($i = 255; $i >= 0; --$i) {
-            $bbb = (ord($sss[(int)($i / 8)]) >> ($i & 7)) & 1;
-            $this->cswap($ppp, $qqq, $bbb);
-            $this->add($qqq, $ppp);
-            $this->add($ppp, $ppp);
-            $this->cswap($ppp, $qqq, $bbb);
+            $b = (ord($s[(int)($i / 8)]) >> ($i & 7)) & 1;
+            $this->cswap($p, $q, $b);
+            $this->add($q, $p);
+            $this->add($p, $p);
+            $this->cswap($p, $q, $b);
         }
     }
 
     /**
-     * @param array<int, int> $ppp
-     * @param array<int, int> $qqq
-     * @param int $bbb
+     * @param array<int, int> $p
+     * @param array<int, int> $q
+     * @param int $b
      */
-    private function sel25519(array &$ppp, array &$qqq, int $bbb): void
+    private function sel25519(array &$p, array &$q, int $b): void
     {
-        $ccc = ~($bbb - 1);
+        $c = ~($b - 1);
         for ($i = 0; $i < 16; $i++) {
-            $ttt = $ccc & ($ppp[$i] ^ $qqq[$i]);
-            $ppp[$i] ^= $ttt;
-            $qqq[$i] ^= $ttt;
+            $ttt = $c & ($p[$i] ^ $q[$i]);
+            $p[$i] ^= $ttt;
+            $q[$i] ^= $ttt;
         }
     }
 
     /**
-     * @param array<int, int> $rrr
-     * @param array<int, int> $aaa
+     * @param array<int, int> $r
+     * @param array<int, int> $a
      */
-    private function set25519(array &$rrr, array $aaa): void
-    {
-        for ($i = 0; $i < 16; $i++) {
-            $rrr[$i] = $aaa[$i];
-        }
-    }
-
-    /**
-     * @param array<int, int> $out
-     * @param string $nnn
-     */
-    private function unpack25519(array &$out, string $nnn): void
+    private function set25519(array &$r, array $a): void
     {
         for ($i = 0; $i < 16; $i++) {
-            $out[$i] = ord($nnn[2 * $i]) + (ord($nnn[2 * $i + 1]) << 8);
+            $r[$i] = $a[$i];
         }
-        $out[15] &= 0x7fff;
     }
 
     /**
-     * @param array<int, array<int, int>> $rrr
-     * @param string $ppp
+     * @param array<int, int> $o
+     * @param string $n
+     */
+    private function unpack25519(array &$o, string $n): void
+    {
+        for ($i = 0; $i < 16; $i++) {
+            $o[$i] = ord($n[2 * $i]) + (ord($n[2 * $i + 1]) << 8);
+        }
+        $o[15] &= 0x7fff;
+    }
+
+    /**
+     * @param array<int, array<int, int>> $r
+     * @param string $p
      * @return bool
      */
-    private function unpackneg(array &$rrr, string $ppp): bool
+    private function unpackneg(array &$r, string $p): bool
     {
-        $gf0 = array_fill(0, 16, 0);
-        $gf1 = [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-        $ddD = [
-            0x78a3,
-            0x1359,
-            0x4dca,
-            0x75eb,
-            0xd8ab,
-            0x4141,
-            0x0a4d,
-            0x0070,
-            0xe898,
-            0x7779,
-            0x4079,
-            0x8cc7,
-            0xfe73,
-            0x2b6f,
-            0x6cee,
-            0x5203
-        ];
-        $iiI = [
-            0xa0b0,
-            0x4a0e,
-            0x1b27,
-            0xc4ee,
-            0xe478,
-            0xad2f,
-            0x1806,
-            0x2f43,
-            0xd7a7,
-            0x3dfb,
-            0x0099,
-            0x2b4d,
-            0xdf0b,
-            0x4fc1,
-            0x2480,
-            0x2b83
-        ];
-        $ttt = array_fill(0, 16, 0);
+        $t = array_fill(0, 16, 0);
         $chk = array_fill(0, 16, 0);
         $num = array_fill(0, 16, 0);
         $den = array_fill(0, 16, 0);
@@ -713,45 +740,45 @@ class Ed25519
         $den4 = array_fill(0, 16, 0);
         $den6 = array_fill(0, 16, 0);
 
-        $this->set25519($rrr[2], $gf1);
-        $this->unpack25519($rrr[1], $ppp);
+        $this->set25519($r[2], $this->gf1);
+        $this->unpack25519($r[1], $p);
 
-        $this->fnM($num, $rrr[1], $rrr[1]);
-        $this->fnM($den, $num, $ddD);
-        $this->fnZ($num, $num, $rrr[2]);
-        $this->fnA($den, $rrr[2], $den);
+        $this->fnM($num, $r[1], $r[1]);
+        $this->fnM($den, $num, $this->D);
+        $this->fnZ($num, $num, $r[2]);
+        $this->fnA($den, $r[2], $den);
 
         $this->fnM($den2, $den, $den);
         $this->fnM($den4, $den2, $den2);
         $this->fnM($den6, $den4, $den2);
-        $this->fnM($ttt, $den6, $num);
-        $this->fnM($ttt, $ttt, $den);
+        $this->fnM($t, $den6, $num);
+        $this->fnM($t, $t, $den);
 
-        $this->pow2523($ttt, $ttt);
-        $this->fnM($ttt, $ttt, $num);
-        $this->fnM($ttt, $ttt, $den);
-        $this->fnM($ttt, $ttt, $den);
-        $this->fnM($rrr[0], $ttt, $den);
+        $this->pow2523($t, $t);
+        $this->fnM($t, $t, $num);
+        $this->fnM($t, $t, $den);
+        $this->fnM($t, $t, $den);
+        $this->fnM($r[0], $t, $den);
 
-        $this->fnM($chk, $rrr[0], $rrr[0]);
+        $this->fnM($chk, $r[0], $r[0]);
         $this->fnM($chk, $chk, $den);
 
         if (!$this->neq25519($chk, $num)) {
-            $this->fnM($rrr[0], $rrr[0], $iiI);
+            $this->fnM($r[0], $r[0], $this->I);
         }
 
-        $this->fnM($chk, $rrr[0], $rrr[0]);
+        $this->fnM($chk, $r[0], $r[0]);
         $this->fnM($chk, $chk, $den);
 
         if (!$this->neq25519($chk, $num)) {
             return false; // @codeCoverageIgnore
         }
 
-        if ($this->par25519($rrr[0]) === (ord($ppp[31]) >> 7)) {
-            $this->fnZ($rrr[0], $gf0, $rrr[0]);
+        if ($this->par25519($r[0]) === (ord($p[31]) >> 7)) {
+            $this->fnZ($r[0], $this->gf0, $r[0]);
         }
 
-        $this->fnM($rrr[3], $rrr[0], $rrr[1]);
+        $this->fnM($r[3], $r[0], $r[1]);
 
         return true;
     }
