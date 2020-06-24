@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Key;
 
 use PHPUnit\Framework\TestCase;
@@ -7,7 +9,7 @@ use UmiTop\UmiCore\Key\SecretKey;
 
 class SecretKeyTest extends TestCase
 {
-    public function testConstructor()
+    public function testConstructor(): void
     {
         $expected = base64_decode(
             'u1mzvCnmyIbgs8RNM9GGGHOWcBdMvD7GIKC0m9zTFcaGXaAPQMbuPdZ1oAnTCfR/1rHTyC3J5n7x+dlFimHM8w=='
@@ -18,17 +20,19 @@ class SecretKeyTest extends TestCase
         $this->assertEquals($expected, $actual);
     }
 
-    public function testConstructorException()
+    public function testConstructorException(): void
     {
-        method_exists($this, 'expectException')
-            ? $this->expectException('Exception')
-            : $this->setExpectedException('Exception'); // PHPUnit 4
+        if (method_exists($this, 'expectException')) {
+            $this->expectException('Exception');
+        } elseif (method_exists($this, 'setExpectedException')) {
+            $this->setExpectedException('Exception'); // PHPUnit 4
+        }
 
         $bytes = str_repeat('a', SecretKey::LENGTH - 1);
         new SecretKey($bytes);
     }
 
-    public function testGetPublicKey()
+    public function testGetPublicKey(): void
     {
         $bytes = base64_decode(
             'u1mzvCnmyIbgs8RNM9GGGHOWcBdMvD7GIKC0m9zTFcaGXaAPQMbuPdZ1oAnTCfR/1rHTyC3J5n7x+dlFimHM8w=='
@@ -43,48 +47,54 @@ class SecretKeyTest extends TestCase
     /**
      * @dataProvider seedProvider
      */
-    public function testFromSeed($seed, $expected)
+    public function testFromSeed(string $seed, string $expected): void
     {
         $actual = SecretKey::fromSeed(base64_decode($seed))->getPublicKey()->toBytes();
         $this->assertEquals($actual, base64_decode($expected));
     }
 
-    public function seedProvider()
+    /**
+     * @return array<string, array<string, string>>
+     */
+    public function seedProvider(): array
     {
-        return array(
-            '31 bytes' => array(
+        return [
+            '31 bytes' => [
                 'seed' => 'QUwFVtVMcpHvJ5O2mhcufcGkT6vJ56w9pwuff9LozQ==',
                 'pub' => 'COHSlmM5PqA7Xu2JyTlxE7pvorkTnFOsoYT/ltw3ZPY='
-            ),
-            '32 bytes' => array(
+            ],
+            '32 bytes' => [
                 'seed' => '5aAVt4OuYhVSbevEhxfez89Y1MGWwKsOQqM30gapqVQ=',
                 'pub' => 'dbCnSb1MfzfQ9WSsjXWl4bx1O98GXtfeMeKhKIAutPc='
-            ),
-            '33 bytes' => array(
+            ],
+            '33 bytes' => [
                 'seed' => 'TsaQqkeQElaT79I11SauRyvY1+vgEtC8imt2t84ZPLtJ',
                 'pub' => 'KypqdqdomMVT4Ksnx+DIxZrhh/8mpRqdvdjBxNRnO9w='
-            )
-        );
+            ]
+        ];
     }
 
     /**
      * @dataProvider signProvider
      */
-    public function testSign($key, $message, $expected)
+    public function testSign(string $key, string $message, string $expected): void
     {
         $obj = new SecretKey(base64_decode($key));
         $actual = $obj->sign(base64_decode($message));
         $this->assertEquals($actual, base64_decode($expected));
     }
 
-    public function signProvider()
+    /**
+     * @return array<string, array<string, string>>
+     */
+    public function signProvider(): array
     {
-        return array(
-            '1st' => array(
+        return [
+            '1st' => [
                 'key' => 'u1mzvCnmyIbgs8RNM9GGGHOWcBdMvD7GIKC0m9zTFcaGXaAPQMbuPdZ1oAnTCfR/1rHTyC3J5n7x+dlFimHM8w==',
                 'msg' => '9tJbOqCDGGU0E4F0hYQR88MExTleIverV4iYgQs1bzn+gKmf7HMO3A==',
                 'sig' => '5a+mePEJlbUzTrqM5uxtVklI4KK+wtxBgkt4jiregPLmqasQ+4kTMu2KQfAJd7IlFYZqH2yM6lZDufXVY6ooBQ==',
-            )
-        );
+            ]
+        ];
     }
 }

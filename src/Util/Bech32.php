@@ -89,9 +89,16 @@ class Bech32
         return chr($version >> 8 & 0xff) . chr($version & 0xff) . $pubKey;
     }
 
-    private const GENERATOR = [0x3b6a57b2, 0x26508e6d, 0x1ea119fa, 0x3d4233dd, 0x2a1462b3];
-    private const CHARSET = 'qpzry9x8gf2tvdw0s3jn54khce6mua7l';
-    private const CHARKEY_KEY = [
+    /** @var array<int, int>  */
+    private static array $generator = [
+        0x3b6a57b2, 0x26508e6d, 0x1ea119fa, 0x3d4233dd, 0x2a1462b3
+    ];
+
+    /** @var string */
+    private static string $charset = 'qpzry9x8gf2tvdw0s3jn54khce6mua7l';
+
+    /** @var array<int, int> */
+    private static array $charkeyKey = [
         -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
         -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
         -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
@@ -115,7 +122,7 @@ class Bech32
             $chk = ($chk & 0x1ffffff) << 5 ^ $values[$i];
 
             for ($j = 0; $j < 5; $j++) {
-                $value = (($top >> $j) & 1) ? self::GENERATOR[$j] : 0;
+                $value = (($top >> $j) & 1) ? self::$generator[$j] : 0;
                 $chk ^= $value;
             }
         }
@@ -229,7 +236,7 @@ class Bech32
 
         $encoded = [];
         for ($i = 0, $n = count($characters); $i < $n; $i++) {
-            $encoded[$i] = self::CHARSET[$characters[$i]];
+            $encoded[$i] = self::$charset[$characters[$i]];
         }
 
         return "{$hrp}1" . implode('', $encoded);
@@ -293,11 +300,12 @@ class Bech32
             throw new Exception('Too short checksum');
         }
 
-        $hrp = pack("C*", ...array_slice($chars, 0, $positionOne));
+//        $hrp = pack("C*", ...array_slice($chars, 0, $positionOne));
+        $hrp = substr($sBech, 0, $positionOne);
 
         $data = [];
         for ($i = $positionOne + 1; $i < $length; $i++) {
-            $data[] = ($chars[$i] & 0x80) ? -1 : self::CHARKEY_KEY[$chars[$i]];
+            $data[] = ($chars[$i] & 0x80) ? -1 : self::$charkeyKey[$chars[$i]];
         }
 
         if (!$this->verifyChecksum($hrp, $data)) {

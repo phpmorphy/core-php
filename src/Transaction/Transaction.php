@@ -44,8 +44,8 @@ class Transaction implements TransactionInterface
     /** @var string */
     private string $bytes;
 
-    /** @var array */
-    private array $fields;
+    /** @var array<int, string> */
+    private array $fields = [];
 
     /**
      * Transaction constructor.
@@ -392,7 +392,7 @@ class Transaction implements TransactionInterface
         }
 
         // unsigned length = 85
-        $hash = hash('sha256', substr(0, 85), true);
+        $hash = hash('sha256', substr($this->bytes, 0, 85), true);
         $tail = (ord($hash[29]) << 16) + (ord($hash[30]) << 8) + ord($hash[31]);
         $mask = 0xffffffff >> (24 - $bits);
 

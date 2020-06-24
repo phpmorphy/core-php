@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Address;
 
 use PHPUnit\Framework\TestCase;
@@ -8,17 +10,19 @@ use UmiTop\UmiCore\Key\PublicKey;
 
 class AddressTest extends TestCase
 {
-    public function testConstructorException()
+    public function testConstructorException(): void
     {
-        method_exists($this, 'expectException')
-            ? $this->expectException('Exception')
-            : $this->setExpectedException('Exception'); // PHPUnit 4
+        if (method_exists($this, 'expectException')) {
+            $this->expectException('Exception');
+        } elseif (method_exists($this, 'setExpectedException')) {
+            $this->setExpectedException('Exception'); // PHPUnit 4
+        }
 
         $bytes = str_repeat('a', Address::LENGTH - 1);
         new Address($bytes);
     }
 
-    public function testVersion()
+    public function testVersion(): void
     {
         $obj = new Address();
 
@@ -28,7 +32,7 @@ class AddressTest extends TestCase
         $this->assertEquals($expected, $actual);
     }
 
-    public function testPrefix()
+    public function testPrefix(): void
     {
         $expected = 'aaa';
 
@@ -38,7 +42,7 @@ class AddressTest extends TestCase
         $this->assertEquals($expected, $actual);
     }
 
-    public function testPublicKey()
+    public function testPublicKey(): void
     {
         $bytes = str_repeat("\xff", PublicKey::LENGTH);
         $expected = new PublicKey($bytes);
@@ -49,7 +53,7 @@ class AddressTest extends TestCase
         $this->assertEquals($expected->toBytes(), $actual->toBytes());
     }
 
-    public function testBech32()
+    public function testBech32(): void
     {
         $expected = 'umi1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqr5zcpj';
         $actual = Address::fromBech32($expected)->toBech32();
@@ -57,16 +61,18 @@ class AddressTest extends TestCase
         $this->assertEquals($expected, $actual);
     }
 
-    public function testBech32Exception()
+    public function testBech32Exception(): void
     {
-        method_exists($this, 'expectException')
-            ? $this->expectException('Exception')
-            : $this->setExpectedException('Exception'); // PHPUnit 4
+        if (method_exists($this, 'expectException')) {
+            $this->expectException('Exception');
+        } elseif (method_exists($this, 'setExpectedException')) {
+            $this->setExpectedException('Exception'); // PHPUnit 4
+        }
 
         Address::fromBech32('umi1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqu5fmc9');
     }
 
-    public function testFromKey()
+    public function testFromKey(): void
     {
         $key = new PublicKey(str_repeat("\xff", PublicKey::LENGTH));
 

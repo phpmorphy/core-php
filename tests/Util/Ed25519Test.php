@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Util;
 
 use PHPUnit\Framework\TestCase;
@@ -7,7 +9,7 @@ use UmiTop\UmiCore\Util\Ed25519;
 
 class Ed25519Test extends TestCase
 {
-    public function testPublicKeyFromSecretKey()
+    public function testPublicKeyFromSecretKey(): void
     {
         $secKey = base64_decode(
             'm8SzWB0okW5pliiqCbAFbMrrh+3z+914V12x0uB19FsqSoVJFNJIHaOO9ktXJvhOP9AY2cmtzZ5KFKbTMvFN2Q=='
@@ -20,17 +22,19 @@ class Ed25519Test extends TestCase
         $this->assertEquals($expected, $actual);
     }
 
-    public function testPublicKeyFromSecretKeyException()
+    public function testPublicKeyFromSecretKeyException(): void
     {
-        method_exists($this, 'expectException')
-            ? $this->expectException('Exception')
-            : $this->setExpectedException('Exception'); // PHPUnit 4
+        if (method_exists($this, 'expectException')) {
+            $this->expectException('Exception');
+        } elseif (method_exists($this, 'setExpectedException')) {
+            $this->setExpectedException('Exception'); // PHPUnit 4
+        }
 
         $obj = new Ed25519();
         $obj->publicKeyFromSecretKey(str_repeat("\x0", Ed25519::SECRET_KEY_BYTES - 1));
     }
 
-    public function testSecretKeyFromSeed()
+    public function testSecretKeyFromSeed(): void
     {
         $seed = base64_decode('xfg17XxfdmQGBaG81VhujlaXeBXohAA+PUGyAm7K6xc=');
         $expected = base64_decode(
@@ -43,17 +47,19 @@ class Ed25519Test extends TestCase
         $this->assertEquals($expected, $actual);
     }
 
-    public function testSecretKeyFromSeedException()
+    public function testSecretKeyFromSeedException(): void
     {
-        method_exists($this, 'expectException')
-            ? $this->expectException('Exception')
-            : $this->setExpectedException('Exception'); // PHPUnit 4
+        if (method_exists($this, 'expectException')) {
+            $this->expectException('Exception');
+        } elseif (method_exists($this, 'setExpectedException')) {
+            $this->setExpectedException('Exception'); // PHPUnit 4
+        }
 
         $obj = new Ed25519();
         $obj->secretKeyFromSeed(str_repeat("\x0", Ed25519::SEED_BYTES - 1));
     }
 
-    public function testSign()
+    public function testSign(): void
     {
         $secKey = base64_decode(
             'SABAmPEL+wRkg0s/ksFVNkNM5lyW7Od0Es0YL9AK1CEjPSbgoTSBCX0RTMtpvZK9oF0yMonrE2wvpQZqDojy4g=='
@@ -69,11 +75,13 @@ class Ed25519Test extends TestCase
         $this->assertEquals($expected, $actual);
     }
 
-    public function testSignException()
+    public function testSignException(): void
     {
-        method_exists($this, 'expectException')
-            ? $this->expectException('Exception')
-            : $this->setExpectedException('Exception'); // PHPUnit 4
+        if (method_exists($this, 'expectException')) {
+            $this->expectException('Exception');
+        } elseif (method_exists($this, 'setExpectedException')) {
+            $this->setExpectedException('Exception'); // PHPUnit 4
+        }
 
         $obj = new Ed25519();
         $obj->sign('', str_repeat("\x0", Ed25519::SECRET_KEY_BYTES - 1));
@@ -82,40 +90,45 @@ class Ed25519Test extends TestCase
     /**
      * @dataProvider signatureProvider
      */
-    public function testVerify($key, $message, $signature, $expected)
+    public function testVerify(string $key, string $message, string $signature, bool $expected): void
     {
         $obj = new Ed25519();
         $actual = $obj->verify($signature, $message, $key);
         $this->assertEquals($expected, $actual);
     }
 
-    public function signatureProvider()
+    /**
+     * @return array<string, array<string, string|bool>>
+     */
+    public function signatureProvider(): array
     {
-        return array(
-            'valid' => array(
+        return [
+            'valid' => [
                 'key' => base64_decode('rWFVo/97AI3lJIFGyp9SZt03SU5H5KP+iPp+qsc9pdE='),
                 'msg' => base64_decode('8NotdiZroXjaKRjU1zI3jYp1lit3wUUn4HL0PsR6YiE6rykxmkfOgA=='),
                 'sig' => base64_decode(
                     '3Bhcv0q6LKjOkL0fkjMyilc0Ul7MzHOh23DTZ6jpeUthlksImbSlnH2bUup4WDa6eEYXMMW3IWCLGJnCFjyjBw=='
                 ),
                 'exp' => true
-            ),
-            'invalid' => array(
+            ],
+            'invalid' => [
                 'key' => base64_decode('9LqLUmP6mOIb/D4JS6tzw190YOOmQ+5HrjwQs9tsbgs='),
                 'msg' => base64_decode('1/YEhyIBT8Xxn/deVuk9UwSHWtHJgVOlrFMI/gROaoVPJfklDlWVVg=='),
                 'sig' => base64_decode(
                     'bwa7kuXNWTZJJUXUJyXSR08wlagl1XxA40DFnTI1oYsJGp/0vc50gVeTr6ma9Ozo9kNrnS/SGx6mGqUOZA1lDA=='
                 ),
                 'exp' => false
-            )
-        );
+            ]
+        ];
     }
 
-    public function testVerifyExceptionSignature()
+    public function testVerifyExceptionSignature(): void
     {
-        method_exists($this, 'expectException')
-            ? $this->expectException('Exception')
-            : $this->setExpectedException('Exception'); // PHPUnit 4
+        if (method_exists($this, 'expectException')) {
+            $this->expectException('Exception');
+        } elseif (method_exists($this, 'setExpectedException')) {
+            $this->setExpectedException('Exception'); // PHPUnit 4
+        }
 
         $sig = str_repeat("\x0", Ed25519::SIGNATURE_BYTES - 1);
         $msg = '';
@@ -124,11 +137,13 @@ class Ed25519Test extends TestCase
         $obj->verify($sig, $msg, $pub);
     }
 
-    public function testVerifyExceptionPublicKey()
+    public function testVerifyExceptionPublicKey(): void
     {
-        method_exists($this, 'expectException')
-            ? $this->expectException('Exception')
-            : $this->setExpectedException('Exception'); // PHPUnit 4
+        if (method_exists($this, 'expectException')) {
+            $this->expectException('Exception');
+        } elseif (method_exists($this, 'setExpectedException')) {
+            $this->setExpectedException('Exception'); // PHPUnit 4
+        }
 
         $sig = str_repeat("\x0", Ed25519::SIGNATURE_BYTES);
         $msg = '';

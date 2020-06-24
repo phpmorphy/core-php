@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Util;
 
 use PHPUnit\Framework\TestCase;
@@ -10,43 +12,48 @@ class Bech32Test extends TestCase
     /**
      * @dataProvider invalidAddressProvider
      */
-    public function testDecodeException($address)
+    public function testDecodeException(string $address): void
     {
-        method_exists($this, 'expectException')
-            ? $this->expectException('Exception')
-            : $this->setExpectedException('Exception'); // PHPUnit 4
+        if (method_exists($this, 'expectException')) {
+            $this->expectException('Exception');
+        } elseif (method_exists($this, 'setExpectedException')) {
+            $this->setExpectedException('Exception'); // PHPUnit 4
+        }
 
         $obj = new Bech32();
         $obj->decode($address);
     }
 
-    public function invalidAddressProvider()
+    /**
+     * @return array<array <string, string>>
+     */
+    public function invalidAddressProvider(): array
     {
-        return array(
-            'invalid checksum' => array(
+        return [
+            'invalid checksum' => [
                 'adr' => 'umi1qq4kruxf'
-            ),
-            'short checksum' => array(
+            ],
+            'short checksum' => [
                 'adr' => 'li1dgmt3'
-            ),
-            'empty HRP' => array(
+            ],
+            'empty HRP' => [
                 'adr' => '1qqpxkr44'
-            ),
-            'separator character' => array(
+            ],
+            'separator character' => [
                 'adr' => 'qqpxkr44'
-            ),
-            'mixed' => array(
+            ],
+            'mixed' => [
                 'adr' => 'Umi1qqnlgn4t'
-            ),
-            'character' => array(
+            ],
+            'character' => [
                 'adr' => "umi1\x0q4kruxd"
-            ),
-            'short' => array(
+            ],
+            'short' => [
                 'adr' => 'umi1'
-            ),
-            'non-zero padding' => array(
+            ],
+            'non-zero padding' => [
                 'adr' => 'tb1qrp33g0q5c5txsp9arysrx4k6zdkfs4nce4xj0gdcccefvpysxf3pjxtptv'
-            )
-        );
+            ]
+        ];
     }
 }

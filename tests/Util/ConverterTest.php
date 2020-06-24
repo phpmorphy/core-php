@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Util;
 
 use PHPUnit\Framework\TestCase;
@@ -10,7 +12,7 @@ class ConverterTest extends TestCase
     /**
      * @dataProvider versionProvider
      */
-    public function testVersionToPrefix($version, $expected)
+    public function testVersionToPrefix(int $version, string $expected): void
     {
         $cnv = new Converter();
         $actual = $cnv->versionToPrefix($version);
@@ -18,73 +20,81 @@ class ConverterTest extends TestCase
         $this->assertEquals($expected, $actual);
     }
 
-    public function versionProvider()
+    /**
+     * @return array<string, array<string, int|string>>
+     */
+    public function versionProvider(): array
     {
-        return array(
-            'genesis' => array(
+        return [
+            'genesis' => [
                 'ver' => 0,
                 'pfx' => 'genesis'
-            ),
-            'aaa' => array(
+            ],
+            'aaa' => [
                 'ver' => 1057,
                 'pfx' => 'aaa'
-            ),
-            'abc' => array(
+            ],
+            'abc' => [
                 'ver' => 1091,
                 'pfx' => 'abc'
-            ),
-            'umi' => array(
+            ],
+            'umi' => [
                 'ver' => 21929,
                 'pfx' => 'umi'
-            ),
-            'zzz' => array(
+            ],
+            'zzz' => [
                 'ver' => 27482,
                 'pfx' => 'zzz'
-            )
-        );
+            ]
+        ];
     }
 
     /**
      * @dataProvider invalidVersionProvider
      */
-    public function testVersionToPrefixException($version)
+    public function testVersionToPrefixException(int $version): void
     {
-        method_exists($this, 'expectException')
-            ? $this->expectException('Exception')
-            : $this->setExpectedException('Exception'); // PHPUnit 4
+        if (method_exists($this, 'expectException')) {
+            $this->expectException('Exception');
+        } elseif (method_exists($this, 'setExpectedException')) {
+            $this->setExpectedException('Exception'); // PHPUnit 4
+        }
 
         $cnv = new Converter();
         $cnv->versionToPrefix($version);
     }
 
-    public function invalidVersionProvider()
+    /**
+     * @return array<string, array<string, int>>
+     */
+    public function invalidVersionProvider(): array
     {
-        return array(
-            'first chr (<1)' => array(
+        return [
+            'first chr (<1)' => [
                 'ver' => (0 << 10) + (1 << 5) + 1
-            ),
-            'first chr (>26)' => array(
+            ],
+            'first chr (>26)' => [
                 'ver' => (27 << 10) + (1 << 5) + 1
-            ),
-            'second chr (<1)' => array(
+            ],
+            'second chr (<1)' => [
                 'ver' => (1 << 10) + (0 << 5) + 1
-            ),
-            'second chr (>26)' => array(
+            ],
+            'second chr (>26)' => [
                 'ver' => (1 << 10) + (27 << 5) + 1
-            ),
-            'third chr (<1)' => array(
+            ],
+            'third chr (<1)' => [
                 'ver' => (1 << 10) + (1 << 5),
-            ),
-            'third chr (>26)' => array(
+            ],
+            'third chr (>26)' => [
                 'ver' => (1 << 10) + (1 << 5) + 27,
-            )
-        );
+            ]
+        ];
     }
 
     /**
      * @dataProvider versionProvider
      */
-    public function testPrefixToVersion($expected, $prefix)
+    public function testPrefixToVersion(int $expected, string $prefix): void
     {
         $cnv = new Converter();
         $actual = $cnv->prefixToVersion($prefix);
@@ -95,34 +105,39 @@ class ConverterTest extends TestCase
     /**
      * @dataProvider invalidPrefixProvider
      */
-    public function testPrefixToVersionException($prefix)
+    public function testPrefixToVersionException(string $prefix): void
     {
-        method_exists($this, 'expectException')
-            ? $this->expectException('Exception')
-            : $this->setExpectedException('Exception'); // PHPUnit 4
+        if (method_exists($this, 'expectException')) {
+            $this->expectException('Exception');
+        } elseif (method_exists($this, 'setExpectedException')) {
+            $this->setExpectedException('Exception'); // PHPUnit 4
+        }
 
         $cnv = new Converter();
         $cnv->prefixToVersion($prefix);
     }
 
-    public function invalidPrefixProvider()
+    /**
+     * @return array<string, array<string, string>>
+     */
+    public function invalidPrefixProvider(): array
     {
-        return array(
-            'ab' => array(
+        return [
+            'ab' => [
                 'pfx' => 'ab'
-            ),
-            'abcd' => array(
+            ],
+            'abcd' => [
                 'pfx' => 'abcd'
-            ),
-            'Abc' => array(
+            ],
+            'Abc' => [
                 'pfx' => 'Abc'
-            ),
-            'aBc' => array(
+            ],
+            'aBc' => [
                 'pfx' => 'aBc'
-            ),
-            'abC' => array(
+            ],
+            'abC' => [
                 'pfx' => 'abC'
-            )
-        );
+            ]
+        ];
     }
 }

@@ -1,13 +1,13 @@
 {
     "name": "umi-top/umi-core-php",
+    "type": "library",
     "description": "UMI Core PHP Library",
+    "homepage": "https://umi.top",
+    "license": "MIT",
     "keywords": [
         "UMI",
         "umi.top"
     ],
-    "type": "library",
-    "license": "MIT",
-    "homepage": "https://umi.top",
     "authors": [
         {
             "name": "UMI",
@@ -35,5 +35,8 @@
         "phpcs": "phpcs",
         "phpmd": "phpmd ./src text cleancode,codesize,controversial,design,naming,unusedcode",
         "lint": ["@phpmd", "@phpcs", "@psalm", "@phpstan"]
+    },
+    "archive": {
+        "exclude": ["*", "!LICENSE", "!README.md", "!composer.json", "!src"]
     }
 }
