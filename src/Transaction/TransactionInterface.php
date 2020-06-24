@@ -54,6 +54,8 @@ interface TransactionInterface
 
     public function setNonce(int $value): TransactionInterface;
 
+    public function hasPowBits(int $bits): bool;
+
     public function getPrefix(): string;
 
     public function setPrefix(string $prefix): TransactionInterface;

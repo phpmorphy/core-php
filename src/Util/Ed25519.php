@@ -30,6 +30,8 @@ use Exception;
 
 /**
  * Class Ed25519
+ * Implementation derived from TweetNaCl version 20140427.
+ * @see http://tweetnacl.cr.yp.to/
  * @package UmiTop\UmiCore\Util
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
  * @SuppressWarnings(PHPMD.ShortMethodName)
@@ -50,22 +52,16 @@ class Ed25519
     public const SIGNATURE_BYTES = 64;
 
     /** @var array<int, int> */
-    private array $gf0;
-
-    /** @var array<int, int> */
-    private array $gf1;
+    private array $D2;
 
     /** @var array<int, int> */
     private array $D;
 
     /** @var array<int, int> */
-    private array $D2;
+    private array $gf0;
 
     /** @var array<int, int> */
-    private array $X;
-
-    /** @var array<int, int> */
-    private array $Y;
+    private array $gf1;
 
     /** @var array<int, int> */
     private array $I;
@@ -73,49 +69,35 @@ class Ed25519
     /** @var array<int, int> */
     private array $L;
 
+    /** @var array<int, int> */
+    private array $X;
+
+    /** @var array<int, int> */
+    private array $Y;
+
     /**
      * Ed25519 constructor.
      * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
      */
     public function __construct()
     {
-        $this->gf0 = array_fill(0, 16, 0);
-        $this->gf1 = [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-        $this->X = [
-            0xd51a,
-            0x8f25,
-            0x2d60,
-            0xc956,
-            0xa7b2,
-            0x9525,
-            0xc760,
-            0x692c,
-            0xdc5c,
-            0xfdd6,
-            0xe231,
-            0xc0a4,
-            0x53fe,
-            0xcd6e,
-            0x36d3,
-            0x2169
-        ];
-        $this->Y = [
-            0x6658,
-            0x6666,
-            0x6666,
-            0x6666,
-            0x6666,
-            0x6666,
-            0x6666,
-            0x6666,
-            0x6666,
-            0x6666,
-            0x6666,
-            0x6666,
-            0x6666,
-            0x6666,
-            0x6666,
-            0x6666
+        $this->D2 = [
+            0xf159,
+            0x26b2,
+            0x9b94,
+            0xebd6,
+            0xb156,
+            0x8283,
+            0x149a,
+            0x00e0,
+            0xd130,
+            0xeef3,
+            0x80f2,
+            0x198e,
+            0xfce7,
+            0x56df,
+            0xd9dc,
+            0x2406
         ];
         $this->D = [
             0x78a3,
@@ -135,24 +117,8 @@ class Ed25519
             0x6cee,
             0x5203
         ];
-        $this->D2 = [
-            0xf159,
-            0x26b2,
-            0x9b94,
-            0xebd6,
-            0xb156,
-            0x8283,
-            0x149a,
-            0x00e0,
-            0xd130,
-            0xeef3,
-            0x80f2,
-            0x198e,
-            0xfce7,
-            0x56df,
-            0xd9dc,
-            0x2406
-        ];
+        $this->gf0 = array_fill(0, 16, 0);
+        $this->gf1 = [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
         $this->I = [
             0xa0b0,
             0x4a0e,
@@ -204,6 +170,42 @@ class Ed25519
             0,
             0,
             0x10
+        ];
+        $this->X = [
+            0xd51a,
+            0x8f25,
+            0x2d60,
+            0xc956,
+            0xa7b2,
+            0x9525,
+            0xc760,
+            0x692c,
+            0xdc5c,
+            0xfdd6,
+            0xe231,
+            0xc0a4,
+            0x53fe,
+            0xcd6e,
+            0x36d3,
+            0x2169
+        ];
+        $this->Y = [
+            0x6658,
+            0x6666,
+            0x6666,
+            0x6666,
+            0x6666,
+            0x6666,
+            0x6666,
+            0x6666,
+            0x6666,
+            0x6666,
+            0x6666,
+            0x6666,
+            0x6666,
+            0x6666,
+            0x6666,
+            0x6666
         ];
     }
 

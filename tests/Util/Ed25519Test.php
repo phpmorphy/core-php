@@ -22,7 +22,9 @@ class Ed25519Test extends TestCase
 
     public function testPublicKeyFromSecretKeyException()
     {
-        $this->expectException('Exception');
+        method_exists($this, 'expectException')
+            ? $this->expectException('Exception')
+            : $this->setExpectedException('Exception'); // PHPUnit 4
 
         $obj = new Ed25519();
         $obj->publicKeyFromSecretKey(str_repeat("\x0", Ed25519::SECRET_KEY_BYTES - 1));
@@ -43,7 +45,9 @@ class Ed25519Test extends TestCase
 
     public function testSecretKeyFromSeedException()
     {
-        $this->expectException('Exception');
+        method_exists($this, 'expectException')
+            ? $this->expectException('Exception')
+            : $this->setExpectedException('Exception'); // PHPUnit 4
 
         $obj = new Ed25519();
         $obj->secretKeyFromSeed(str_repeat("\x0", Ed25519::SEED_BYTES - 1));
@@ -67,7 +71,9 @@ class Ed25519Test extends TestCase
 
     public function testSignException()
     {
-        $this->expectException('Exception');
+        method_exists($this, 'expectException')
+            ? $this->expectException('Exception')
+            : $this->setExpectedException('Exception'); // PHPUnit 4
 
         $obj = new Ed25519();
         $obj->sign('', str_repeat("\x0", Ed25519::SECRET_KEY_BYTES - 1));
@@ -107,7 +113,9 @@ class Ed25519Test extends TestCase
 
     public function testVerifyExceptionSignature()
     {
-        $this->expectException('Exception');
+        method_exists($this, 'expectException')
+            ? $this->expectException('Exception')
+            : $this->setExpectedException('Exception'); // PHPUnit 4
 
         $sig = str_repeat("\x0", Ed25519::SIGNATURE_BYTES - 1);
         $msg = '';
@@ -118,8 +126,9 @@ class Ed25519Test extends TestCase
 
     public function testVerifyExceptionPublicKey()
     {
-        $this->expectException('Exception');
-
+        method_exists($this, 'expectException')
+            ? $this->expectException('Exception')
+            : $this->setExpectedException('Exception'); // PHPUnit 4
 
         $sig = str_repeat("\x0", Ed25519::SIGNATURE_BYTES);
         $msg = '';

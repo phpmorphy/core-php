@@ -61,6 +61,7 @@ class SecretKey implements SecretKeyInterface
      * @param string $seed
      * @return SecretKeyInterface
      * @throws Exception
+     * @codeCoverageIgnore
      */
     public static function fromSeed(string $seed): SecretKeyInterface
     {
@@ -97,6 +98,7 @@ class SecretKey implements SecretKeyInterface
      * @param string $message
      * @return string
      * @throws Exception
+     * @codeCoverageIgnore
      */
     public function sign(string $message): string
     {

@@ -44,6 +44,27 @@ class Transaction implements TransactionInterface
     /** @var string */
     private string $bytes;
 
+    /** @var array */
+    private array $fields;
+
+    /**
+     * Transaction constructor.
+     * @param string|null $bytes (optional)
+     * @throws Exception
+     */
+    public function __construct(string $bytes = null)
+    {
+        if ($bytes === null) {
+            $bytes = str_repeat("\x0", self::LENGTH);
+        }
+
+        if (strlen($bytes) !== self::LENGTH) {
+            throw new Exception('bytes length must be 150 bytes');
+        }
+
+        $this->bytes = $bytes;
+    }
+
     /**
      * @param string $bytes
      * @return TransactionInterface
@@ -70,45 +91,31 @@ class Transaction implements TransactionInterface
         return new Transaction($bytes);
     }
 
-//    public static function fromHex(): TransactionInterface
-//    {
-//        return new Transaction();
-//    }
-//
-//    public function toBase64(): string
-//    {
-//        return '';
-//    }
-//
-//    public function toBaseHex(): string
-//    {
-//        return '';
-//    }
-
     /**
-     * Transaction constructor.
-     * @param string|null $bytes (optional)
-     * @throws Exception
+     * @return int
      */
-    public function __construct(string $bytes = null)
+    public function getFeePercent(): int
     {
-        if ($bytes === null) {
-            $bytes = str_repeat("\x0", self::LENGTH);
-        }
-
-        if (strlen($bytes) !== self::LENGTH) {
-            throw new Exception('bytes length must be 150 bytes');
-        }
-
-        $this->bytes = $bytes;
+        // fee offset - 39
+        return (ord($this->bytes[39]) << 8) + ord($this->bytes[40]);
     }
 
     /**
-     * @return string
+     * @param int $percent
+     * @return TransactionInterface
+     * @throws Exception
      */
-    public function toBytes(): string
+    public function setFeePercent(int $percent): TransactionInterface
     {
-        return $this->bytes;
+        if ($percent < 0 || $percent > 2000) {
+            throw new Exception('incorrect feePercent');
+        }
+
+        // fee offset - 39
+        $this->bytes[39] = chr($percent >> 8 & 0xff);
+        $this->bytes[40] = chr($percent & 0xff);
+
+        return $this;
     }
 
     /**
@@ -120,110 +127,29 @@ class Transaction implements TransactionInterface
     }
 
     /**
-     * @return int
+     * @return string
      */
-    public function getVersion(): int
+    public function getName(): string
     {
-        return ord($this->bytes[0]);
+        // name offset - 41
+        return substr($this->bytes, 42, ord($this->bytes[41]));
     }
 
     /**
-     * @param int $version
-     * @return TransactionInterface
-     */
-    public function setVersion(int $version): TransactionInterface
-    {
-        $this->bytes[0] = chr($version);
-
-        return $this;
-    }
-
-    /**
-     * @return AddressInterface
-     * @throws Exception
-     */
-    public function getSender(): AddressInterface
-    {
-        // sender offset - 1
-        // sender length - 34
-        return new Address(substr($this->bytes, 1, 34));
-    }
-
-    /**
-     * @param AddressInterface $address
-     * @return TransactionInterface
-     */
-    public function setSender(AddressInterface $address): TransactionInterface
-    {
-        // sender offset - 1
-        // sender length - 34
-        $this->bytes = substr_replace($this->bytes, $address->toBytes(), 1, 34);
-
-        return $this;
-    }
-
-    /**
-     * @return AddressInterface
-     * @throws Exception
-     */
-    public function getRecipient(): AddressInterface
-    {
-        // recipient offset - 35
-        // recipient length - 34
-        return new Address(substr($this->bytes, 35, 34));
-    }
-
-    /**
-     * @param AddressInterface $address
-     * @return TransactionInterface
-     */
-    public function setRecipient(AddressInterface $address): TransactionInterface
-    {
-        // recipient offset - 35
-        // recipient length - 34
-        $this->bytes = substr_replace($this->bytes, $address->toBytes(), 35, 34);
-
-        return $this;
-    }
-
-    /**
-     * @return int
-     */
-    public function getValue(): int
-    {
-        // value offset - 69
-        $val = ord($this->bytes[69]) << 56;
-        $val += ord($this->bytes[70]) << 48;
-        $val += ord($this->bytes[71]) << 40;
-        $val += ord($this->bytes[72]) << 32;
-        $val += ord($this->bytes[73]) << 24;
-        $val += ord($this->bytes[74]) << 16;
-        $val += ord($this->bytes[75]) << 8;
-        $val += ord($this->bytes[76]);
-
-        return $val;
-    }
-
-    /**
-     * @param int $value
+     * @param string $name
      * @return TransactionInterface
      * @throws Exception
      */
-    public function setValue(int $value): TransactionInterface
+    public function setName(string $name): TransactionInterface
     {
-        if ($value < 1) {
-            throw new Exception('value must be between 1 and 9223372036854775807');
+        // name offset - 41
+        // name length - 36
+        if (strlen($name) >= 36) {
+            throw new Exception('name too long');
         }
 
-        // value offset - 69
-        $this->bytes[69] = chr($value >> 56 & 0xff);
-        $this->bytes[70] = chr($value >> 48 & 0xff);
-        $this->bytes[71] = chr($value >> 40 & 0xff);
-        $this->bytes[72] = chr($value >> 32 & 0xff);
-        $this->bytes[73] = chr($value >> 24 & 0xff);
-        $this->bytes[74] = chr($value >> 16 & 0xff);
-        $this->bytes[75] = chr($value >> 8 & 0xff);
-        $this->bytes[76] = chr($value & 0xff);
+        $this->bytes[41] = chr(strlen($name));
+        $this->bytes = substr_replace($this->bytes, $name, 42, strlen($name));
 
         return $this;
     }
@@ -296,34 +222,6 @@ class Transaction implements TransactionInterface
     }
 
     /**
-     * @return string
-     */
-    public function getName(): string
-    {
-        // name offset - 41
-        return substr($this->bytes, 42, ord($this->bytes[41]));
-    }
-
-    /**
-     * @param string $name
-     * @return TransactionInterface
-     * @throws Exception
-     */
-    public function setName(string $name): TransactionInterface
-    {
-        // name offset - 41
-        // name length - 36
-        if (strlen($name) >= 36) {
-            throw new Exception('name too long');
-        }
-
-        $this->bytes[41] = chr(strlen($name));
-        $this->bytes = substr_replace($this->bytes, $name, 42, strlen($name));
-
-        return $this;
-    }
-
-    /**
      * @return int
      */
     public function getProfitPercent(): int
@@ -351,28 +249,49 @@ class Transaction implements TransactionInterface
     }
 
     /**
-     * @return int
+     * @return AddressInterface
+     * @throws Exception
      */
-    public function getFeePercent(): int
+    public function getRecipient(): AddressInterface
     {
-        // fee offset - 39
-        return (ord($this->bytes[39]) << 8) + ord($this->bytes[40]);
+        // recipient offset - 35
+        // recipient length - 34
+        return new Address(substr($this->bytes, 35, 34));
     }
 
     /**
-     * @param int $percent
+     * @param AddressInterface $address
      * @return TransactionInterface
+     */
+    public function setRecipient(AddressInterface $address): TransactionInterface
+    {
+        // recipient offset - 35
+        // recipient length - 34
+        $this->bytes = substr_replace($this->bytes, $address->toBytes(), 35, 34);
+
+        return $this;
+    }
+
+    /**
+     * @return AddressInterface
      * @throws Exception
      */
-    public function setFeePercent(int $percent): TransactionInterface
+    public function getSender(): AddressInterface
     {
-        if ($percent < 0 || $percent > 2000) {
-            throw new Exception('incorrect feePercent');
-        }
+        // sender offset - 1
+        // sender length - 34
+        return new Address(substr($this->bytes, 1, 34));
+    }
 
-        // fee offset - 39
-        $this->bytes[39] = chr($percent >> 8 & 0xff);
-        $this->bytes[40] = chr($percent & 0xff);
+    /**
+     * @param AddressInterface $address
+     * @return TransactionInterface
+     */
+    public function setSender(AddressInterface $address): TransactionInterface
+    {
+        // sender offset - 1
+        // sender length - 34
+        $this->bytes = substr_replace($this->bytes, $address->toBytes(), 1, 34);
 
         return $this;
     }
@@ -401,6 +320,86 @@ class Transaction implements TransactionInterface
     }
 
     /**
+     * @return int
+     */
+    public function getValue(): int
+    {
+        // value offset - 69
+        $val = ord($this->bytes[69]) << 56;
+        $val += ord($this->bytes[70]) << 48;
+        $val += ord($this->bytes[71]) << 40;
+        $val += ord($this->bytes[72]) << 32;
+        $val += ord($this->bytes[73]) << 24;
+        $val += ord($this->bytes[74]) << 16;
+        $val += ord($this->bytes[75]) << 8;
+        $val += ord($this->bytes[76]);
+
+        return $val;
+    }
+
+    /**
+     * @param int $value
+     * @return TransactionInterface
+     * @throws Exception
+     */
+    public function setValue(int $value): TransactionInterface
+    {
+        if ($value < 1) {
+            throw new Exception('value must be between 1 and 9223372036854775807');
+        }
+
+        // value offset - 69
+        $this->bytes[69] = chr($value >> 56 & 0xff);
+        $this->bytes[70] = chr($value >> 48 & 0xff);
+        $this->bytes[71] = chr($value >> 40 & 0xff);
+        $this->bytes[72] = chr($value >> 32 & 0xff);
+        $this->bytes[73] = chr($value >> 24 & 0xff);
+        $this->bytes[74] = chr($value >> 16 & 0xff);
+        $this->bytes[75] = chr($value >> 8 & 0xff);
+        $this->bytes[76] = chr($value & 0xff);
+
+        return $this;
+    }
+
+    /**
+     * @return int
+     */
+    public function getVersion(): int
+    {
+        return ord($this->bytes[0]);
+    }
+
+    /**
+     * @param int $version
+     * @return TransactionInterface
+     */
+    public function setVersion(int $version): TransactionInterface
+    {
+        $this->bytes[0] = chr($version);
+
+        return $this;
+    }
+
+    /**
+     * @param int $bits
+     * @return bool
+     * @throws Exception
+     */
+    public function hasPowBits(int $bits): bool
+    {
+        if ($bits < 0 || $bits > 24) {
+            throw new Exception('bits value must be between 0 and 24');
+        }
+
+        // unsigned length = 85
+        $hash = hash('sha256', substr(0, 85), true);
+        $tail = (ord($hash[29]) << 16) + (ord($hash[30]) << 8) + ord($hash[31]);
+        $mask = 0xffffffff >> (24 - $bits);
+
+        return (($tail & $mask) === 0);
+    }
+
+    /**
      * @param SecretKeyInterface $secretKey
      * @return TransactionInterface
      */
@@ -408,6 +407,14 @@ class Transaction implements TransactionInterface
     {
         // unsigned length = 85
         return $this->setSignature($secretKey->sign(substr($this->bytes, 0, 85)));
+    }
+
+    /**
+     * @return string
+     */
+    public function toBytes(): string
+    {
+        return $this->bytes;
     }
 
     /**

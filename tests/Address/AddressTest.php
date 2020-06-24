@@ -2,45 +2,38 @@
 
 namespace Tests\Address;
 
-use Exception;
 use PHPUnit\Framework\TestCase;
 use UmiTop\UmiCore\Address\Address;
 use UmiTop\UmiCore\Key\PublicKey;
 
 class AddressTest extends TestCase
 {
-    public function testFromBytes()
+    public function testConstructorException()
     {
-        $bytes = str_repeat('a', Address::LENGTH);
-        $address = Address::fromBytes($bytes);
-
-        $this->assertEquals($bytes, $address->toBytes());
-    }
-
-    public function testFromBytesException()
-    {
-        $this->expectException('Exception');
+        method_exists($this, 'expectException')
+            ? $this->expectException('Exception')
+            : $this->setExpectedException('Exception'); // PHPUnit 4
 
         $bytes = str_repeat('a', Address::LENGTH - 1);
-        Address::fromBytes($bytes);
+        new Address($bytes);
     }
 
     public function testVersion()
     {
-        $bytes = str_repeat("\x0", Address::LENGTH);
+        $obj = new Address();
 
         $expected = 1057; // 'aaa'
-        $actual = Address::fromBytes($bytes)->setVersion($expected)->getVersion();
+        $actual = $obj->setVersion($expected)->getVersion();
 
         $this->assertEquals($expected, $actual);
     }
 
     public function testPrefix()
     {
-        $bytes = str_repeat("\x0", Address::LENGTH);
-
         $expected = 'aaa';
-        $actual = Address::fromBytes($bytes)->setPrefix($expected)->getPrefix();
+
+        $obj = new Address();
+        $actual = $obj->setPrefix($expected)->getPrefix();
 
         $this->assertEquals($expected, $actual);
     }
@@ -50,8 +43,8 @@ class AddressTest extends TestCase
         $bytes = str_repeat("\xff", PublicKey::LENGTH);
         $expected = new PublicKey($bytes);
 
-        $bytes = str_repeat("\x0", Address::LENGTH);
-        $actual = Address::fromBytes($bytes)->setPublicKey($expected)->getPublicKey();
+        $obj = new Address();
+        $actual = $obj->setPublicKey($expected)->getPublicKey();
 
         $this->assertEquals($expected->toBytes(), $actual->toBytes());
     }
@@ -66,7 +59,9 @@ class AddressTest extends TestCase
 
     public function testBech32Exception()
     {
-        $this->expectException('Exception');
+        method_exists($this, 'expectException')
+            ? $this->expectException('Exception')
+            : $this->setExpectedException('Exception'); // PHPUnit 4
 
         Address::fromBech32('umi1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqu5fmc9');
     }

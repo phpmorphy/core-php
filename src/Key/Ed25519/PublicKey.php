@@ -77,6 +77,7 @@ class PublicKey implements PublicKeyInterface
      * @param string $message
      * @return bool
      * @throws Exception
+     * @codeCoverageIgnore
      */
     public function verifySignature(string $signature, string $message): bool
     {

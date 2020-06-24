@@ -12,7 +12,9 @@ class Bech32Test extends TestCase
      */
     public function testDecodeException($address)
     {
-        $this->expectException('Exception');
+        method_exists($this, 'expectException')
+            ? $this->expectException('Exception')
+            : $this->setExpectedException('Exception'); // PHPUnit 4
 
         $obj = new Bech32();
         $obj->decode($address);

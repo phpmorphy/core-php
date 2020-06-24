@@ -49,7 +49,9 @@ class ConverterTest extends TestCase
      */
     public function testVersionToPrefixException($version)
     {
-        $this->expectException('Exception');
+        method_exists($this, 'expectException')
+            ? $this->expectException('Exception')
+            : $this->setExpectedException('Exception'); // PHPUnit 4
 
         $cnv = new Converter();
         $cnv->versionToPrefix($version);
@@ -95,7 +97,9 @@ class ConverterTest extends TestCase
      */
     public function testPrefixToVersionException($prefix)
     {
-        $this->expectException('Exception');
+        method_exists($this, 'expectException')
+            ? $this->expectException('Exception')
+            : $this->setExpectedException('Exception'); // PHPUnit 4
 
         $cnv = new Converter();
         $cnv->prefixToVersion($prefix);
