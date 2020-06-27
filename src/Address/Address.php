@@ -42,7 +42,7 @@ class Address implements AddressInterface
     public const LENGTH = 34;
 
     /** @var string */
-    private string $bytes;
+    private $bytes;
 
     /**
      * Address constructor.

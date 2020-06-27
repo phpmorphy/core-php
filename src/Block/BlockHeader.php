@@ -46,7 +46,7 @@ class BlockHeader implements BlockHeaderInterface
     public const LENGTH = 167;
 
     /** @var string */
-    private string $bytes;
+    private $bytes;
 
     /**
      * BlockHeader constructor.

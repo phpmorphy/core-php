@@ -16,6 +16,7 @@ if [ "${PHP_VER}" == "7.3" ] || [ "${PHP_VER}" == "7.2" ] || [ "${PHP_VER}" == "
   while IFS= read -r -d '' file; do
     sed -i -e 's/private string \$/private \$/g' "$file"
     sed -i -e 's/private array \$/private \$/g' "$file"
+    sed -i -e 's/private BlockHeaderInterface \$/private \$/g' "$file"
   done < <(find "$(pwd)/src" "$(pwd)/tests" -type f -name '*.php' -print0)
 fi
 
@@ -92,7 +93,7 @@ if [ "${PHP_VER}" == "5.3" ]; then
     sed -i -E 's/, 0\]/, 0\)/' "$file"
     sed -i -e 's/ \[$/ array\(/' "$file"
     sed -i -E 's/ \]/ \)/' "$file"
-    sed -i -e 's/ \[\$hrp/ array\(\$hrp/g' "$file"
+#    sed -i -e 's/ \[\$hrp/ array\(\$hrp/g' "$file"
     sed -i -E 's/6\)\];/6\)\);/g' "$file"
   done < <(find "$(pwd)/src" "$(pwd)/tests" -type f -name '*.php' -print0)
 fi

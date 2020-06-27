@@ -89,15 +89,15 @@ class Bech32
     }
 
     /** @var array<int, int>  */
-    private array $generator = [
+    private $generator = [
         0x3b6a57b2, 0x26508e6d, 0x1ea119fa, 0x3d4233dd, 0x2a1462b3
     ];
 
     /** @var string */
-    private string $charset = 'qpzry9x8gf2tvdw0s3jn54khce6mua7l';
+    private $charset = 'qpzry9x8gf2tvdw0s3jn54khce6mua7l';
 
     /** @var array<int, int> */
-    private array $charkeyKey = [
+    private $charkeyKey = [
         -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
         -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
         -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,

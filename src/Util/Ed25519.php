@@ -52,28 +52,28 @@ class Ed25519
     public const SIGNATURE_BYTES = 64;
 
     /** @var array<int, int> */
-    private array $D2;
+    private $D2;
 
     /** @var array<int, int> */
-    private array $D;
+    private $D;
 
     /** @var array<int, int> */
-    private array $gf0;
+    private $gf0;
 
     /** @var array<int, int> */
-    private array $gf1;
+    private $gf1;
 
     /** @var array<int, int> */
-    private array $I;
+    private $I;
 
     /** @var array<int, int> */
-    private array $L;
+    private $L;
 
     /** @var array<int, int> */
-    private array $X;
+    private $X;
 
     /** @var array<int, int> */
-    private array $Y;
+    private $Y;
 
     /**
      * Ed25519 constructor.

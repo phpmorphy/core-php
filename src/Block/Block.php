@@ -38,10 +38,10 @@ use UmiTop\UmiCore\Transaction\TransactionInterface;
 class Block implements BlockInterface
 {
     /** @var array<int, string> */
-    private array $trxs;
+    private $trxs;
 
     /** @var BlockHeaderInterface */
-    private BlockHeaderInterface $header;
+    private $header;
 
     /**
      * Block constructor.
@@ -161,25 +161,25 @@ class Block implements BlockInterface
         $root = [];
 
         // step 1
-        $m = $txCount - 1;
-        $j = ceil($txCount / 2);
-        for ($i = 0; $i < $j; $i++) {
-            $k1 = $i * 2;
-            $k2 = min(($k1 + 1), $m);
-            $sum = $this->getTransaction($k1)->getHash() . $this->getTransaction($k2)->getHash();
+        $lst = $txCount - 1;
+        $nxt = ceil($txCount / 2);
+        for ($i = 0; $i < $nxt; $i++) {
+            $idx1 = $i * 2;
+            $idx2 = min(($idx1 + 1), $lst);
+            $sum = $this->getTransaction($idx1)->getHash() . $this->getTransaction($idx2)->getHash();
             $root[$i] = hash('sha256', $sum, true);
         }
 
         // step 2
-        while ($j > 1) {
-            $m = $j - 1;
-            $j = ceil($j / 2);
-            for ($i = 0; $i < $j; $i++) {
-                $k1 = $i * 2;
-                $k2 = min(($k1 + 1), $m);
-                $root[$i] = hash('sha256', ($root[$k1] . $root[$k2]), true);
+        while ($nxt > 1) {
+            $lst = (int)($nxt - 1);
+            $nxt = (int)ceil($nxt / 2);
+            for ($i = 0; $i < $nxt; $i++) {
+                $idx1 = $i * 2;
+                $idx2 = min(($idx1 + 1), $lst);
+                $root[$i] = hash('sha256', ($root[$idx1] . $root[$idx2]), true);
             }
-        };
+        }
 
         return $root[0];
     }
@@ -286,15 +286,6 @@ class Block implements BlockInterface
         }
 
         return new Transaction($this->trxs[$index]);
-    }
-
-    /**
-     * @param integer $count
-     * @return BlockHeaderInterface
-     */
-    public function setTransactionCount(int $count): BlockHeaderInterface
-    {
-        throw new Exception('forbidden');
     }
 
     /**

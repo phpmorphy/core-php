@@ -113,19 +113,6 @@ class BlockTest extends TestCase
         $this->assertEquals($expected, $actual);
     }
 
-    public function testTransactionCountException(): void
-    {
-        if (method_exists($this, 'expectException')) {
-            $this->expectException('Exception');
-        } elseif (method_exists($this, 'setExpectedException')) {
-            $this->setExpectedException('Exception'); // PHPUnit 4
-        }
-
-        $obj = new Block();
-        $this->assertEquals(0, $obj->getTransactionCount());
-        $obj->setTransactionCount(1);
-    }
-
     public function testTransaction(): void
     {
         $obj = new Block();
@@ -190,7 +177,7 @@ class BlockTest extends TestCase
     }
 
     /**
-     * @return array<string, array<string, string>>
+     * @return array<int|string, array<string, string|int>>
      */
     public function merkleProvider(): array
     {

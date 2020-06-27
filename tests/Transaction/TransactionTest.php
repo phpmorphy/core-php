@@ -230,7 +230,7 @@ class TransactionTest extends TestCase
     }
 
     /**
-     * @return array<string, array<string, string>>
+     * @return array<int|string, array<string, int|string>>
      */
     public function bytesProvider(): array
     {

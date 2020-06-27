@@ -39,7 +39,7 @@ class PublicKey implements PublicKeyInterface
     public const LENGTH = Ed25519::PUBLIC_KEY_BYTES;
 
     /** @var string */
-    private string $bytes;
+    private $bytes;
 
     /**
      * PublicKey constructor.

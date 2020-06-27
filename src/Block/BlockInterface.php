@@ -27,15 +27,51 @@ declare(strict_types=1);
 namespace UmiTop\UmiCore\Block;
 
 use UmiTop\UmiCore\Transaction\TransactionInterface;
+use UmiTop\UmiCore\Key\PublicKeyInterface;
+use UmiTop\UmiCore\Key\SecretKeyInterface;
 
 /**
  * Interface BlockInterface
  */
-interface BlockInterface extends BlockHeaderInterface
+interface BlockInterface
 {
     public function appendTransaction(TransactionInterface $transaction): BlockInterface;
 
     public function calculateMerkleRoot(): string;
 
     public function getTransaction(int $index): TransactionInterface;
+
+    public function getHash(): string;
+
+    public function getMerkleRootHash(): string;
+
+    public function setMerkleRootHash(string $hash): BlockInterface;
+
+    public function getPreviousBlockHash(): string;
+
+    public function setPreviousBlockHash(string $hash): BlockInterface;
+
+    public function getPublicKey(): PublicKeyInterface;
+
+    public function setPublicKey(PublicKeyInterface $publicKey): BlockInterface;
+
+    public function getSignature(): string;
+
+    public function setSignature(string $signature): BlockInterface;
+
+    public function getTimestamp(): int;
+
+    public function setTimestamp(int $epoch): BlockInterface;
+
+    public function getTransactionCount(): int;
+
+    public function getVersion(): int;
+
+    public function setVersion(int $version): BlockInterface;
+
+    public function sign(SecretKeyInterface $secretKey): BlockInterface;
+
+    public function toBytes(): string;
+
+    public function verify(): bool;
 }

@@ -40,7 +40,7 @@ class SecretKey implements SecretKeyInterface
     public const LENGTH = Ed25519::SECRET_KEY_BYTES;
 
     /** @var string */
-    private string $bytes;
+    private $bytes;
 
     /**
      * SecretKey constructor.

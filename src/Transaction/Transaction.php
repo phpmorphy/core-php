@@ -41,10 +41,7 @@ class Transaction implements TransactionInterface
     public const LENGTH = 150;
 
     /** @var string */
-    private string $bytes;
-
-    /** @var array<int, string> */
-    private array $fields = [];
+    private $bytes;
 
     /**
      * Transaction constructor.
