@@ -1,14 +1,6 @@
 #!/usr/bin/env bash
 
-if [ $# -gt 0 ]; then
-  PHP_VER="${1}"
-else
-  if [[ -z "${TRAVIS_PHP_VERSION}" ]]; then
-    PHP_VER="7.4"
-  else
-    PHP_VER="${TRAVIS_PHP_VERSION:0:3}"
-  fi
-fi
+PHP_VER="${1:0:3}"
 
 echo "${PHP_VER}"
 
