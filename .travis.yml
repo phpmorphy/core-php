@@ -26,14 +26,11 @@ jobs:
     - php: 5.5
       dist: trusty
 
-before_install:
-  - ./build.sh
+before_install: ./build.sh
 
-install:
-  - composer install
+install: composer install
 
-after_success:
-  - php vendor/bin/php-coveralls -x clover.xml -v
+after_success: php vendor/bin/php-coveralls -x clover.xml -v
 
 notifications:
   webhooks: https://coveralls.io/webhook

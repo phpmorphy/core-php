@@ -10,6 +10,8 @@ else
   fi
 fi
 
+echo "${PHP_VER}"
+
 if [ "${PHP_VER}" == "7.3" ] || [ "${PHP_VER}" == "7.2" ] || [ "${PHP_VER}" == "7.1" ] || [ "${PHP_VER}" == "7.0" ] || [ "${PHP_VER}" == "5.6" ] || [ "${PHP_VER}" == "5.5" ] || [ "${PHP_VER}" == "5.4" ] || [ "${PHP_VER}" == "5.3" ]; then
   while IFS= read -r -d '' file; do
     sed -i -e 's/private string \$/private \$/g' "$file"
