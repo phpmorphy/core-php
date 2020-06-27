@@ -1,15 +1,23 @@
 #!/usr/bin/env bash
 
-if [ "$1" == "php7.3" ] || [ "$1" == "php7.2" ] || [ "$1" == "php7.1" ] || [ "$1" == "php7.0" ] || [ "$1" == "php5.6" ] || [ "$1" == "php5.5" ] || [ "$1" == "php5.4" ] || [ "$1" == "php5.3" ]; then
+if [ $# -gt 0 ]; then
+  PHP_VER="${1}"
+else
+  if [[ -z "${TRAVIS_PHP_VERSION}" ]]; then
+    PHP_VER="7.4"
+  else
+    PHP_VER="${TRAVIS_PHP_VERSION:0:3}"
+  fi
+fi
+
+if [ "${PHP_VER}" == "7.3" ] || [ "${PHP_VER}" == "7.2" ] || [ "${PHP_VER}" == "7.1" ] || [ "${PHP_VER}" == "7.0" ] || [ "${PHP_VER}" == "5.6" ] || [ "${PHP_VER}" == "5.5" ] || [ "${PHP_VER}" == "5.4" ] || [ "${PHP_VER}" == "5.3" ]; then
   while IFS= read -r -d '' file; do
     sed -i -e 's/private string \$/private \$/g' "$file"
     sed -i -e 's/private array \$/private \$/g' "$file"
-#    sed -i -e 's/private static array \$/private static \$/g' "$file"
-#    sed -i -e 's/private static string \$/private static \$/g' "$file"
   done < <(find "$(pwd)/src" "$(pwd)/tests" -type f -name '*.php' -print0)
 fi
 
-if [ "$1" == "php7.0" ] || [ "$1" == "php5.6" ] || [ "$1" == "php5.5" ] || [ "$1" == "php5.4" ] || [ "$1" == "php5.3" ]; then
+if [ "${PHP_VER}" == "7.0" ] || [ "${PHP_VER}" == "5.6" ] || [ "${PHP_VER}" == "5.5" ] || [ "${PHP_VER}" == "5.4" ] || [ "${PHP_VER}" == "5.3" ]; then
   while IFS= read -r -d '' file; do
     sed -i -e 's/public const/const/g' "$file"
     sed -i -e 's/private const/const/g' "$file"
@@ -17,7 +25,7 @@ if [ "$1" == "php7.0" ] || [ "$1" == "php5.6" ] || [ "$1" == "php5.5" ] || [ "$1
   done < <(find "$(pwd)/src" "$(pwd)/tests" -type f -name '*.php' -print0)
 fi
 
-if [ "$1" == "php5.6" ] || [ "$1" == "php5.5" ] || [ "$1" == "php5.4" ] || [ "$1" == "php5.3" ]; then
+if [ "${PHP_VER}" == "5.6" ] || [ "${PHP_VER}" == "5.5" ] || [ "${PHP_VER}" == "5.4" ] || [ "${PHP_VER}" == "5.3" ]; then
   while IFS= read -r -d '' file; do
     # strict
     sed -i -e '/^declare(strict_types=1)/d' "$file"
@@ -38,40 +46,40 @@ if [ "$1" == "php5.6" ] || [ "$1" == "php5.5" ] || [ "$1" == "php5.4" ] || [ "$1
   done < <(find "$(pwd)/src" "$(pwd)/tests" -type f -name '*.php' -print0)
 fi
 
-if [ "$1" == "php7.3" ]; then
+if [ "${PHP_VER}" == "7.3" ]; then
   sed -i -e 's/"php-64bit": ">=7.4"/"php-64bit": ">=7.3"/' "$(pwd)/composer.json"
 fi
 
-if [ "$1" == "php7.2" ]; then
+if [ "${PHP_VER}" == "7.2" ]; then
   sed -i -e 's/"php-64bit": ">=7.4"/"php-64bit": ">=7.2"/' "$(pwd)/composer.json"
 fi
 
-if [ "$1" == "php7.1" ]; then
+if [ "${PHP_VER}" == "7.1" ]; then
   sed -i -e 's/"php-64bit": ">=7.4"/"php-64bit": ">=7.1"/' "$(pwd)/composer.json"
 fi
 
-if [ "$1" == "php7.0" ]; then
+if [ "${PHP_VER}" == "7.0" ]; then
   sed -i -e 's/"php-64bit": ">=7.4"/"php-64bit": ">=7.0"/' "$(pwd)/composer.json"
 fi
 
-if [ "$1" == "php5.6" ]; then
+if [ "${PHP_VER}" == "5.6" ]; then
   sed -i -e 's/"php-64bit": ">=7.4"/"php-64bit": ">=5.6"/' "$(pwd)/composer.json"
 fi
 
-if [ "$1" == "php5.5" ]; then
+if [ "${PHP_VER}" == "5.5" ]; then
   sed -i -e 's/"php-64bit": ">=7.4"/"php-64bit": ">=5.5"/' "$(pwd)/composer.json"
 fi
 
-if [ "$1" == "php5.4" ]; then
+if [ "${PHP_VER}" == "5.4" ]; then
   sed -i -e 's/"php-64bit": ">=7.4"/"php-64bit": ">=5.4"/' "$(pwd)/composer.json"
 fi
 
-if [ "$1" == "php5.4" ] || [ "$1" == "php5.3" ]; then
+if [ "${PHP_VER}" == "5.4" ] || [ "${PHP_VER}" == "5.3" ]; then
   mkdir ~/.composer
   echo '{"config":{"disable-tls":true,"secure-http":false}}' >~/.composer/config.json
 fi
 
-if [ "$1" == "php5.3" ]; then
+if [ "${PHP_VER}" == "5.3" ]; then
   sed -i -e 's/"php-64bit": ">=7.4"/"php-64bit": ">=5.3"/' "$(pwd)/composer.json"
 
   while IFS= read -r -d '' file; do

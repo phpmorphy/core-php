@@ -27,7 +27,7 @@ jobs:
       dist: trusty
 
 before_install:
-  - build.sh php${TRAVIS_PHP_VERSION}
+  - ./build.sh
 
 install:
   - composer install
