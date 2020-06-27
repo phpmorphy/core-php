@@ -86,8 +86,3 @@ if [ "$1" == "php5.3" ]; then
     sed -i -E 's/6\)\];/6\)\);/g' "$file"
   done < <(find "$(pwd)/src" "$(pwd)/tests" -type f -name '*.php' -print0)
 fi
-
-php composer.phar install
-php composer.phar check-platform-reqs
-#php composer.phar dump-autoload
-php phpunit.phar

@@ -26,9 +26,14 @@ jobs:
     - php: 5.5
       dist: trusty
 
-install: composer install
+before_install:
+  - build.sh php${TRAVIS_PHP_VERSION}
 
-after_success: php vendor/bin/php-coveralls -x clover.xml -v
+install:
+  - composer install
+
+after_success:
+  - php vendor/bin/php-coveralls -x clover.xml -v
 
 notifications:
   webhooks: https://coveralls.io/webhook
