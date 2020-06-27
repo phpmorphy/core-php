@@ -197,19 +197,6 @@ class TransactionTest extends TestCase
         $this->assertTrue($actual);
     }
 
-    public function testSignException(): void
-    {
-        if (method_exists($this, 'expectException')) {
-            $this->expectException('Exception');
-        } elseif (method_exists($this, 'setExpectedException')) {
-            $this->setExpectedException('Exception'); // PHPUnit 4
-        }
-
-        $key = SecretKey::fromSeed(str_repeat("\x0", 32));
-        $obj = new Transaction();
-        $obj->sign($key, -1);
-    }
-
     public function testVerify(): void
     {
         $sig = base64_decode(

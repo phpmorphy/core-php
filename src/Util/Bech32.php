@@ -255,8 +255,10 @@ class Bech32
             throw new Exception("Bech32 string is too short");
         }
 
-        /** @var array<int, int> $chars */
-        $chars = array_values(unpack('C*', $sBech));
+        $chars = [];
+        for ($i = 0; $i < $length; $i++) {
+            $chars[] = ord($sBech[$i]);
+        }
 
         $haveUpper = false;
         $haveLower = false;

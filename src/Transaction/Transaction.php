@@ -403,17 +403,11 @@ class Transaction implements TransactionInterface
      * @param SecretKeyInterface $secretKey
      * @param integer $powBits
      * @return TransactionInterface
-     * @throws Exception
      */
     public function sign(SecretKeyInterface $secretKey, int $powBits = null): TransactionInterface
     {
-        if ($powBits === null) {
-            $powBits = 0;
-        }
-
-        if ($powBits < 0 || $powBits > 24) {
-            throw new Exception('incorrect powBits');
-        }
+        $powBits = max((int)$powBits, 0);
+        $powBits = min($powBits, 24);
 
         $mask = 0xffffff >> (24 - $powBits);
         do {
