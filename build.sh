@@ -11,11 +11,9 @@ else
 fi
 
 echo "${PHP_VER}"
-echo "$(pwd)"
 
 if [ "${PHP_VER}" == "7.3" ] || [ "${PHP_VER}" == "7.2" ] || [ "${PHP_VER}" == "7.1" ] || [ "${PHP_VER}" == "7.0" ] || [ "${PHP_VER}" == "5.6" ] || [ "${PHP_VER}" == "5.5" ] || [ "${PHP_VER}" == "5.4" ] || [ "${PHP_VER}" == "5.3" ]; then
   while IFS= read -r -d '' file; do
-    echo "$file"
     sed -i -e 's/private string \$/private \$/g' "$file"
     sed -i -e 's/private array \$/private \$/g' "$file"
   done < <(find "$(pwd)/src" "$(pwd)/tests" -type f -name '*.php' -print0)
@@ -23,7 +21,6 @@ fi
 
 if [ "${PHP_VER}" == "7.0" ] || [ "${PHP_VER}" == "5.6" ] || [ "${PHP_VER}" == "5.5" ] || [ "${PHP_VER}" == "5.4" ] || [ "${PHP_VER}" == "5.3" ]; then
   while IFS= read -r -d '' file; do
-    echo "$file"
     sed -i -e 's/public const/const/g' "$file"
     sed -i -e 's/private const/const/g' "$file"
     sed -i -e 's/): void/)/g' "$file"
@@ -32,7 +29,6 @@ fi
 
 if [ "${PHP_VER}" == "5.6" ] || [ "${PHP_VER}" == "5.5" ] || [ "${PHP_VER}" == "5.4" ] || [ "${PHP_VER}" == "5.3" ]; then
   while IFS= read -r -d '' file; do
-    echo "$file"
     # strict
     sed -i -e '/^declare(strict_types=1)/d' "$file"
     # return types
