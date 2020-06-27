@@ -33,7 +33,6 @@ use UmiTop\UmiCore\Util\Ed25519;
 
 /**
  * Class SecretKey
- * @package UmiTop\UmiCore\Key\Ed25519
  */
 class SecretKey implements SecretKeyInterface
 {
@@ -45,8 +44,8 @@ class SecretKey implements SecretKeyInterface
 
     /**
      * SecretKey constructor.
-     * @param string $bytes
-     * @throws Exception
+     * @param string $bytes Байты.
+     * @throws Exception еуые.
      */
     public function __construct(string $bytes)
     {
@@ -58,9 +57,8 @@ class SecretKey implements SecretKeyInterface
     }
 
     /**
-     * @param string $seed
+     * @param string $seed Сид.
      * @return SecretKeyInterface
-     * @throws Exception
      * @codeCoverageIgnore
      */
     public static function fromSeed(string $seed): SecretKeyInterface
@@ -69,7 +67,7 @@ class SecretKey implements SecretKeyInterface
             $seed = hash('sha256', $seed, true);
         }
 
-        if (function_exists('sodium_crypto_sign_seed_keypair')) {
+        if (function_exists('sodium_crypto_sign_seed_keypair') === true) {
             $bytes = sodium_crypto_sign_secretkey(
                 sodium_crypto_sign_seed_keypair($seed)
             );
@@ -85,7 +83,6 @@ class SecretKey implements SecretKeyInterface
 
     /**
      * @return PublicKeyInterface
-     * @throws Exception
      */
     public function getPublicKey(): PublicKeyInterface
     {
@@ -95,14 +92,13 @@ class SecretKey implements SecretKeyInterface
     }
 
     /**
-     * @param string $message
+     * @param string $message Строка, для которой требуется создать подпись.
      * @return string
-     * @throws Exception
      * @codeCoverageIgnore
      */
     public function sign(string $message): string
     {
-        if (function_exists('sodium_crypto_sign_detached')) {
+        if (function_exists('sodium_crypto_sign_detached') === true) {
             return sodium_crypto_sign_detached($message, $this->bytes);
         }
 

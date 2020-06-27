@@ -11,14 +11,6 @@ use UmiTop\UmiCore\Key\SecretKey;
 
 class TransactionTest extends TestCase
 {
-//    public function testConstructor()
-//    {
-//        $expected = str_repeat("\x0", Transaction::LENGTH);
-//        $actual = new Transaction();
-//
-//        $this->assertEquals($expected, $actual->toBytes());
-//    }
-
     public function testFromBytes(): void
     {
         $bytes = str_repeat("\x0", Transaction::LENGTH);
@@ -193,14 +185,24 @@ class TransactionTest extends TestCase
 
     public function testSign(): void
     {
-        $expected = base64_decode(
-            'u04f+NK+ib+hQU7g/HYeQr9BjZbgZgOJidoW3YhNYM8ZI48Z8vT4kvbdqH9V2iX4z8XLr9Ay3x69eQSB6/KlCw=='
-        );
         $key = SecretKey::fromSeed(str_repeat("\x0", 32));
+        $adr = Address::fromKey($key);
         $trx = new Transaction();
-        $actual = $trx->sign($key)->getSignature();
+        $actual = $trx->setSender($adr)->sign($key)->verify();
+        $this->assertTrue($actual);
+    }
 
-        $this->assertEquals($expected, $actual);
+    public function testSignException(): void
+    {
+        if (method_exists($this, 'expectException')) {
+            $this->expectException('Exception');
+        } elseif (method_exists($this, 'setExpectedException')) {
+            $this->setExpectedException('Exception'); // PHPUnit 4
+        }
+
+        $key = SecretKey::fromSeed(str_repeat("\x0", 32));
+        $obj = new Transaction();
+        $obj->sign($key, -1);
     }
 
     public function testVerify(): void
@@ -210,7 +212,59 @@ class TransactionTest extends TestCase
         );
         $trx = new Transaction();
         $actual = $trx->setSignature($sig)->verify();
-
         $this->assertFalse($actual);
+    }
+
+    /**
+     * @dataProvider bytesProvider
+     */
+    public function testGetPowBits(string $bytes, int $powBits): void
+    {
+        $obj = new Transaction(base64_decode($bytes));
+        $this->assertEquals($powBits, $obj->getPowBits());
+    }
+
+    /**
+     * @return array<string, array<string, string>>
+     */
+    public function bytesProvider(): array
+    {
+        return [
+            '24' => [
+                'bytes' =>
+                    'AQQhO2onvM62pC1io6jQKm8Nc2UyFXcd4kOmOsBIoYtZ2ikIQjtqJ7zOtqQtYqOo0CpvDXN' .
+                    'lMhV3HeJDpjrASKGLWdopAAAAAAdbzRXQ8islGAiVgitiax/TuTl1q+G/4ClbtUqUGB32Ii' .
+                    'bsC3SwmcFzGo5Yja+xzddRrKSSXYzAWCtqRSrfIRaEPLlytLz6D6jkGgYA',
+                'bits' => 24
+            ],
+            '20' => [
+                'bytes' =>
+                    'AQQhO2onvM62pC1io6jQKm8Nc2UyFXcd4kOmOsBIoYtZ2ikIQjtqJ7zOtqQtYqOo0CpvDXN' .
+                    'lMhV3HeJDpjrASKGLWdopAAAAAAdbzRUl2AolGAlxvYEyT6/5aQt7V01G7tUu7quGMH2N3G' .
+                    'cI3TFleG4kuTsO7/dAgnmOFv8Jtd3H6hoTJwebaADPUZrmTi1xr314LAMA',
+                'bits' => 20
+            ],
+            '15' => [
+                'bytes' =>
+                    'AQQhO2onvM62pC1io6jQKm8Nc2UyFXcd4kOmOsBIoYtZ2ikIQjtqJ7zOtqQtYqOo0CpvDXN' .
+                    'lMhV3HeJDpjrASKGLWdopAAAAAAdbzRUAqk0lGAmeamcwzijOBt5NfbdCwj813UZ4wgbogs' .
+                    'wZHBHzzm0zy1yQeNUmieTCE0ZrM5l8aZ5PhgrP9DuhvxiQWaicswd/oAgA',
+                'bits' => 15
+            ],
+            '8' => [
+                'bytes' =>
+                    'AQQhO2onvM62pC1io6jQKm8Nc2UyFXcd4kOmOsBIoYtZ2ikIQjtqJ7zOtqQtYqOo0CpvDXN' .
+                    'lMhV3HeJDpjrASKGLWdopAAAAAAdbzRUAAVolGAnq0aOujiTIumZBqEV7wVcdBvaNrXJXKO' .
+                    'jiuSAHlpphpvBXTBX4GrXK3WP3aXh6yLqN9vr0r6vs1hLuxKUxFlIwdgkA',
+                'bits' => 8
+            ],
+            '0' => [
+                'bytes' =>
+                    'AQQhO2onvM62pC1io6jQKm8Nc2UyFXcd4kOmOsBIoYtZ2ikIQjtqJ7zOtqQtYqOo0CpvDXN' .
+                    'lMhV3HeJDpjrASKGLWdopAAAAAAdbzRUAAAAlGAn77OKoVDAJWplpbukaD0kwirLUv3vB8N' .
+                    'GxpUGpcaC+k0fWWHnL485umMbHgwtL3/ChjCUZDgNpCSXK2fD2UC6RLAQA',
+                'bits' => 0
+            ]
+        ];
     }
 }

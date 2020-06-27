@@ -28,9 +28,12 @@ namespace UmiTop\UmiCore\Key;
 
 /**
  * Interface SecretKeyInterface
- * @package UmiTop\UmiCore\Key
  */
 interface SecretKeyInterface extends KeyInterface
 {
+    /**
+     * @param string $message Сообщение в бинарном виде.
+     * @return string
+     */
     public function sign(string $message): string;
 }

@@ -28,11 +28,16 @@ namespace UmiTop\UmiCore\Key;
 
 /**
  * Interface KeyInterface
- * @package UmiTop\UmiCore\Key
  */
 interface KeyInterface
 {
+    /**
+     * @return PublicKeyInterface
+     */
     public function getPublicKey(): PublicKeyInterface;
 
+    /**
+     * @return string
+     */
     public function toBytes(): string;
 }

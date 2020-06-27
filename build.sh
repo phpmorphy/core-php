@@ -4,8 +4,8 @@ if [ "$1" == "php7.3" ] || [ "$1" == "php7.2" ] || [ "$1" == "php7.1" ] || [ "$1
   while IFS= read -r -d '' file; do
     sed -i -e 's/private string \$/private \$/g' "$file"
     sed -i -e 's/private array \$/private \$/g' "$file"
-    sed -i -e 's/private static array \$/private static \$/g' "$file"
-    sed -i -e 's/private static string \$/private static \$/g' "$file"
+#    sed -i -e 's/private static array \$/private static \$/g' "$file"
+#    sed -i -e 's/private static string \$/private static \$/g' "$file"
   done < <(find "$(pwd)/src" "$(pwd)/tests" -type f -name '*.php' -print0)
 fi
 

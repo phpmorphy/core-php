@@ -32,7 +32,6 @@ use UmiTop\UmiCore\Util\Ed25519;
 
 /**
  * Class PublicKey
- * @package UmiTop\UmiCore\Key\Ed25519
  */
 class PublicKey implements PublicKeyInterface
 {
@@ -44,8 +43,8 @@ class PublicKey implements PublicKeyInterface
 
     /**
      * PublicKey constructor.
-     * @param string $bytes
-     * @throws Exception
+     * @param string $bytes Публичный ключ в бинарном виде, в формате libsodium.
+     * @throws Exception Ошибка в случае некорректной длины.
      */
     public function __construct(string $bytes)
     {
@@ -73,15 +72,14 @@ class PublicKey implements PublicKeyInterface
     }
 
     /**
-     * @param string $signature
-     * @param string $message
-     * @return bool
-     * @throws Exception
+     * @param string $signature Подпись в бинарном виде.
+     * @param string $message   Сообщение в бинарном виде.
+     * @return boolean
      * @codeCoverageIgnore
      */
     public function verifySignature(string $signature, string $message): bool
     {
-        if (function_exists('sodium_crypto_sign_verify_detached')) {
+        if (function_exists('sodium_crypto_sign_verify_detached') === true) {
             return sodium_crypto_sign_verify_detached($signature, $message, $this->bytes);
         }
 

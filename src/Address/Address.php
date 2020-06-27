@@ -35,7 +35,6 @@ use UmiTop\UmiCore\Util\Converter;
 
 /**
  * Class Address
- * @package UmiTop\UmiCore\Address
  */
 class Address implements AddressInterface
 {
@@ -47,8 +46,8 @@ class Address implements AddressInterface
 
     /**
      * Address constructor.
-     * @param string|null $bytes (optional)
-     * @throws Exception
+     * @param string|null $bytes Адрес в бинарном виде. Опциональный параметр.
+     * @throws Exception Ошибка в случае некорректной длины.
      */
     public function __construct(string $bytes = null)
     {
@@ -64,9 +63,9 @@ class Address implements AddressInterface
     }
 
     /**
-     * @param string $address
+     * @param string $address Адрес в формате Bech32.
      * @return AddressInterface
-     * @throws Exception
+     * @throws Exception Ошибка в случае если адрес имеет некорректный формат.
      */
     public static function fromBech32(string $address): AddressInterface
     {
@@ -77,9 +76,9 @@ class Address implements AddressInterface
     }
 
     /**
-     * @param string $bytes
+     * @param string $bytes Адрес в бинарном виде.
      * @return AddressInterface
-     * @throws Exception
+     * @throws Exception Ошибка в случае некорректной длины.
      */
     public static function fromBytes(string $bytes): AddressInterface
     {
@@ -87,9 +86,8 @@ class Address implements AddressInterface
     }
 
     /**
-     * @param KeyInterface $key
+     * @param KeyInterface $key Приватный или публичный ключ.
      * @return AddressInterface
-     * @throws Exception
      */
     public static function fromKey(KeyInterface $key): AddressInterface
     {
@@ -100,7 +98,7 @@ class Address implements AddressInterface
 
     /**
      * @return string
-     * @throws Exception
+     * @throws Exception Ошибка в случае если префикс не проходит валидацию.
      */
     public function getPrefix(): string
     {
@@ -110,9 +108,9 @@ class Address implements AddressInterface
     }
 
     /**
-     * @param string $prefix
+     * @param string $prefix Префикс. Три байта лайтинцы в нижнем регистре.
      * @return AddressInterface
-     * @throws Exception
+     * @throws Exception Ошибка в случае, если префикс не проходит валидацию.
      */
     public function setPrefix(string $prefix): AddressInterface
     {
@@ -123,7 +121,7 @@ class Address implements AddressInterface
 
     /**
      * @return PublicKeyInterface
-     * @throws Exception
+     * @throws Exception Ошибка, в случае если прубличный ключ не был установлен.
      */
     public function getPublicKey(): PublicKeyInterface
     {
@@ -131,7 +129,7 @@ class Address implements AddressInterface
     }
 
     /**
-     * @param PublicKeyInterface $publicKey
+     * @param PublicKeyInterface $publicKey Публичный ключ.
      * @return AddressInterface
      */
     public function setPublicKey(PublicKeyInterface $publicKey): AddressInterface
@@ -142,23 +140,24 @@ class Address implements AddressInterface
     }
 
     /**
-     * @return int
+     * @return integer
      */
     public function getVersion(): int
     {
-        // version - uin16, first 2 bytes
-        return (ord($this->bytes[0]) << 8) + ord($this->bytes[1]);
+        // Version - uin16, first 2 bytes.
+        return ((ord($this->bytes[0]) << 8) + ord($this->bytes[1]));
     }
 
     /**
-     * @param int $version
+     * @param integer $version Версия в числовом виде.
      * @return AddressInterface
-     * @throws Exception
+     * @throws Exception Ошибка в случае если версия не проходит валидацию.
      */
     public function setVersion(int $version): AddressInterface
     {
+        // Validation.
         $cnv = new Converter();
-        $cnv->versionToPrefix($version); // validation
+        $cnv->versionToPrefix($version);
 
         $this->bytes[0] = chr($version >> 8 & 0xff);
         $this->bytes[1] = chr($version & 0xff);
@@ -168,7 +167,6 @@ class Address implements AddressInterface
 
     /**
      * @return string
-     * @throws Exception
      */
     public function toBech32(): string
     {

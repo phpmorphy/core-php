@@ -28,9 +28,13 @@ namespace UmiTop\UmiCore\Key;
 
 /**
  * Interface PublicKeyInterface
- * @package UmiTop\UmiCore\Key
  */
 interface PublicKeyInterface extends KeyInterface
 {
-    public function verifySignature(string $message, string $signature): bool;
+    /**
+     * @param string $signature Цифровая подпись в бинарном виде.
+     * @param string $message   Сообщение в бинарном виде.
+     * @return boolean
+     */
+    public function verifySignature(string $signature, string $message): bool;
 }

@@ -30,7 +30,6 @@ use Exception;
 
 /**
  * Class Bech32
- * @package UmiTop\UmiCore\Util
  */
 class Bech32
 {
@@ -90,15 +89,15 @@ class Bech32
     }
 
     /** @var array<int, int>  */
-    private static array $generator = [
+    private array $generator = [
         0x3b6a57b2, 0x26508e6d, 0x1ea119fa, 0x3d4233dd, 0x2a1462b3
     ];
 
     /** @var string */
-    private static string $charset = 'qpzry9x8gf2tvdw0s3jn54khce6mua7l';
+    private string $charset = 'qpzry9x8gf2tvdw0s3jn54khce6mua7l';
 
     /** @var array<int, int> */
-    private static array $charkeyKey = [
+    private array $charkeyKey = [
         -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
         -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
         -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
@@ -122,7 +121,7 @@ class Bech32
             $chk = ($chk & 0x1ffffff) << 5 ^ $values[$i];
 
             for ($j = 0; $j < 5; $j++) {
-                $value = (($top >> $j) & 1) ? self::$generator[$j] : 0;
+                $value = (($top >> $j) & 1) ? $this->generator[$j] : 0;
                 $chk ^= $value;
             }
         }
@@ -196,7 +195,7 @@ class Bech32
      * @param array<int, int> $convertedDataChars
      * @return array<int, int>
      */
-    private function createChecksum(string $hrp, array $convertedDataChars): array
+    protected function createChecksum(string $hrp, array $convertedDataChars): array
     {
         $values = array_merge($this->hrpExpand($hrp, strlen($hrp)), $convertedDataChars);
         $polyMod = $this->polyMod(array_merge($values, [0, 0, 0, 0, 0, 0]), count($values) + 6) ^ 1;
@@ -236,7 +235,7 @@ class Bech32
 
         $encoded = [];
         for ($i = 0, $n = count($characters); $i < $n; $i++) {
-            $encoded[$i] = self::$charset[$characters[$i]];
+            $encoded[$i] = $this->charset[$characters[$i]];
         }
 
         return "{$hrp}1" . implode('', $encoded);
@@ -305,7 +304,7 @@ class Bech32
 
         $data = [];
         for ($i = $positionOne + 1; $i < $length; $i++) {
-            $data[] = ($chars[$i] & 0x80) ? -1 : self::$charkeyKey[$chars[$i]];
+            $data[] = ($chars[$i] & 0x80) ? -1 : $this->charkeyKey[$chars[$i]];
         }
 
         if (!$this->verifyChecksum($hrp, $data)) {

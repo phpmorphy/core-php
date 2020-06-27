@@ -32,7 +32,6 @@ use Exception;
  * Class Ed25519
  * Implementation derived from TweetNaCl version 20140427.
  * @see http://tweetnacl.cr.yp.to/
- * @package UmiTop\UmiCore\Util
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
  * @SuppressWarnings(PHPMD.ShortMethodName)
  * @SuppressWarnings(PHPMD.ShortVariable)

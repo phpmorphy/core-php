@@ -24,55 +24,49 @@
 
 declare(strict_types=1);
 
-namespace UmiTop\UmiCore\Address;
+namespace UmiTop\UmiCore\Block;
 
 use UmiTop\UmiCore\Key\PublicKeyInterface;
+use UmiTop\UmiCore\Key\SecretKeyInterface;
 
 /**
- * Interface AddressInterface
+ * Interface BlockHeaderInterface
  */
-interface AddressInterface
+interface BlockHeaderInterface
 {
-    /**
-     * @return string
-     */
-    public function getPrefix(): string;
+    public function getHash(): string;
 
-    /**
-     * @param string $prefix Перфикс. Три символа латиницы в нижнем регистре.
-     * @return AddressInterface
-     */
-    public function setPrefix(string $prefix): AddressInterface;
+    public function getMerkleRootHash(): string;
 
-    /**
-     * @return PublicKeyInterface
-     */
+    public function setMerkleRootHash(string $hash): BlockHeaderInterface;
+
+    public function getPreviousBlockHash(): string;
+
+    public function setPreviousBlockHash(string $hash): BlockHeaderInterface;
+
     public function getPublicKey(): PublicKeyInterface;
 
-    /**
-     * @param PublicKeyInterface $publicKey Публичный ключ.
-     * @return AddressInterface
-     */
-    public function setPublicKey(PublicKeyInterface $publicKey): AddressInterface;
+    public function setPublicKey(PublicKeyInterface $publicKey): BlockHeaderInterface;
 
-    /**
-     * @return integer
-     */
+    public function getSignature(): string;
+
+    public function setSignature(string $signature): BlockHeaderInterface;
+
+    public function getTimestamp(): int;
+
+    public function setTimestamp(int $epoch): BlockHeaderInterface;
+
+    public function getTransactionCount(): int;
+
+    public function setTransactionCount(int $count): BlockHeaderInterface;
+
     public function getVersion(): int;
 
-    /**
-     * @param integer $version Версия в числовом виде.
-     * @return AddressInterface
-     */
-    public function setVersion(int $version): AddressInterface;
+    public function setVersion(int $version): BlockHeaderInterface;
 
-    /**
-     * @return string
-     */
-    public function toBech32(): string;
+    public function sign(SecretKeyInterface $secretKey): BlockHeaderInterface;
 
-    /**
-     * @return string
-     */
     public function toBytes(): string;
+
+    public function verify(): bool;
 }

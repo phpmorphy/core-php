@@ -30,7 +30,6 @@ use Exception;
 
 /**
  * Class Converter
- * @package UmiTop\UmiCore\Util
  */
 class Converter
 {

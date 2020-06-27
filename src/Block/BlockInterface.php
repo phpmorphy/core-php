@@ -24,13 +24,18 @@
 
 declare(strict_types=1);
 
-namespace UmiTop\UmiCore\Key;
+namespace UmiTop\UmiCore\Block;
 
-use UmiTop\UmiCore\Key\Ed25519\SecretKey as SecretKeyEd25519;
+use UmiTop\UmiCore\Transaction\TransactionInterface;
 
 /**
- * Class SecretKey
+ * Interface BlockInterface
  */
-class SecretKey extends SecretKeyEd25519 implements SecretKeyInterface
+interface BlockInterface extends BlockHeaderInterface
 {
+    public function appendTransaction(TransactionInterface $transaction): BlockInterface;
+
+    public function calculateMerkleRoot(): string;
+
+    public function getTransaction(int $index): TransactionInterface;
 }

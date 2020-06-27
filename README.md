@@ -1,9 +1,69 @@
-# umi-core-php
-UMI Core PHP Library
+<h1 align="center">
+  <a href="https://umi.top"><img src="./logo.svg" alt="UMI" width="200"></a>
+  <br>
+  UMI Core - PHP Library
+  <br>
+  <br>
+</h1>
 
-### Install
+<p align="center">
+  <!-- release    --><a href="https://github.com/umi-top/umi-core-php"><img alt="GitHub release (latest SemVer)" src="https://img.shields.io/github/v/release/umi-top/umi-core-php?sort=semver"></a>
+  <!-- build      --><a href="https://travis-ci.org/umi-top/umi-core-php"><img alt="travis" src="https://img.shields.io/travis/umi-top/umi-core-php/master"></a>
+  <!-- coverage   --><img alt="Coveralls github branch" src="https://img.shields.io/coveralls/github/umi-top/umi-core-php/master">
+  <!-- code style --><a href="https://www.php-fig.org/psr/psr-12/"><img alt="PSR-12" src="https://img.shields.io/badge/code_style-PSR--12-green"></a>
+  <!-- license    --><a href="https://github.com/umi-top/umi-core-php/blob/master/LICENSE"><img alt="GitHub" src="https://img.shields.io/github/license/umi-top/umi-core-php"></a>
+  <!-- PGP        --><a href="https://keybase.io/umitop"><img alt="Keybase PGP" src="https://img.shields.io/keybase/pgp/umitop"></a>
+  <br/><!-- master -->
+  <!-- packagist  --><a href="https://packagist.org/packages/umi-top/umi-core-php"><img alt="Packagist Version" src="https://img.shields.io/packagist/v/umi-top/umi-core-php"></a>
+  <!-- php support--><img alt="Packagist PHP Version Support" src="https://img.shields.io/packagist/php-v/umi-top/umi-core-php">
+  <!-- downloads  --><img alt="Packagist Downloads" src="https://img.shields.io/packagist/dm/umi-top/umi-core-php">
+  <br/><!-- php70 -->
+  <!-- packagist  --><a href="https://packagist.org/packages/umi-top/umi-core-php"><img alt="Packagist Version" src="https://img.shields.io/badge/packagist-v1.0.70-orange"></a>
+  <!-- php support--><img alt="Packagist PHP Version Support (specify version)" src="https://img.shields.io/packagist/php-v/umi-top/umi-core-php/v0.9.2">
+  <br/><!-- php53 -->
+  <!-- packagist  --><a href="https://packagist.org/packages/umi-top/umi-core-php"><img alt="Packagist Version" src="https://img.shields.io/badge/packagist-v1.0.53-orange"></a>
+  <!-- php support--><img alt="Packagist PHP Version Support (specify version)" src="https://img.shields.io/packagist/php-v/umi-top/umi-core-php/v0.9.2">
+</p>
 
-    composer require umi-top/umi-core-php
+## Оглавление
+-   Введение
+
+-   [Установка](#установка)
+    - Composer
+
+-   [Примеры](#примеры)
+    -   [Ключи](#ключи)
+        - Приватный ключ из seed
+        - Приватный ключ из мнемонической фразы
+        - Создание и проверка цифровой подписи
+
+    -   [Адреса](#адреса)
+        - Адреса в формате Bech32
+        - Адрес из приватного или публичного ключа
+        - Установка и смена префикса адреса
+
+    -   [Транзакции](#транзакции)
+        - Отправка монет
+        - Создание структуры
+        - Обновление настроек структуры
+        - Установка адреса для начисления профита
+        - Установка адреса для перевода комиссии
+        - Активация транзитного адреса
+        - Деактивация транзитного адреса
+
+    -   [Блоки](#блоки)
+        - Создание и подпись блоков
+        - Парсинг блоков
+
+-   [Лицензия](#лицензия)
+
+## Введение
+
+## Установка
+### npm
+```bash
+composer require umi-top/umi-core-php
+```
 
 ### Addresses
 Create Address from Mnemonic
@@ -65,7 +125,7 @@ $tx1 = (new Transaction())
     ->setVersion(Transaction::BASIC)
     ->setSender($sender)
     ->setRecipient($recipient)
-    ->setValue(gmp_init('18446744073709551615'))
+    ->setValue(18446744073709551615)
     ->sign($secKey);
 
 $tx2 = new Transaction($tx1->toBytes());
@@ -169,4 +229,32 @@ var_dump(
         'verify' => $tx2->verify()
     ]
 );
+```
+
+## Лицензия
+
+```text
+Лицензия MIT
+
+Copyright © 2020 UMI
+
+Данная лицензия разрешает лицам, получившим копию данного программного
+обеспечения и сопутствующей документации (в дальнейшем именуемыми
+«Программное обеспечение»), безвозмездно использовать Программное обеспечение
+без ограничений, включая неограниченное право на использование, копирование,
+изменение, слияние, публикацию, распространение, сублицензирование и/или
+продажу копий Программного обеспечения, а также лицам, которым предоставляется
+данное Программное обеспечение, при соблюдении следующих условий:
+
+Указанное выше уведомление об авторском праве и данные условия должны быть
+включены во все копии или значимые части данного Программного обеспечения.
+
+ДАННОЕ ПРОГРАММНОЕ ОБЕСПЕЧЕНИЕ ПРЕДОСТАВЛЯЕТСЯ «КАК ЕСТЬ», БЕЗ КАКИХ-ЛИБО
+ГАРАНТИЙ, ЯВНО ВЫРАЖЕННЫХ ИЛИ ПОДРАЗУМЕВАЕМЫХ, ВКЛЮЧАЯ ГАРАНТИИ ТОВАРНОЙ
+ПРИГОДНОСТИ, СООТВЕТСТВИЯ ПО ЕГО КОНКРЕТНОМУ НАЗНАЧЕНИЮ И ОТСУТСТВИЯ НАРУШЕНИЙ,
+НО НЕ ОГРАНИЧИВАЯСЬ ИМИ. НИ В КАКОМ СЛУЧАЕ АВТОРЫ ИЛИ ПРАВООБЛАДАТЕЛИ НЕ НЕСУТ
+ОТВЕТСТВЕННОСТИ ПО КАКИМ-ЛИБО ИСКАМ, ЗА УЩЕРБ ИЛИ ПО ИНЫМ ТРЕБОВАНИЯМ, В ТОМ
+ЧИСЛЕ, ПРИ ДЕЙСТВИИ КОНТРАКТА, ДЕЛИКТЕ ИЛИ ИНОЙ СИТУАЦИИ, ВОЗНИКШИМ ИЗ-ЗА
+ИСПОЛЬЗОВАНИЯ ПРОГРАММНОГО ОБЕСПЕЧЕНИЯ ИЛИ ИНЫХ ДЕЙСТВИЙ С ПРОГРАММНЫМ
+ОБЕСПЕЧЕНИЕМ. 
 ```

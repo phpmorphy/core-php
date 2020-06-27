@@ -31,13 +31,28 @@ use UmiTop\UmiCore\Key\SecretKeyInterface;
 
 interface TransactionInterface
 {
+    /** @var int */
     public const GENESIS = 0;
+
+    /** @var int */
     public const BASIC = 1;
+
+    /** @var int */
     public const CREATE_STRUCTURE = 2;
+
+    /** @var int */
     public const UPDATE_STRUCTURE = 3;
+
+    /** @var int */
     public const UPDATE_PROFIT_ADDRESS = 4;
+
+    /** @var int */
     public const UPDATE_FEE_ADDRESS = 5;
+
+    /** @var int */
     public const CREATE_TRANSIT_ADDRESS = 6;
+
+    /** @var int */
     public const DELETE_TRANSIT_ADDRESS = 7;
 
     public function getFeePercent(): int;
@@ -54,7 +69,7 @@ interface TransactionInterface
 
     public function setNonce(int $value): TransactionInterface;
 
-    public function hasPowBits(int $bits): bool;
+    public function getPowBits(): int;
 
     public function getPrefix(): string;
 
@@ -84,7 +99,7 @@ interface TransactionInterface
 
     public function setVersion(int $version): TransactionInterface;
 
-    public function sign(SecretKeyInterface $secretKey): TransactionInterface;
+    public function sign(SecretKeyInterface $secretKey, int $powBits = null): TransactionInterface;
 
     public function toBytes(): string;
 
