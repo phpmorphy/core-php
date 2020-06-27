@@ -48,17 +48,7 @@ class Converter
         $ch2 = $version >> 5 & 0x1F;
         $ch3 = $version & 0x1F;
 
-        if ($ch1 < 1 || $ch1 > 26) {
-            throw new Exception('invalid version [1]');
-        }
-
-        if ($ch2 < 1 || $ch2 > 26) {
-            throw new Exception('invalid version [2]');
-        }
-
-        if ($ch3 < 1 || $ch3 > 26) {
-            throw new Exception('invalid version [3]');
-        }
+        $this->checkChars([$ch1, $ch2, $ch3]);
 
         return chr($ch1 + 96) . chr($ch2 + 96) . chr($ch3 + 96);
     }
@@ -82,18 +72,21 @@ class Converter
         $ch2 = ord($prefix[1]) - 96;
         $ch3 = ord($prefix[2]) - 96;
 
-        if ($ch1 < 1 || $ch1 > 26) {
-            throw new Exception('invalid prefix [1]');
-        }
-
-        if ($ch2 < 1 || $ch2 > 26) {
-            throw new Exception('invalid prefix [2]');
-        }
-
-        if ($ch3 < 1 || $ch3 > 26) {
-            throw new Exception('invalid prefix [3]');
-        }
+        $this->checkChars([$ch1, $ch2, $ch3]);
 
         return ($ch1 << 10) + ($ch2 << 5) + $ch3;
+    }
+
+    /**
+     * @param array<int, int> $chars
+     * @throws Exception
+     */
+    private function checkChars(array $chars): void
+    {
+        foreach ($chars as $chr) {
+            if ($chr < 1 || $chr > 26) {
+                throw new Exception('invalid prefix');
+            }
+        }
     }
 }
