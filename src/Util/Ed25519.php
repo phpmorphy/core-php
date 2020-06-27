@@ -35,6 +35,7 @@ use Exception;
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
  * @SuppressWarnings(PHPMD.ShortMethodName)
  * @SuppressWarnings(PHPMD.ShortVariable)
+ * @SuppressWarnings(PHPMD.TooManyMethods)
  */
 class Ed25519
 {

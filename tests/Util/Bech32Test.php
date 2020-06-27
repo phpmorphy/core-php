@@ -7,6 +7,9 @@ namespace Tests\Util;
 use PHPUnit\Framework\TestCase;
 use UmiTop\UmiCore\Util\Bech32;
 
+/**
+ * @SuppressWarnings(PHPMD.StaticAccess)
+ */
 class Bech32Test extends TestCase
 {
     /**

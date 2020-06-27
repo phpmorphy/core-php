@@ -7,6 +7,9 @@ namespace Tests\Block;
 use PHPUnit\Framework\TestCase;
 use UmiTop\UmiCore\Block\BlockHeader;
 
+/**
+ * @SuppressWarnings(PHPMD.StaticAccess)
+ */
 class BlockHeaderTest extends TestCase
 {
     public function testConstructor(): void

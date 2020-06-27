@@ -7,6 +7,9 @@ namespace Tests\Util;
 use PHPUnit\Framework\TestCase;
 use UmiTop\UmiCore\Util\Converter;
 
+/**
+ * @SuppressWarnings(PHPMD.StaticAccess)
+ */
 class ConverterTest extends TestCase
 {
     /**

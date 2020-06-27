@@ -10,8 +10,12 @@ use UmiTop\UmiCore\Block\BlockHeader;
 use UmiTop\UmiCore\Key\PublicKey;
 use UmiTop\UmiCore\Key\SecretKey;
 use UmiTop\UmiCore\Transaction\Transaction;
-use UmiTop\UmiCore\Util\Ed25519;
 
+/**
+ * @SuppressWarnings(PHPMD.StaticAccess)
+ * @SuppressWarnings(PHPMD.TooManyMethods)
+ * @SuppressWarnings(PHPMD.TooManyPublicMethods)
+ */
 class BlockTest extends TestCase
 {
     public function testConstructor(): void

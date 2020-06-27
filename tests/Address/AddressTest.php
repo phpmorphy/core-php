@@ -8,6 +8,9 @@ use PHPUnit\Framework\TestCase;
 use UmiTop\UmiCore\Address\Address;
 use UmiTop\UmiCore\Key\PublicKey;
 
+/**
+ * @SuppressWarnings(PHPMD.StaticAccess)
+ */
 class AddressTest extends TestCase
 {
     public function testConstructorException(): void

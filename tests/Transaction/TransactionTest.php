@@ -9,6 +9,11 @@ use UmiTop\UmiCore\Transaction\Transaction;
 use UmiTop\UmiCore\Address\Address;
 use UmiTop\UmiCore\Key\SecretKey;
 
+/**
+ * @SuppressWarnings(PHPMD.StaticAccess)
+ * @SuppressWarnings(PHPMD.TooManyMethods)
+ * @SuppressWarnings(PHPMD.TooManyPublicMethods)
+ */
 class TransactionTest extends TestCase
 {
     public function testFromBytes(): void

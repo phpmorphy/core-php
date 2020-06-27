@@ -7,6 +7,9 @@ namespace Tests\Util;
 use PHPUnit\Framework\TestCase;
 use UmiTop\UmiCore\Util\Ed25519;
 
+/**
+ * @SuppressWarnings(PHPMD.StaticAccess)
+ */
 class Ed25519Test extends TestCase
 {
     public function testPublicKeyFromSecretKey(): void

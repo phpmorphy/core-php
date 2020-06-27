@@ -7,6 +7,9 @@ namespace Tests\Key;
 use PHPUnit\Framework\TestCase;
 use UmiTop\UmiCore\Key\PublicKey;
 
+/**
+ * @SuppressWarnings(PHPMD.StaticAccess)
+ */
 class PublicKeyTest extends TestCase
 {
     public function testConstructorException(): void

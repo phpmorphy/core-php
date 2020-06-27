@@ -7,6 +7,9 @@ namespace Tests\Key;
 use PHPUnit\Framework\TestCase;
 use UmiTop\UmiCore\Key\SecretKey;
 
+/**
+ * @SuppressWarnings(PHPMD.StaticAccess)
+ */
 class SecretKeyTest extends TestCase
 {
     public function testConstructor(): void
