@@ -104,9 +104,7 @@ class Transaction implements TransactionInterface
      */
     public function setFeePercent(int $percent): TransactionInterface
     {
-        if ($percent < 0 || $percent > 2000) {
-            throw new Exception('incorrect feePercent');
-        }
+        $this->validateInt($percent, 0, 2000);
 
         // Fee offset - 39.
         $this->bytes[39] = chr($percent >> 8 & 0xff);
@@ -235,9 +233,7 @@ class Transaction implements TransactionInterface
      */
     public function setProfitPercent(int $percent): TransactionInterface
     {
-        if ($percent < 100 || $percent > 500) {
-            throw new Exception('incorrect profitPercent');
-        }
+        $this->validateInt($percent, 100, 500);
 
         // Profit offset - 37.
         $this->bytes[37] = chr($percent >> 8 & 0xff);
@@ -342,9 +338,7 @@ class Transaction implements TransactionInterface
      */
     public function setValue(int $value): TransactionInterface
     {
-        if ($value < 1) {
-            throw new Exception('value must be between 1 and 9223372036854775807');
-        }
+        $this->validateInt($value, 1);
 
         // Value offset - 69.
         $this->bytes[69] = chr(($value >> 56) & 0xff);
@@ -403,11 +397,12 @@ class Transaction implements TransactionInterface
      * @param SecretKeyInterface $secretKey
      * @param integer $powBits
      * @return TransactionInterface
+     * @throws Exception
      */
     public function sign(SecretKeyInterface $secretKey, int $powBits = null): TransactionInterface
     {
-        $powBits = max((int)$powBits, 0);
-        $powBits = min($powBits, 24);
+        $powBits = (int)$powBits;
+        $this->validateInt($powBits, 0, 24);
 
         $mask = 0xffffff >> (24 - $powBits);
         do {
@@ -455,5 +450,22 @@ class Transaction implements TransactionInterface
         return $this->getSender()
             ->getPublicKey()
             ->verifySignature($this->getSignature(), substr($this->bytes, 0, 85));
+    }
+
+    /**
+     * @param int $val
+     * @param int|null $min
+     * @param int|null $max
+     * @throws Exception
+     */
+    private function validateInt(int $val, int $min = null, int $max = null): void
+    {
+        if ($min !== null && $val < $min) {
+            throw new Exception('invalid value');
+        }
+
+        if ($max !== null && $val > $max) {
+            throw new Exception('invalid value');
+        }
     }
 }
