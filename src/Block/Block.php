@@ -36,6 +36,7 @@ use UmiTop\UmiCore\Transaction\TransactionInterface;
 /**
  * Class Block
  * @implements Iterator<int, TransactionInterface>
+ * @SuppressWarnings(PHPMD.TooManyMethods)
  * @SuppressWarnings(PHPMD.TooManyPublicMethods)
  */
 class Block implements BlockInterface, Iterator

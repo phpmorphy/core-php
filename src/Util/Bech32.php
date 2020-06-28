@@ -44,14 +44,10 @@ class Bech32
         $version = (ord($bytes[0]) << 8) + ord($bytes[1]);
         $prefix = $cnv->versionToPrefix($version);
 
-        $data = array_map(
-            function (string $value): int {
-                return ord($value);
-            },
-            str_split(substr($bytes, 2, 32))
-        );
+        $data = $this->convert8to5(substr($bytes, 2, 32));
+        $checksum = $this->createChecksum($prefix, $data);
 
-        return $this->encoder($prefix, $this->convertBits($data, count($data), 8, 5, true));
+        return "{$prefix}1{$data}{$checksum}";
     }
 
     /**
@@ -61,52 +57,41 @@ class Bech32
      */
     public function decode(string $bech32): string
     {
-        $decoded = $this->decodeRaw($bech32);
-
-        /** @var string $prefix */
-        $prefix = $decoded[0];
-
-        /** @var array<array-key, int> $words */
-        $words = $decoded[1];
-
-        $pubKey = array_reduce(
-            $this->convertBits($words, count($words), 5, 8, false),
-            function (string $carry, int $item): string {
-                $carry .= chr($item);
-                return $carry;
-            },
-            ''
-        );
-
-        if (strlen($pubKey) !== 32) {
-            throw new Exception('data length should be 32 bytes');
+        if (strlen($bech32) !== 62) {
+            throw new Exception('invalid length');
         }
 
-        $cnv = new Converter();
-        $version = $cnv->prefixToVersion($prefix);
+        $bech32 = strtolower($bech32);
+        $sepPos = strpos($bech32, '1');
 
-        return chr($version >> 8 & 0xff) . chr($version & 0xff) . $pubKey;
+        if ($sepPos === false) {
+            throw new Exception('missing separator');
+        }
+
+        $pfx = substr($bech32, 0, $sepPos);
+        $cnv = new Converter();
+        $ver = $cnv->prefixToVersion($pfx);
+
+        $data = substr($bech32, ($sepPos + 1));
+        $this->checkAbc($data);
+        $this->verifyChecksum($pfx, $data);
+
+        $bytes = $this->convert5to8(substr($data, 0, -6));
+
+        return chr($ver >> 8 & 0xff) . chr($ver & 0xff) . $bytes;
     }
 
-    /** @var array<int, int>  */
+    /** @var array<int, int> */
     private $generator = [
-        0x3b6a57b2, 0x26508e6d, 0x1ea119fa, 0x3d4233dd, 0x2a1462b3
+        0x3b6a57b2,
+        0x26508e6d,
+        0x1ea119fa,
+        0x3d4233dd,
+        0x2a1462b3
     ];
 
     /** @var string */
-    private $charset = 'qpzry9x8gf2tvdw0s3jn54khce6mua7l';
-
-    /** @var array<int, int> */
-    private $charkeyKey = [
-        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-        15, -1, 10, 17, 21, 20, 26, 30,  7,  5, -1, -1, -1, -1, -1, -1,
-        -1, 29, -1, 24, 13, 25,  9,  8, 23, -1, 18, 22, 31, 27, 19, -1,
-        1,  0,  3, 16, 11, 28, 12, 14,  6,  4,  2, -1, -1, -1, -1, -1,
-        -1, 29, -1, 24, 13, 25,  9,  8, 23, -1, 18, 22, 31, 27, 19, -1,
-        1,  0,  3, 16, 11, 28, 12, 14,  6,  4,  2, -1, -1, -1, -1, -1
-    ];
+    private $alphabeb = 'qpzry9x8gf2tvdw0s3jn54khce6mua7l';
 
     /**
      * @param array<int, int> $values
@@ -132,14 +117,13 @@ class Bech32
     /**
      * Expands the human readable part into a character array for checksumming.
      * @param string $hrp
-     * @param int $hrpLen
      * @return array<int, int>
      */
-    private function hrpExpand(string $hrp, int $hrpLen): array
+    private function hrpExpand(string $hrp): array
     {
         $expand1 = [];
         $expand2 = [];
-        for ($i = 0; $i < $hrpLen; $i++) {
+        for ($i = 0, $l = strlen($hrp); $i < $l; $i++) {
             $ord = ord($hrp[$i]);
             $expand1[] = $ord >> 5;
             $expand2[] = $ord & 31;
@@ -149,170 +133,122 @@ class Bech32
     }
 
     /**
-     * Converts words of $fromBits bits to $toBits bits in size.
-     *
-     * @param int[] $data - character array of data to convert
-     * @param int $inLen - number of elements in array
-     * @param int $fromBits - word (bit count) size of provided data
-     * @param int $toBits - requested word size (bit count)
-     * @param bool $pad - whether to pad (only when encoding)
-     * @return array<int, int>
+     * @param string $data
+     * @return string
      * @throws Exception
-     * @SuppressWarnings(PHPMD.BooleanArgumentFlag)
      */
-    private function convertBits(array $data, int $inLen, int $fromBits, int $toBits, bool $pad = true): array
+    private function convert5to8(string $data): string
     {
         $acc = 0;
         $bits = 0;
-        $ret = [];
-        $maxv = (1 << $toBits) - 1;
-        $maxacc = (1 << ($fromBits + $toBits - 1)) - 1;
+        $bytes = '';
 
-        for ($i = 0; $i < $inLen; $i++) {
-            $value = $data[$i];
-            $acc = (($acc << $fromBits) | $value) & $maxacc;
-            $bits += $fromBits;
+        for ($i = 0, $l = strlen($data); $i < $l; $i++) {
+            $value = (int)strpos($this->alphabeb, $data[$i]);
+            $acc = (($acc << 5) | $value) & 0xfff;
+            $bits += 5;
 
-            while ($bits >= $toBits) {
-                $bits -= $toBits;
-                $ret[] = (($acc >> $bits) & $maxv);
+            while ($bits >= 8) {
+                $bits -= 8;
+                $bytes .= chr(($acc >> $bits) & 0x1f);
             }
         }
 
-        if ($pad) {
-            if ($bits) {
-                $ret[] = ($acc << $toBits - $bits) & $maxv;
-            }
-        } elseif ($bits >= $fromBits || ((($acc << ($toBits - $bits))) & $maxv)) {
+        if ($bits >= 5 || ((($acc << (8 - $bits))) & 0x1f)) {
             throw new Exception('Invalid data');
         }
 
-        return $ret;
+        return $bytes;
+    }
+
+    /**
+     * @param string $bytes
+     * @return string
+     */
+    private function convert8to5(string $bytes): string
+    {
+        $acc = 0;
+        $bits = 0;
+        $res = '';
+
+        for ($i = 0, $l = strlen($bytes); $i < $l; $i++) {
+            $value = ord($bytes[$i]);
+            $acc = (($acc << 8) | $value) & 0xfff;
+            $bits += 8;
+
+            while ($bits >= 5) {
+                $bits -= 5;
+                $res .= $this->alphabeb[(($acc >> $bits) & 0x1f)];
+            }
+        }
+
+        if ($bits) {
+            $res .= $this->alphabeb[($acc << 5 - $bits) & 0x1f];
+        }
+
+        return $res;
     }
 
     /**
      * @param string $hrp
-     * @param array<int, int> $convertedDataChars
-     * @return array<int, int>
+     * @param string $convertedDataChars
+     * @return string
      */
-    protected function createChecksum(string $hrp, array $convertedDataChars): array
+    protected function createChecksum(string $hrp, string $convertedDataChars): string
     {
-        $values = array_merge($this->hrpExpand($hrp, strlen($hrp)), $convertedDataChars);
+        $values = array_merge($this->hrpExpand($hrp), $this->strToBytes($convertedDataChars));
         $polyMod = $this->polyMod(array_merge($values, [0, 0, 0, 0, 0, 0]), count($values) + 6) ^ 1;
-        $results = [];
+        $res = '';
+
         for ($i = 0; $i < 6; $i++) {
-            $results[$i] = ($polyMod >> 5 * (5 - $i)) & 31;
+            $res .= $this->alphabeb[($polyMod >> 5 * (5 - $i)) & 31];
         }
 
-        return $results;
+        return $res;
     }
 
     /**
      * Verifies the checksum given $hrp and $convertedDataChars.
      *
      * @param string $hrp
-     * @param array<int, int> $convertedDataChars
-     * @return bool
+     * @param string $convertedDataChars
+     * @throws Exception
      */
-    private function verifyChecksum(string $hrp, array $convertedDataChars): bool
+    private function verifyChecksum(string $hrp, string $convertedDataChars): void
     {
-        $expandHrp = $this->hrpExpand($hrp, strlen($hrp));
-        $arr = array_merge($expandHrp, $convertedDataChars);
+        $expandHrp = $this->hrpExpand($hrp);
+        $arr = array_merge($expandHrp, $this->strToBytes($convertedDataChars));
         $poly = $this->polyMod($arr, count($arr));
 
-        return $poly === 1;
-    }
-
-    /**
-     * @param string $hrp
-     * @param array<int, int> $combinedDataChars
-     * @return string
-     */
-    private function encoder(string $hrp, array $combinedDataChars): string
-    {
-        $checksum = $this->createChecksum($hrp, $combinedDataChars);
-        $characters = array_merge($combinedDataChars, $checksum);
-
-        $encoded = [];
-        for ($i = 0, $n = count($characters); $i < $n; $i++) {
-            $encoded[$i] = $this->charset[$characters[$i]];
+        if ($poly !== 1) {
+            throw new Exception('invalid checksum');
         }
-
-        return "{$hrp}1" . implode('', $encoded);
     }
 
     /**
-     * @param string $sBech - the bech32 encoded string
-     * @return array<int, string|array> - returns [$hrp, $dataChars]
+     * @param string $str
      * @throws Exception
-     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
-     * @SuppressWarnings(PHPMD.NPathComplexity)
      */
-    private function decodeRaw(string $sBech): array
+    private function checkAbc(string $str): void
     {
-        $length = strlen($sBech);
-        if ($length < 8) {
-            throw new Exception("Bech32 string is too short");
-        }
-
-        $chars = [];
-        for ($i = 0; $i < $length; $i++) {
-            $chars[] = ord($sBech[$i]);
-        }
-
-        $haveUpper = false;
-        $haveLower = false;
-        $positionOne = -1;
-
-        for ($i = 0; $i < $length; $i++) {
-            $chr = $chars[$i];
-            if ($chr < 33 || $chr > 126) {
-                throw new Exception('Out of range character in bech32 string');
-            }
-
-            if ($chr >= 0x61 && $chr <= 0x7a) {
-                $haveLower = true;
-            }
-
-            if ($chr >= 0x41 && $chr <= 0x5a) {
-                $haveUpper = true;
-                $chr = $chars[$i] = $chr + 0x20;
-            }
-
-            // find location of last '1' character
-            if ($chr === 0x31) {
-                $positionOne = $i;
+        for ($i = 0, $l = strlen($str); $i < $l; $i++) {
+            if (strpos($this->alphabeb, $str[$i]) === false) {
+                throw new Exception('invalid character');
             }
         }
+    }
 
-        if ($haveUpper && $haveLower) {
-            throw new Exception('Data contains mixture of higher/lower case characters');
-        }
-
-        if ($positionOne === -1) {
-            throw new Exception("Missing separator character");
-        }
-
-        if ($positionOne < 1) {
-            throw new Exception("Empty HRP");
-        }
-
-        if (($positionOne + 7) > $length) {
-            throw new Exception('Too short checksum');
-        }
-
-//        $hrp = pack("C*", ...array_slice($chars, 0, $positionOne));
-        $hrp = substr($sBech, 0, $positionOne);
-
-        $data = [];
-        for ($i = $positionOne + 1; $i < $length; $i++) {
-            $data[] = ($chars[$i] & 0x80) ? -1 : $this->charkeyKey[$chars[$i]];
-        }
-
-        if (!$this->verifyChecksum($hrp, $data)) {
-            throw new Exception('Invalid bech32 checksum');
-        }
-
-        return [$hrp, array_slice($data, 0, -6)];
+    /**
+     * @param string $data
+     * @return array<int, int>
+     */
+    private function strToBytes(string $data): array
+    {
+        return array_map(
+            function (string $chr) {
+                return (int)strpos($this->alphabeb, $chr);
+            },
+            str_split($data)
+        );
     }
 }
