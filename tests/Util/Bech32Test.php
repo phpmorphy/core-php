@@ -34,28 +34,22 @@ class Bech32Test extends TestCase
     {
         return [
             'invalid checksum' => [
-                'adr' => 'umi1qq4kruxf'
+                'adr' => 'umi1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqr5zcpf'
             ],
-            'short checksum' => [
-                'adr' => 'li1dgmt3'
+            'invalid character' => [
+                'adr' => 'umi1iqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqr5zcpj'
             ],
             'empty HRP' => [
                 'adr' => '1qqpxkr44'
             ],
-            'separator character' => [
-                'adr' => 'qqpxkr44'
-            ],
-            'mixed' => [
-                'adr' => 'Umi1qqnlgn4t'
-            ],
-            'character' => [
-                'adr' => "umi1\x0q4kruxd"
+            'missing separator' => [
+                'adr' => 'umiqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqr5zcpf'
             ],
             'short' => [
-                'adr' => 'umi1'
+                'adr' => 'umi1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqu5fmc9'
             ],
             'non-zero padding' => [
-                'adr' => 'tb1qrp33g0q5c5txsp9arysrx4k6zdkfs4nce4xj0gdcccefvpysxf3pjxtptv'
+                'adr' => 'umi1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqlfceute'
             ]
         ];
     }
