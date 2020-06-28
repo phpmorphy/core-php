@@ -27,6 +27,7 @@ declare(strict_types=1);
 namespace UmiTop\UmiCore\Block;
 
 use Exception;
+use Iterator;
 use UmiTop\UmiCore\Key\PublicKeyInterface;
 use UmiTop\UmiCore\Key\SecretKeyInterface;
 use UmiTop\UmiCore\Transaction\Transaction;
@@ -34,14 +35,19 @@ use UmiTop\UmiCore\Transaction\TransactionInterface;
 
 /**
  * Class Block
+ * @implements Iterator<int, TransactionInterface>
+ * @SuppressWarnings(PHPMD.TooManyPublicMethods)
  */
-class Block implements BlockInterface
+class Block implements BlockInterface, Iterator
 {
     /** @var array<int, string> */
     private $trxs;
 
     /** @var BlockHeaderInterface */
     private $header;
+
+    /** @var int */
+    private $position = 0;
 
     /**
      * Block constructor.
@@ -148,33 +154,17 @@ class Block implements BlockInterface
      */
     public function calculateMerkleRoot(): string
     {
-        $txCount = $this->header->getTransactionCount();
-
-        if ($txCount === 0) {
-            throw new Exception('no txs');
-        }
-
-        if ($txCount === 1) {
-            return $this->getTransaction(0)->getHash();
-        }
-
         $root = [];
 
-        // step 1
-        $lst = $txCount - 1;
-        $nxt = ceil($txCount / 2);
-        for ($i = 0; $i < $nxt; $i++) {
-            $idx1 = $i * 2;
-            $idx2 = min(($idx1 + 1), $lst);
-            $sum = $this->getTransaction($idx1)->getHash() . $this->getTransaction($idx2)->getHash();
-            $root[$i] = hash('sha256', $sum, true);
+        foreach ($this as $idx => $trx) {
+            $root[$idx] = $trx->getHash();
         }
 
-        // step 2
-        while ($nxt > 1) {
-            $lst = (int)($nxt - 1);
-            $nxt = (int)ceil($nxt / 2);
-            for ($i = 0; $i < $nxt; $i++) {
+        $lvl = count($root);
+        while ($lvl > 1) {
+            $lst = (int)($lvl - 1);
+            $lvl = (int)ceil($lvl / 2);
+            for ($i = 0; $i < $lvl; $i++) {
                 $idx1 = $i * 2;
                 $idx2 = min(($idx1 + 1), $lst);
                 $root[$i] = hash('sha256', ($root[$idx1] . $root[$idx2]), true);
@@ -302,5 +292,46 @@ class Block implements BlockInterface
     public function toBytes(): string
     {
         return $this->header->toBytes() . join('', $this->trxs);
+    }
+
+    /**
+     * @return TransactionInterface
+     * @throws Exception
+     */
+    public function current(): TransactionInterface
+    {
+        return $this->getTransaction($this->position);
+    }
+
+    /**
+     * @return void
+     */
+    public function next(): void
+    {
+        ++$this->position;
+    }
+
+    /**
+     * @return int
+     */
+    public function key(): int
+    {
+        return $this->position;
+    }
+
+    /**
+     * @return bool
+     */
+    public function valid(): bool
+    {
+        return array_key_exists($this->position, $this->trxs);
+    }
+
+    /**
+     * @return void
+     */
+    public function rewind(): void
+    {
+        $this->position = 0;
     }
 }
