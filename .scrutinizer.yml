@@ -7,7 +7,16 @@ build:
         override:
           - php-scrutinizer-run --enable-security-analysis
           - phpcs-run
-    tests: true
+    tests:
+      dependencies:
+        override:
+          - composer require --dev phpunit/phpunit
+      tests:
+        override:
+          - command: composer test
+            coverage:
+              file: clover.xml
+              format: clover
 filter:
   paths:
     - src/
