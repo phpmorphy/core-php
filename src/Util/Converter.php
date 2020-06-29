@@ -65,7 +65,7 @@ class Converter
         }
 
         if (strlen($prefix) !== 3) {
-            throw new Exception('invalid prefix length');
+            throw new Exception('bech32: invalid prefix length');
         }
 
         $ch1 = ord($prefix[0]) - 96;
@@ -85,7 +85,7 @@ class Converter
     {
         foreach ($chars as $chr) {
             if ($chr < 1 || $chr > 26) {
-                throw new Exception('invalid prefix');
+                throw new Exception('bech32: invalid prefix character');
             }
         }
     }

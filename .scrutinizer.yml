@@ -3,6 +3,9 @@ checks:
 build:
   nodes:
     analysis:
+      dependencies:
+        override:
+          - true
       tests:
         override:
           - php-scrutinizer-run --enable-security-analysis
@@ -20,7 +23,5 @@ build:
 filter:
   paths:
     - src/
-  excluded_paths:
-    - tests/
   dependency_paths:
     - src/Util/Ed25519.php
