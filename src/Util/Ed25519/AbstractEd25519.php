@@ -23,7 +23,7 @@ abstract class AbstractEd25519
     public const SEED_BYTES = 32;
 
     /** @var array<int, int> */
-    private $D2;
+    protected $D2;
 
     /** @var array<int, int> */
     protected $D;
@@ -41,10 +41,10 @@ abstract class AbstractEd25519
     protected $L;
 
     /** @var array<int, int> */
-    private $X;
+    protected $X;
 
     /** @var array<int, int> */
-    private $Y;
+    protected $Y;
 
     /**
      * Ed25519 constructor.
@@ -77,36 +77,6 @@ abstract class AbstractEd25519
             0x6658, 0x6666, 0x6666, 0x6666, 0x6666, 0x6666, 0x6666, 0x6666,
             0x6666, 0x6666, 0x6666, 0x6666, 0x6666, 0x6666, 0x6666, 0x6666
         ];
-    }
-
-
-    /**
-     * @param array<int, array<int, int>> $p
-     * @param array<int, array<int, int>> $q
-     */
-    protected function add(array &$p, array $q): void
-    {
-        $a = $b = $c = $d = $t = $e = $f = $g = $h = array_fill(0, 16, 0);
-
-        $this->fnZ($a, $p[1], $p[0]);
-        $this->fnZ($t, $q[1], $q[0]);
-        $this->fnM($a, $a, $t);
-        $this->fnA($b, $p[0], $p[1]);
-        $this->fnA($t, $q[0], $q[1]);
-        $this->fnM($b, $b, $t);
-        $this->fnM($c, $p[3], $q[3]);
-        $this->fnM($c, $c, $this->D2);
-        $this->fnM($d, $p[2], $q[2]);
-        $this->fnA($d, $d, $d);
-        $this->fnZ($e, $b, $a);
-        $this->fnZ($f, $d, $c);
-        $this->fnA($g, $d, $c);
-        $this->fnA($h, $b, $a);
-
-        $this->fnM($p[0], $e, $f);
-        $this->fnM($p[1], $h, $g);
-        $this->fnM($p[2], $g, $f);
-        $this->fnM($p[3], $e, $h);
     }
 
     /**
@@ -159,67 +129,6 @@ abstract class AbstractEd25519
     }
 
     /**
-     * @param array<int, int> $o
-     */
-    private function car25519(array &$o): void
-    {
-        for ($i = 0; $i < 16; $i++) {
-            $o[$i] += (1 << 16);
-            $c = $o[$i] >> 16;
-            $o[($i + 1) * (int)($i < 15)] += $c - 1 + 37 * ($c - 1) * (int)($i === 15);
-            $o[$i] -= $c << 16;
-        }
-    }
-
-
-    /**
-     * @param array<int, int> $o
-     * @param array<int, int> $i
-     */
-    protected function inv25519(array &$o, array $i): void
-    {
-        $c = $i;
-        for ($a = 253; $a >= 0; $a--) {
-            $this->fnM($c, $c, $c);
-            if ($a != 2 && $a != 4) {
-                $this->fnM($c, $c, $i);
-            }
-        }
-        $o = $c;
-    }
-
-    /**
-     * @param string $o
-     * @param array<int, int> $n
-     */
-    protected function pack25519(string &$o, array $n): void
-    {
-        $m = array_fill(0, 16, 0);
-        $t = $n;
-
-        $this->car25519($t);
-        $this->car25519($t);
-        $this->car25519($t);
-
-        for ($j = 0; $j < 2; $j++) {
-            $m[0] = $t[0] - 0xffed;
-            for ($i = 1; $i < 15; $i++) {
-                $m[$i] = $t[$i] - 0xffff - (($m[$i - 1] >> 16) & 1);
-                $m[$i - 1] &= 0xffff;
-            }
-            $m[15] = $t[15] - 0x7fff - (($m[14] >> 16) & 1);
-            $b = ($m[15] >> 16) & 1;
-            $m[14] &= 0xffff;
-            $this->sel25519($t, $m, 1 - $b);
-        }
-
-        for ($i = 0; $i < 16; $i++) {
-            $o[2 * $i] = chr($t[$i] & 0xff);
-            $o[2 * $i + 1] = chr($t[$i] >> 8);
-        }
-    }
-
-    /**
      * @param array<int, int> $a
      * @return int
      */
@@ -250,38 +159,49 @@ abstract class AbstractEd25519
     }
 
     /**
-     * @param array<int, array<int, int>> $p
-     * @param string $s
+     * @param string $x
+     * @param string $y
+     * @return bool
      */
-    protected function scalarbase(array &$p, string $s): void
+    protected function cryptoVerify32(string $x, string $y): bool
     {
-        $q = array_fill(0, 4, array_fill(0, 16, 0));
-        $this->set25519($q[0], $this->X);
-        $this->set25519($q[1], $this->Y);
-        $this->set25519($q[2], $this->gf1);
-        $this->fnM($q[3], $this->X, $this->Y);
-        $this->scalarmult($p, $q, $s);
+        $d = 0;
+        for ($i = 0; $i < 32; $i++) {
+            $d |= ord($x[$i]) ^ ord($y[$i]);
+        }
+
+        return (1 & (($d - 1) >> 8)) === 1;
     }
 
     /**
-     * @param array<int, array<int, int>> $p
-     * @param array<int, array<int, int>> $q
-     * @param string $s
+     * @param array<int, int> $a
+     * @param array<int, int> $b
+     * @return bool
      */
-    protected function scalarmult(array &$p, array &$q, string $s): void
+    protected function neq25519(array $a, array $b): bool
     {
-        $this->set25519($p[0], $this->gf0);
-        $this->set25519($p[1], $this->gf1);
-        $this->set25519($p[2], $this->gf1);
-        $this->set25519($p[3], $this->gf0);
+        $c = $d = str_repeat("\x0", 32);
 
-        for ($i = 255; $i >= 0; --$i) {
-            $b = (ord($s[(int)($i / 8)]) >> ($i & 7)) & 1;
-            $this->cswap($p, $q, $b);
-            $this->add($q, $p);
-            $this->add($p, $p);
-            $this->cswap($p, $q, $b);
+        $this->pack25519($c, $a);
+        $this->pack25519($d, $b);
+
+        return $this->cryptoVerify32($c, $d);
+    }
+
+    /**
+     * @param array<int, int> $o
+     * @param array<int, int> $i
+     */
+    protected function inv25519(array &$o, array $i): void
+    {
+        $c = $i;
+        for ($a = 253; $a >= 0; $a--) {
+            $this->fnM($c, $c, $c);
+            if ($a != 2 && $a != 4) {
+                $this->fnM($c, $c, $i);
+            }
         }
+        $o = $c;
     }
 
     /**
@@ -312,7 +232,7 @@ abstract class AbstractEd25519
      * @param array<int, array<int, int>> $q
      * @param int $b
      */
-    private function cswap(array &$p, array &$q, int $b): void
+    protected function cswap(array &$p, array &$q, int $b): void
     {
         for ($i = 0; $i < 4; $i++) {
             $this->sel25519($p[$i], $q[$i], $b);
@@ -324,13 +244,57 @@ abstract class AbstractEd25519
      * @param array<int, int> $q
      * @param int $b
      */
-    private function sel25519(array &$p, array &$q, int $b): void
+    protected function sel25519(array &$p, array &$q, int $b): void
     {
         $c = ~($b - 1);
         for ($i = 0; $i < 16; $i++) {
             $ttt = $c & ($p[$i] ^ $q[$i]);
             $p[$i] ^= $ttt;
             $q[$i] ^= $ttt;
+        }
+    }
+
+    /**
+     * @param array<int, int> $o
+     */
+    private function car25519(array &$o): void
+    {
+        for ($i = 0; $i < 16; $i++) {
+            $o[$i] += (1 << 16);
+            $c = $o[$i] >> 16;
+            $o[($i + 1) * (int)($i < 15)] += $c - 1 + 37 * ($c - 1) * (int)($i === 15);
+            $o[$i] -= $c << 16;
+        }
+    }
+
+    /**
+     * @param string $o
+     * @param array<int, int> $n
+     */
+    protected function pack25519(string &$o, array $n): void
+    {
+        $m = array_fill(0, 16, 0);
+        $t = $n;
+
+        $this->car25519($t);
+        $this->car25519($t);
+        $this->car25519($t);
+
+        for ($j = 0; $j < 2; $j++) {
+            $m[0] = $t[0] - 0xffed;
+            for ($i = 1; $i < 15; $i++) {
+                $m[$i] = $t[$i] - 0xffff - (($m[$i - 1] >> 16) & 1);
+                $m[$i - 1] &= 0xffff;
+            }
+            $m[15] = $t[15] - 0x7fff - (($m[14] >> 16) & 1);
+            $b = ($m[15] >> 16) & 1;
+            $m[14] &= 0xffff;
+            $this->sel25519($t, $m, 1 - $b);
+        }
+
+        for ($i = 0; $i < 16; $i++) {
+            $o[2 * $i] = chr($t[$i] & 0xff);
+            $o[2 * $i + 1] = chr($t[$i] >> 8);
         }
     }
 }

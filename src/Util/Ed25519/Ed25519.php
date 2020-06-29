@@ -130,18 +130,32 @@ class Ed25519 extends AbstractEd25519
     }
 
     /**
-     * @param string $x
-     * @param string $y
-     * @return bool
+     * @param array<int, array<int, int>> $p
+     * @param array<int, array<int, int>> $q
      */
-    private function cryptoVerify32(string $x, string $y): bool
+    private function add(array &$p, array $q): void
     {
-        $d = 0;
-        for ($i = 0; $i < 32; $i++) {
-            $d |= ord($x[$i]) ^ ord($y[$i]);
-        }
+        $a = $b = $c = $d = $t = $e = $f = $g = $h = array_fill(0, 16, 0);
 
-        return (1 & (($d - 1) >> 8)) === 1;
+        $this->fnZ($a, $p[1], $p[0]);
+        $this->fnZ($t, $q[1], $q[0]);
+        $this->fnM($a, $a, $t);
+        $this->fnA($b, $p[0], $p[1]);
+        $this->fnA($t, $q[0], $q[1]);
+        $this->fnM($b, $b, $t);
+        $this->fnM($c, $p[3], $q[3]);
+        $this->fnM($c, $c, $this->D2);
+        $this->fnM($d, $p[2], $q[2]);
+        $this->fnA($d, $d, $d);
+        $this->fnZ($e, $b, $a);
+        $this->fnZ($f, $d, $c);
+        $this->fnA($g, $d, $c);
+        $this->fnA($h, $b, $a);
+
+        $this->fnM($p[0], $e, $f);
+        $this->fnM($p[1], $h, $g);
+        $this->fnM($p[2], $g, $f);
+        $this->fnM($p[3], $e, $h);
     }
 
     /**
@@ -179,21 +193,6 @@ class Ed25519 extends AbstractEd25519
     }
 
     /**
-     * @param array<int, int> $a
-     * @param array<int, int> $b
-     * @return bool
-     */
-    private function neq25519(array $a, array $b): bool
-    {
-        $c = $d = str_repeat("\x0", 32);
-
-        $this->pack25519($c, $a);
-        $this->pack25519($d, $b);
-
-        return $this->cryptoVerify32($c, $d);
-    }
-
-    /**
      * @param string $r
      * @param array<int, array<int, int>> $p
      */
@@ -225,6 +224,41 @@ class Ed25519 extends AbstractEd25519
         }
 
         $this->modL($r, $x);
+    }
+
+    /**
+     * @param array<int, array<int, int>> $p
+     * @param string $s
+     */
+    private function scalarbase(array &$p, string $s): void
+    {
+        $q = array_fill(0, 4, array_fill(0, 16, 0));
+        $this->set25519($q[0], $this->X);
+        $this->set25519($q[1], $this->Y);
+        $this->set25519($q[2], $this->gf1);
+        $this->fnM($q[3], $this->X, $this->Y);
+        $this->scalarmult($p, $q, $s);
+    }
+
+    /**
+     * @param array<int, array<int, int>> $p
+     * @param array<int, array<int, int>> $q
+     * @param string $s
+     */
+    private function scalarmult(array &$p, array &$q, string $s): void
+    {
+        $this->set25519($p[0], $this->gf0);
+        $this->set25519($p[1], $this->gf1);
+        $this->set25519($p[2], $this->gf1);
+        $this->set25519($p[3], $this->gf0);
+
+        for ($i = 255; $i >= 0; --$i) {
+            $b = (ord($s[(int)($i / 8)]) >> ($i & 7)) & 1;
+            $this->cswap($p, $q, $b);
+            $this->add($q, $p);
+            $this->add($p, $p);
+            $this->cswap($p, $q, $b);
+        }
     }
 
     /**
