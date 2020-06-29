@@ -58,7 +58,7 @@ class Block extends BlockHeader implements BlockInterface, Iterator
             throw new Exception('bytes size should be at least 167 bytes');
         }
 
-        parent::__construct($bytes);
+        parent::__construct(substr($bytes, 0, BlockHeader::LENGTH));
 
         $blockLen = BlockHeader::LENGTH + (Transaction::LENGTH * $this->getTransactionCount());
 
