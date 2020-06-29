@@ -25,17 +25,17 @@ class Ed25519Test extends TestCase
         $this->assertEquals($expected, $actual);
     }
 
-    public function testPublicKeyFromSecretKeyException(): void
-    {
-        if (method_exists($this, 'expectException')) {
-            $this->expectException('Exception');
-        } elseif (method_exists($this, 'setExpectedException')) {
-            $this->setExpectedException('Exception'); // PHPUnit 4
-        }
-
-        $obj = new Ed25519();
-        $obj->publicKeyFromSecretKey(str_repeat("\x0", Ed25519::SECRET_KEY_BYTES - 1));
-    }
+//    public function testPublicKeyFromSecretKeyException(): void
+//    {
+//        if (method_exists($this, 'expectException')) {
+//            $this->expectException('Exception');
+//        } elseif (method_exists($this, 'setExpectedException')) {
+//            $this->setExpectedException('Exception'); // PHPUnit 4
+//        }
+//
+//        $obj = new Ed25519();
+//        $obj->publicKeyFromSecretKey(str_repeat("\x0", Ed25519::SECRET_KEY_BYTES - 1));
+//    }
 
     public function testSecretKeyFromSeed(): void
     {
@@ -50,17 +50,17 @@ class Ed25519Test extends TestCase
         $this->assertEquals($expected, $actual);
     }
 
-    public function testSecretKeyFromSeedException(): void
-    {
-        if (method_exists($this, 'expectException')) {
-            $this->expectException('Exception');
-        } elseif (method_exists($this, 'setExpectedException')) {
-            $this->setExpectedException('Exception'); // PHPUnit 4
-        }
-
-        $obj = new Ed25519();
-        $obj->secretKeyFromSeed(str_repeat("\x0", Ed25519::SEED_BYTES - 1));
-    }
+//    public function testSecretKeyFromSeedException(): void
+//    {
+//        if (method_exists($this, 'expectException')) {
+//            $this->expectException('Exception');
+//        } elseif (method_exists($this, 'setExpectedException')) {
+//            $this->setExpectedException('Exception'); // PHPUnit 4
+//        }
+//
+//        $obj = new Ed25519();
+//        $obj->secretKeyFromSeed(str_repeat("\x0", Ed25519::SEED_BYTES - 1));
+//    }
 
     public function testSign(): void
     {
@@ -78,17 +78,17 @@ class Ed25519Test extends TestCase
         $this->assertEquals($expected, $actual);
     }
 
-    public function testSignException(): void
-    {
-        if (method_exists($this, 'expectException')) {
-            $this->expectException('Exception');
-        } elseif (method_exists($this, 'setExpectedException')) {
-            $this->setExpectedException('Exception'); // PHPUnit 4
-        }
-
-        $obj = new Ed25519();
-        $obj->sign('', str_repeat("\x0", Ed25519::SECRET_KEY_BYTES - 1));
-    }
+//    public function testSignException(): void
+//    {
+//        if (method_exists($this, 'expectException')) {
+//            $this->expectException('Exception');
+//        } elseif (method_exists($this, 'setExpectedException')) {
+//            $this->setExpectedException('Exception'); // PHPUnit 4
+//        }
+//
+//        $obj = new Ed25519();
+//        $obj->sign('', str_repeat("\x0", Ed25519::SECRET_KEY_BYTES - 1));
+//    }
 
     /**
      * @dataProvider signatureProvider
@@ -125,33 +125,33 @@ class Ed25519Test extends TestCase
         ];
     }
 
-    public function testVerifyExceptionSignature(): void
-    {
-        if (method_exists($this, 'expectException')) {
-            $this->expectException('Exception');
-        } elseif (method_exists($this, 'setExpectedException')) {
-            $this->setExpectedException('Exception'); // PHPUnit 4
-        }
+//    public function testVerifyExceptionSignature(): void
+//    {
+//        if (method_exists($this, 'expectException')) {
+//            $this->expectException('Exception');
+//        } elseif (method_exists($this, 'setExpectedException')) {
+//            $this->setExpectedException('Exception'); // PHPUnit 4
+//        }
+//
+//        $sig = str_repeat("\x0", Ed25519::SIGNATURE_BYTES - 1);
+//        $msg = '';
+//        $pub = str_repeat("\x0", Ed25519::PUBLIC_KEY_BYTES);
+//        $obj = new Ed25519();
+//        $obj->verify($sig, $msg, $pub);
+//    }
 
-        $sig = str_repeat("\x0", Ed25519::SIGNATURE_BYTES - 1);
-        $msg = '';
-        $pub = str_repeat("\x0", Ed25519::PUBLIC_KEY_BYTES);
-        $obj = new Ed25519();
-        $obj->verify($sig, $msg, $pub);
-    }
-
-    public function testVerifyExceptionPublicKey(): void
-    {
-        if (method_exists($this, 'expectException')) {
-            $this->expectException('Exception');
-        } elseif (method_exists($this, 'setExpectedException')) {
-            $this->setExpectedException('Exception'); // PHPUnit 4
-        }
-
-        $sig = str_repeat("\x0", Ed25519::SIGNATURE_BYTES);
-        $msg = '';
-        $pub = str_repeat("\x0", Ed25519::PUBLIC_KEY_BYTES - 1);
-        $obj = new Ed25519();
-        $obj->verify($sig, $msg, $pub);
-    }
+//    public function testVerifyExceptionPublicKey(): void
+//    {
+//        if (method_exists($this, 'expectException')) {
+//            $this->expectException('Exception');
+//        } elseif (method_exists($this, 'setExpectedException')) {
+//            $this->setExpectedException('Exception'); // PHPUnit 4
+//        }
+//
+//        $sig = str_repeat("\x0", Ed25519::SIGNATURE_BYTES);
+//        $msg = '';
+//        $pub = str_repeat("\x0", Ed25519::PUBLIC_KEY_BYTES - 1);
+//        $obj = new Ed25519();
+//        $obj->verify($sig, $msg, $pub);
+//    }
 }

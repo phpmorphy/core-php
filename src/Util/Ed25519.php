@@ -26,16 +26,14 @@ declare(strict_types=1);
 
 namespace UmiTop\UmiCore\Util;
 
-use Exception;
-
 /**
  * Class Ed25519
  * Implementation derived from TweetNaCl version 20140427.
  * @see http://tweetnacl.cr.yp.to/
- * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
+ * @1SuppressWarnings(PHPMD.ExcessiveClassComplexity)
  * @SuppressWarnings(PHPMD.ShortMethodName)
  * @SuppressWarnings(PHPMD.ShortVariable)
- * @SuppressWarnings(PHPMD.TooManyMethods)
+ * @1SuppressWarnings(PHPMD.TooManyMethods)
  */
 class Ed25519
 {
@@ -77,7 +75,6 @@ class Ed25519
 
     /**
      * Ed25519 constructor.
-     * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
      */
     public function __construct()
     {
@@ -115,28 +112,18 @@ class Ed25519
     /**
      * @param string $secretKey
      * @return string
-     * @throws Exception
      */
     public function publicKeyFromSecretKey(string $secretKey): string
     {
-        if (strlen($secretKey) !== self::SECRET_KEY_BYTES) {
-            throw new Exception('length must be 64 bytes');
-        }
-
         return substr($secretKey, 32, 32);
     }
 
     /**
      * @param string $seed
      * @return string
-     * @throws Exception
      */
     public function secretKeyFromSeed(string $seed): string
     {
-        if (strlen($seed) !== self::SEED_BYTES) {
-            throw new Exception('seed length must be 32 bytes');
-        }
-
         $p = array_fill(0, 4, array_fill(0, 16, 0));
 
         $d = hash('sha512', $seed, true);
@@ -156,14 +143,9 @@ class Ed25519
      * @param string $message
      * @param string $secretKey
      * @return string
-     * @throws Exception
      */
     public function sign(string $message, string $secretKey): string
     {
-        if (strlen($secretKey) !== self::SECRET_KEY_BYTES) {
-            throw new Exception('secretKey length must be 64 bytes');
-        }
-
         $sm = str_pad($message, 64 + strlen($message), "\x0", STR_PAD_LEFT);
 
         // хэшируем приватный ключик (32байта)
@@ -207,28 +189,16 @@ class Ed25519
      * @param string $message
      * @param string $publicKey
      * @return bool
-     * @throws Exception
      */
     public function verify(string $signature, string $message, string $publicKey): bool
     {
-        if (strlen($signature) !== self::SIGNATURE_BYTES) {
-            throw new Exception('signature length must be 64 bytes');
-        }
-
-        if (strlen($publicKey) !== self::PUBLIC_KEY_BYTES) {
-            throw new Exception('publicKey length must be 32 bytes');
-        }
-
         $q = array_fill(0, 4, array_fill(0, 16, 0));
         if (!$this->unpackneg($q, $publicKey)) {
             return false; // @codeCoverageIgnore
         }
 
-        $m = $sm = $signature . $message;
-
-        for ($i = 0; $i < 32; $i++) {
-            $m[$i + 32] = $publicKey[$i];
-        }
+        $sm = $signature . $message;
+        $m = substr_replace($sm, substr($publicKey, 0, 32), 32, 32);
 
         $h = hash('sha512', $m, true);
         $this->reduce($h);
@@ -250,15 +220,7 @@ class Ed25519
      */
     private function add(array &$p, array $q): void
     {
-        $a = array_fill(0, 16, 0);
-        $b = array_fill(0, 16, 0);
-        $c = array_fill(0, 16, 0);
-        $d = array_fill(0, 16, 0);
-        $t = array_fill(0, 16, 0);
-        $e = array_fill(0, 16, 0);
-        $f = array_fill(0, 16, 0);
-        $g = array_fill(0, 16, 0);
-        $h = array_fill(0, 16, 0);
+        $a = $b = $c = $d = $t = $e = $f = $g = $h = array_fill(0, 16, 0);
 
         $this->fnZ($a, $p[1], $p[0]);
         $this->fnZ($t, $q[1], $q[0]);
@@ -286,12 +248,18 @@ class Ed25519
      */
     private function car25519(array &$o): void
     {
-        for ($i = 0; $i < 16; $i++) {
-            $o[$i] += (1 << 16);
-            $c = $o[$i] >> 16;
+        array_walk($o, function (&$v, $i) use (&$o) {
+            $v += (1 << 16);
+            $c = $v >> 16;
             $o[($i + 1) * (int)($i < 15)] += $c - 1 + 37 * ($c - 1) * (int)($i === 15);
-            $o[$i] -= $c << 16;
-        }
+            $v -= $c << 16;
+        });
+//        for ($i = 0; $i < 16; $i++) {
+//            $o[$i] += (1 << 16);
+//            $c = $o[$i] >> 16;
+//            $o[($i + 1) * (int)($i < 15)] += $c - 1 + 37 * ($c - 1) * (int)($i === 15);
+//            $o[$i] -= $c << 16;
+//        }
     }
 
     /**
@@ -316,9 +284,16 @@ class Ed25519
      */
     private function cswap(array &$p, array &$q, int $b): void
     {
-        for ($i = 0; $i < 4; $i++) {
-            $this->sel25519($p[$i], $q[$i], $b);
-        }
+        array_walk(
+            $p,
+            function (&$v, $i) use (&$q, $b) {
+                $this->sel25519($v, $q[$i], $b);
+            }
+        );
+
+//        for ($i = 0; $i < 4; $i++) {
+//            $this->sel25519($p[$i], $q[$i], $b);
+//        }
     }
 
     /**
@@ -328,9 +303,16 @@ class Ed25519
      */
     private function fnA(array &$o, array $a, array $b): void
     {
-        for ($i = 0; $i < 16; $i++) {
-            $o[$i] = $a[$i] + $b[$i];
-        }
+        array_walk(
+            $o,
+            function (&$v, $i) use ($a, $b) {
+                $v = $a[$i] + $b[$i];
+            }
+        );
+
+//        for ($i = 0; $i < 16; $i++) {
+//            $o[$i] = $a[$i] + $b[$i];
+//        }
     }
 
     /**
@@ -350,9 +332,17 @@ class Ed25519
         for ($i = 0; $i < 15; $i++) {
             $t[$i] += 38 * $t[$i + 16];
         }
-        for ($i = 0; $i < 16; $i++) {
-            $o[$i] = $t[$i];
-        }
+
+        array_walk(
+            $o,
+            function (&$v, $i) use ($t) {
+                $v = $t[$i];
+            }
+        );
+
+//        for ($i = 0; $i < 16; $i++) {
+//            $o[$i] = $t[$i];
+//        }
 
         $this->car25519($o);
         $this->car25519($o);
@@ -365,9 +355,12 @@ class Ed25519
      */
     private function fnZ(array &$o, array $a, array $b): void
     {
-        for ($i = 0; $i < 16; $i++) {
-            $o[$i] = $a[$i] - $b[$i];
-        }
+        array_walk(
+            $o,
+            function (&$val, $key) use ($a, $b) {
+                $val = $a[$key] - $b[$key];
+            }
+        );
     }
 
     /**
@@ -376,22 +369,14 @@ class Ed25519
      */
     private function inv25519(array &$o, array $i): void
     {
-        $c = array_fill(0, 16, 0);
-
-        for ($a = 0; $a < 16; $a++) {
-            $c[$a] = $i[$a];
-        }
-
+        $c = $i;
         for ($a = 253; $a >= 0; $a--) {
             $this->fnM($c, $c, $c);
             if ($a != 2 && $a != 4) {
                 $this->fnM($c, $c, $i);
             }
         }
-
-        for ($a = 0; $a < 16; $a++) {
-            $o[$a] = $c[$a];
-        }
+        $o = $c;
     }
 
     /**
@@ -435,8 +420,7 @@ class Ed25519
      */
     private function neq25519(array $a, array $b): bool
     {
-        $c = str_repeat("\x0", 32);
-        $d = str_repeat("\x0", 32);
+        $c = $d = str_repeat("\x0", 32);
 
         $this->pack25519($c, $a);
         $this->pack25519($d, $b);
@@ -450,9 +434,7 @@ class Ed25519
      */
     private function pack(string &$r, array $p): void
     {
-        $tx = array_fill(0, 16, 0);
-        $ty = array_fill(0, 16, 0);
-        $zi = array_fill(0, 16, 0);
+        $tx = $ty = $zi = array_fill(0, 16, 0);
 
         $this->inv25519($zi, $p[2]);
         $this->fnM($tx, $p[0], $zi);
@@ -469,11 +451,12 @@ class Ed25519
     private function pack25519(string &$o, array $n): void
     {
         $m = array_fill(0, 16, 0);
-        $t = array_fill(0, 16, 0);
+//        $t = array_fill(0, 16, 0);
 
-        for ($i = 0; $i < 16; $i++) {
-            $t[$i] = $n[$i];
-        }
+        $t = $n;
+//        for ($i = 0; $i < 16; $i++) {
+//            $t[$i] = $n[$i];
+//        }
 
         $this->car25519($t);
         $this->car25519($t);
@@ -486,15 +469,23 @@ class Ed25519
                 $m[$i - 1] &= 0xffff;
             }
             $m[15] = $t[15] - 0x7fff - (($m[14] >> 16) & 1);
-            $bbb = ($m[15] >> 16) & 1;
+            $b = ($m[15] >> 16) & 1;
             $m[14] &= 0xffff;
-            $this->sel25519($t, $m, 1 - $bbb);
+            $this->sel25519($t, $m, 1 - $b);
         }
 
-        for ($i = 0; $i < 16; $i++) {
-            $o[2 * $i] = chr($t[$i] & 0xff);
-            $o[2 * $i + 1] = chr($t[$i] >> 8);
-        }
+        array_walk(
+            $t,
+            function ($v, $i) use (&$o) {
+                $o[2 * $i] = chr($v & 0xff);
+                $o[2 * $i + 1] = chr($v >> 8);
+            }
+        );
+
+//        for ($i = 0; $i < 16; $i++) {
+//            $o[2 * $i] = chr($t[$i] & 0xff);
+//            $o[2 * $i + 1] = chr($t[$i] >> 8);
+//        }
     }
 
     /**
@@ -515,11 +506,11 @@ class Ed25519
      */
     private function pow2523(array &$o, array $i): void
     {
-        $c = array_fill(0, 16, 0);
+        $c = $i; // array_fill(0, 16, 0);
 
-        for ($a = 0; $a < 16; $a++) {
-            $c[$a] = $i[$a];
-        }
+//        for ($a = 0; $a < 16; $a++) {
+//            $c[$a] = $i[$a];
+//        }
 
         for ($a = 250; $a >= 0; $a--) {
             $this->fnM($c, $c, $c);
@@ -528,9 +519,11 @@ class Ed25519
             }
         }
 
-        for ($a = 0; $a < 16; $a++) {
-            $o[$a] = $c[$a];
-        }
+        $o = $c;
+
+//        for ($a = 0; $a < 16; $a++) {
+//            $o[$a] = $c[$a];
+//        }
     }
 
     /**
@@ -540,13 +533,21 @@ class Ed25519
     {
         $x = array_fill(0, 64, 0);
 
-        for ($i = 0; $i < 64; $i++) {
-            $x[$i] = ord($r[$i]);
-        }
+        array_walk(
+            $x,
+            function (&$v, $i) use (&$r) {
+                $v = ord($r[$i]);
+                $r[$i] = chr(0);
+            }
+        );
 
-        for ($i = 0; $i < 64; $i++) {
-            $r[$i] = chr(0);
-        }
+//        for ($i = 0; $i < 64; $i++) {
+//            $x[$i] = ord($r[$i]);
+//        }
+
+//        for ($i = 0; $i < 64; $i++) {
+//            $r[$i] = chr(0);
+//        }
 
         $this->modL($r, $x);
     }
@@ -594,11 +595,20 @@ class Ed25519
     private function sel25519(array &$p, array &$q, int $b): void
     {
         $c = ~($b - 1);
-        for ($i = 0; $i < 16; $i++) {
-            $ttt = $c & ($p[$i] ^ $q[$i]);
-            $p[$i] ^= $ttt;
-            $q[$i] ^= $ttt;
-        }
+        array_walk(
+            $p,
+            function (&$v, $i) use (&$q, $c) {
+                $t = $c & ($v ^ $q[$i]);
+                $v ^= $t;
+                $q[$i] ^= $t;
+            }
+        );
+
+//        for ($i = 0; $i < 16; $i++) {
+//            $t = $c & ($p[$i] ^ $q[$i]);
+//            $p[$i] ^= $t;
+//            $q[$i] ^= $t;
+//        }
     }
 
     /**
@@ -607,9 +617,15 @@ class Ed25519
      */
     private function set25519(array &$r, array $a): void
     {
-        for ($i = 0; $i < 16; $i++) {
-            $r[$i] = $a[$i];
-        }
+        array_walk(
+            $r,
+            function (&$v, $i) use ($a) {
+                $v = $a[$i];
+            }
+        );
+//        for ($i = 0; $i < 16; $i++) {
+//            $r[$i] = $a[$i];
+//        }
     }
 
     /**
@@ -618,9 +634,15 @@ class Ed25519
      */
     private function unpack25519(array &$o, string $n): void
     {
-        for ($i = 0; $i < 16; $i++) {
-            $o[$i] = ord($n[2 * $i]) + (ord($n[2 * $i + 1]) << 8);
-        }
+        array_walk(
+            $o,
+            function (&$v, $i) use ($n) {
+                $v = ord($n[2 * $i]) + (ord($n[2 * $i + 1]) << 8);
+            }
+        );
+//        for ($i = 0; $i < 16; $i++) {
+//            $o[$i] = ord($n[2 * $i]) + (ord($n[2 * $i + 1]) << 8);
+//        }
         $o[15] &= 0x7fff;
     }
 

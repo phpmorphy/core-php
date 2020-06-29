@@ -26,7 +26,10 @@ class BlockTest extends TestCase
         $this->assertEquals($expected, $actual);
     }
 
-    public function testConstructorException(): void
+    /**
+     * @dataProvider invalidBlockProvider
+     */
+    public function testConstructorException(string $bytes): void
     {
         if (method_exists($this, 'expectException')) {
             $this->expectException('Exception');
@@ -34,7 +37,22 @@ class BlockTest extends TestCase
             $this->setExpectedException('Exception'); // PHPUnit 4
         }
 
-        new Block('');
+        new Block($bytes);
+    }
+
+    /**
+     * @return array<string, array<string, int|string>>
+     */
+    public function invalidBlockProvider(): array
+    {
+        return [
+            'too short' => [
+                'bytes' => str_repeat("\x0", BlockHeader::LENGTH - 1)
+            ],
+            'incorrect' => [
+                'bytes' => str_repeat("\x0", BlockHeader::LENGTH + 1)
+            ]
+        ];
     }
 
     public function testConstructorException2(): void
