@@ -5,25 +5,25 @@ declare(strict_types=1);
 namespace Tests\Util;
 
 use PHPUnit\Framework\TestCase;
-use UmiTop\UmiCore\Util\Ed25519;
+use UmiTop\UmiCore\Util\Ed25519\Ed25519;
 
 /**
  * @SuppressWarnings(PHPMD.StaticAccess)
  */
 class Ed25519Test extends TestCase
 {
-    public function testPublicKeyFromSecretKey(): void
-    {
-        $secKey = base64_decode(
-            'm8SzWB0okW5pliiqCbAFbMrrh+3z+914V12x0uB19FsqSoVJFNJIHaOO9ktXJvhOP9AY2cmtzZ5KFKbTMvFN2Q=='
-        );
-        $expected = base64_decode('KkqFSRTSSB2jjvZLVyb4Tj/QGNnJrc2eShSm0zLxTdk=');
-
-        $obj = new Ed25519();
-        $actual = $obj->publicKeyFromSecretKey($secKey);
-
-        $this->assertEquals($expected, $actual);
-    }
+//    public function testPublicKeyFromSecretKey(): void
+//    {
+//        $secKey = base64_decode(
+//            'm8SzWB0okW5pliiqCbAFbMrrh+3z+914V12x0uB19FsqSoVJFNJIHaOO9ktXJvhOP9AY2cmtzZ5KFKbTMvFN2Q=='
+//        );
+//        $expected = base64_decode('KkqFSRTSSB2jjvZLVyb4Tj/QGNnJrc2eShSm0zLxTdk=');
+//
+//        $obj = new Ed25519();
+//        $actual = $obj->publicKeyFromSecretKey($secKey);
+//
+//        $this->assertEquals($expected, $actual);
+//    }
 
 //    public function testPublicKeyFromSecretKeyException(): void
 //    {

@@ -29,7 +29,7 @@ namespace UmiTop\UmiCore\Key\Ed25519;
 use Exception;
 use UmiTop\UmiCore\Key\PublicKeyInterface;
 use UmiTop\UmiCore\Key\SecretKeyInterface;
-use UmiTop\UmiCore\Util\Ed25519;
+use UmiTop\UmiCore\Util\Ed25519\Ed25519;
 
 /**
  * Class SecretKey
