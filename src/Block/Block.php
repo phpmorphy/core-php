@@ -28,24 +28,17 @@ namespace UmiTop\UmiCore\Block;
 
 use Exception;
 use Iterator;
-use UmiTop\UmiCore\Key\PublicKeyInterface;
-use UmiTop\UmiCore\Key\SecretKeyInterface;
 use UmiTop\UmiCore\Transaction\Transaction;
 use UmiTop\UmiCore\Transaction\TransactionInterface;
 
 /**
  * Class Block
  * @implements Iterator<int, TransactionInterface>
- * @SuppressWarnings(PHPMD.TooManyMethods)
- * @SuppressWarnings(PHPMD.TooManyPublicMethods)
  */
-class Block implements BlockInterface, Iterator
+class Block extends BlockHeader implements BlockInterface, Iterator
 {
     /** @var array<int, string> */
     private $trxs;
-
-    /** @var BlockHeaderInterface */
-    private $header;
 
     /** @var int */
     private $position = 0;
@@ -65,9 +58,9 @@ class Block implements BlockInterface, Iterator
             throw new Exception('bytes size should be at least 167 bytes');
         }
 
-        $this->header = new BlockHeader(substr($bytes, 0, BlockHeader::LENGTH));
+        parent::__construct($bytes);
 
-        $blockLen = BlockHeader::LENGTH + (Transaction::LENGTH * $this->header->getTransactionCount());
+        $blockLen = BlockHeader::LENGTH + (Transaction::LENGTH * $this->getTransactionCount());
 
         if (strlen($bytes) !== $blockLen) {
             throw new Exception('incorrect length');
@@ -81,72 +74,7 @@ class Block implements BlockInterface, Iterator
      */
     public function getHeader(): BlockHeaderInterface
     {
-        return $this->header;
-    }
-
-    /**
-     * @return string
-     */
-    public function getHash(): string
-    {
-        return $this->header->getHash();
-    }
-
-    /**
-     * @return integer
-     */
-    public function getVersion(): int
-    {
-        return $this->header->getVersion();
-    }
-
-    /**
-     * @param integer $version
-     * @return BlockInterface
-     */
-    public function setVersion(int $version): BlockInterface
-    {
-        $this->header->setVersion($version);
-
-        return $this;
-    }
-
-    /**
-     * @return string
-     */
-    public function getPreviousBlockHash(): string
-    {
-        return $this->header->getPreviousBlockHash();
-    }
-
-    /**
-     * @param string $hash
-     * @return BlockInterface
-     */
-    public function setPreviousBlockHash(string $hash): BlockInterface
-    {
-        $this->header->setPreviousBlockHash($hash);
-
-        return $this;
-    }
-
-    /**
-     * @return string
-     */
-    public function getMerkleRootHash(): string
-    {
-        return $this->header->getMerkleRootHash();
-    }
-
-    /**
-     * @param string $hash
-     * @return BlockInterface
-     */
-    public function setMerkleRootHash(string $hash): BlockInterface
-    {
-        $this->header->setMerkleRootHash($hash);
-
-        return $this;
+        return new BlockHeader(parent::toBytes());
     }
 
     /**
@@ -176,91 +104,14 @@ class Block implements BlockInterface, Iterator
     }
 
     /**
-     * @return int
-     */
-    public function getTimestamp(): int
-    {
-        return $this->header->getTimestamp();
-    }
-
-    /**
-     * @param integer $epoch
-     * @return BlockInterface
-     */
-    public function setTimestamp(int $epoch): BlockInterface
-    {
-        $this->header->setTimestamp($epoch);
-
-        return $this;
-    }
-
-    /**
-     * @return PublicKeyInterface
-     * @throws Exception
-     */
-    public function getPublicKey(): PublicKeyInterface
-    {
-        return $this->header->getPublicKey();
-    }
-
-    /**
-     * @param PublicKeyInterface $publicKey
-     * @return BlockInterface
-     */
-    public function setPublicKey(PublicKeyInterface $publicKey): BlockInterface
-    {
-        $this->header->setPublicKey($publicKey);
-
-        return $this;
-    }
-
-    /**
-     * @return string
-     */
-    public function getSignature(): string
-    {
-        return $this->header->getSignature();
-    }
-
-    /**
-     * @param string $signature
-     * @return BlockInterface
-     */
-    public function setSignature(string $signature): BlockInterface
-    {
-        $this->header->setSignature($signature);
-
-        return $this;
-    }
-
-    /**
-     * @param SecretKeyInterface $secretKey
-     * @return BlockInterface
-     */
-    public function sign(SecretKeyInterface $secretKey): BlockInterface
-    {
-        $this->header->sign($secretKey);
-
-        return $this;
-    }
-
-    /**
-     * @return integer
-     */
-    public function getTransactionCount(): int
-    {
-        return $this->header->getTransactionCount();
-    }
-
-    /**
      * @param TransactionInterface $transaction
      * @return BlockInterface
      */
     public function appendTransaction(TransactionInterface $transaction): BlockInterface
     {
-        $txCount = $this->header->getTransactionCount();
+        $txCount = $this->getTransactionCount();
         $this->trxs[$txCount] = $transaction->toBytes();
-        $this->header->setTransactionCount(++$txCount);
+        $this->setTransactionCount(++$txCount);
 
         return $this;
     }
@@ -272,7 +123,7 @@ class Block implements BlockInterface, Iterator
      */
     public function getTransaction(int $index): TransactionInterface
     {
-        if ($index < 0 || $index >= $this->header->getTransactionCount()) {
+        if ($index < 0 || $index >= $this->getTransactionCount()) {
             throw new Exception('incorrect index');
         }
 
@@ -284,7 +135,7 @@ class Block implements BlockInterface, Iterator
      */
     public function verify(): bool
     {
-        return $this->header->verify();
+        return parent::verify();
     }
 
     /**
@@ -292,7 +143,7 @@ class Block implements BlockInterface, Iterator
      */
     public function toBytes(): string
     {
-        return $this->header->toBytes() . join('', $this->trxs);
+        return parent::toBytes() . join('', $this->trxs);
     }
 
     /**

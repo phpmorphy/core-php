@@ -23,5 +23,3 @@ build:
 filter:
   paths:
     - src/
-  dependency_paths:
-    - src/Util/Ed25519.php
