@@ -27,10 +27,10 @@ declare(strict_types=1);
 namespace UmiTop\UmiCore\Block;
 
 use UmiTop\UmiCore\Key\PublicKeyInterface;
-use UmiTop\UmiCore\Key\SecretKeyInterface;
 
 /**
  * Interface BlockHeaderInterface
+ * @package UmiTop\UmiCore\Block
  */
 interface BlockHeaderInterface
 {
@@ -64,7 +64,7 @@ interface BlockHeaderInterface
 
     public function setVersion(int $version): BlockHeaderInterface;
 
-    public function sign(SecretKeyInterface $secretKey): BlockHeaderInterface;
+    public function toBase64(): string;
 
     public function toBytes(): string;
 

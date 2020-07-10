@@ -14,8 +14,10 @@ class BlockHeaderTest extends TestCase
 {
     public function testConstructor(): void
     {
+        $expected = "\x01" . str_repeat("\x0", BlockHeader::LENGTH - 1);
         $obj = new BlockHeader();
-        $this->assertEquals(str_repeat("\x0", BlockHeader::LENGTH), $obj->toBytes());
+        $actual = $obj->toBytes();
+        $this->assertEquals($expected, $actual);
     }
 
     public function testFromBytesException(): void

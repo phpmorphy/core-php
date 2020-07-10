@@ -33,6 +33,7 @@ use UmiTop\UmiCore\Key\SecretKeyInterface;
 
 /**
  * Class BlockHeader
+ * @package UmiTop\UmiCore\Block
  */
 class BlockHeader implements BlockHeaderInterface
 {
@@ -54,6 +55,7 @@ class BlockHeader implements BlockHeaderInterface
     public function __construct()
     {
         $this->bytes = str_repeat("\x0", self::LENGTH);
+        $this->setVersion(self::BASIC);
     }
 
     /**
@@ -242,18 +244,6 @@ class BlockHeader implements BlockHeaderInterface
         }
 
         $this->bytes = substr_replace($this->bytes, pack('n', $count), 69, 2);
-
-        return $this;
-    }
-
-    /**
-     * @param SecretKeyInterface $secretKey
-     * @return BlockHeaderInterface
-     */
-    public function sign(SecretKeyInterface $secretKey): BlockHeaderInterface
-    {
-        $this->setPublicKey($secretKey->getPublicKey());
-        $this->setSignature($secretKey->sign(substr($this->bytes, 0, 103)));
 
         return $this;
     }

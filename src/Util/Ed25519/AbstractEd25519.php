@@ -30,6 +30,7 @@ namespace UmiTop\UmiCore\Util\Ed25519;
  * Class AbstractEd25519
  * Implementation derived from TweetNaCl version 20140427.
  * @see http://tweetnacl.cr.yp.to/
+ * @package UmiTop\UmiCore\Util\Ed25519
  * @SuppressWarnings(PHPMD.ShortMethodName)
  * @SuppressWarnings(PHPMD.ShortVariable)
  */

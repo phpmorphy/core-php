@@ -28,6 +28,7 @@ namespace UmiTop\UmiCore\Key;
 
 /**
  * Interface PublicKeyInterface
+ * @package UmiTop\UmiCore\Key
  */
 interface PublicKeyInterface extends KeyInterface
 {

@@ -26,22 +26,54 @@ declare(strict_types=1);
 
 namespace UmiTop\UmiCore\Block;
 
-use UmiTop\UmiCore\Key\SecretKeyInterface;
-use UmiTop\UmiCore\Transaction\TransactionInterface;
+use Exception;
 
 /**
- * Interface BlockInterface
+ * Trait BlockIteratorTrait
  * @package UmiTop\UmiCore\Block
  */
-interface BlockInterface extends BlockHeaderInterface
+trait BlockIteratorTrait
 {
-    public function appendTransaction(TransactionInterface $transaction): BlockInterface;
+    /** @var int */
+    private $position = 0;
 
-    public function calculateMerkleRoot(): string;
+    /**
+     * @throws Exception
+     */
+    public function current()
+    {
+        return $this->getTransaction($this->position);
+    }
 
-    public function getTransaction(int $index): TransactionInterface;
+    /**
+     * @return void
+     */
+    public function next(): void
+    {
+        ++$this->position;
+    }
 
-    public function getHeader(): BlockHeaderInterface;
+    /**
+     *
+     */
+    public function key()
+    {
+        return $this->position;
+    }
 
-    public function sign(SecretKeyInterface $secretKey): BlockInterface;
+    /**
+     * @return bool
+     */
+    public function valid(): bool
+    {
+        return array_key_exists($this->position, $this->trxs);
+    }
+
+    /**
+     * @return void
+     */
+    public function rewind(): void
+    {
+        $this->position = 0;
+    }
 }

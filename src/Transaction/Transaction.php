@@ -35,6 +35,7 @@ use UmiTop\UmiCore\Util\ValidatorTrait;
 
 /**
  * Class Transaction
+ * @package UmiTop\UmiCore\Transaction
  */
 class Transaction implements TransactionInterface
 {

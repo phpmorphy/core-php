@@ -28,6 +28,7 @@ namespace UmiTop\UmiCore\Key;
 
 /**
  * Interface SecretKeyInterface
+ * @package UmiTop\UmiCore\Key
  */
 interface SecretKeyInterface extends KeyInterface
 {

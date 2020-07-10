@@ -28,6 +28,7 @@ namespace UmiTop\UmiCore\Key;
 
 /**
  * Interface KeyInterface
+ * @package UmiTop\UmiCore\Key
  */
 interface KeyInterface
 {

@@ -29,6 +29,10 @@ namespace UmiTop\UmiCore\Transaction;
 use UmiTop\UmiCore\Address\AddressInterface;
 use UmiTop\UmiCore\Key\SecretKeyInterface;
 
+/**
+ * Interface TransactionInterface
+ * @package UmiTop\UmiCore\Transaction
+ */
 interface TransactionInterface
 {
     /** @var int */
@@ -102,6 +106,8 @@ interface TransactionInterface
     public function sign(SecretKeyInterface $secretKey, int $powBits = null): TransactionInterface;
 
     public function toBytes(): string;
+
+    public function toBase64(): string;
 
     public function verify(): bool;
 }

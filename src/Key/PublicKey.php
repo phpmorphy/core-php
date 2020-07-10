@@ -30,6 +30,7 @@ use UmiTop\UmiCore\Key\Ed25519\PublicKey as PublicKeyEd25519;
 
 /**
  * Class PublicKey
+ * @package UmiTop\UmiCore\Key
  */
 class PublicKey extends PublicKeyEd25519 implements PublicKeyInterface
 {

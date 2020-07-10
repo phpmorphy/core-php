@@ -30,6 +30,7 @@ use Exception;
 
 /**
  * Trait ValidatorTrait
+ * @package UmiTop\UmiCore\Util
  */
 trait ValidatorTrait
 {

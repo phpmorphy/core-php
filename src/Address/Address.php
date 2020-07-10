@@ -35,6 +35,7 @@ use UmiTop\UmiCore\Util\ConverterTrait;
 
 /**
  * Class Address
+ * @package UmiTop\UmiCore\Address
  */
 class Address implements AddressInterface
 {

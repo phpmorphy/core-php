@@ -20,7 +20,7 @@ class BlockTest extends TestCase
 {
     public function testConstructor(): void
     {
-        $expected = str_repeat("\x0", BlockHeader::LENGTH);
+        $expected = "\x01" . str_repeat("\x0", BlockHeader::LENGTH - 1);
         $obj = new Block();
         $actual = $obj->toBytes();
         $this->assertEquals($expected, $actual);
@@ -89,7 +89,7 @@ class BlockTest extends TestCase
 
     public function testGetHash(): void
     {
-        $expected = hash('sha256', str_repeat("\x0", BlockHeader::LENGTH), true);
+        $expected = hash('sha256', "\x01" . str_repeat("\x0", BlockHeader::LENGTH - 1), true);
         $obj = new Block();
         $actual = $obj->getHash();
         $this->assertEquals($expected, $actual);
@@ -97,7 +97,7 @@ class BlockTest extends TestCase
 
     public function testGetHeader(): void
     {
-        $expected = str_repeat("\x0", BlockHeader::LENGTH);
+        $expected = "\x01" . str_repeat("\x0", BlockHeader::LENGTH - 1);
         $obj = new Block();
         $actual = $obj->getHeader()->toBytes();
         $this->assertEquals($expected, $actual);

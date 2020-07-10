@@ -30,6 +30,7 @@ use UmiTop\UmiCore\Key\Ed25519\SecretKey as SecretKeyEd25519;
 
 /**
  * Class SecretKey
+ * @package UmiTop\UmiCore\Key
  */
 class SecretKey extends SecretKeyEd25519 implements SecretKeyInterface
 {

@@ -30,6 +30,7 @@ use Exception;
 
 /**
  * Trait ConverterTrait
+ * @package UmiTop\UmiCore\Util
  */
 trait ConverterTrait
 {

@@ -30,6 +30,7 @@ use UmiTop\UmiCore\Key\PublicKeyInterface;
 
 /**
  * Interface AddressInterface
+ * @package UmiTop\UmiCore\Address
  */
 interface AddressInterface
 {

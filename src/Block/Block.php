@@ -28,20 +28,21 @@ namespace UmiTop\UmiCore\Block;
 
 use Exception;
 use Iterator;
+use UmiTop\UmiCore\Key\SecretKeyInterface;
 use UmiTop\UmiCore\Transaction\Transaction;
 use UmiTop\UmiCore\Transaction\TransactionInterface;
 
 /**
  * Class Block
+ * @package UmiTop\UmiCore\Block
  * @implements Iterator<int, TransactionInterface>
  */
 class Block extends BlockHeader implements BlockInterface, Iterator
 {
+    use BlockIteratorTrait;
+
     /** @var array<int, string> */
     private $trxs = [];
-
-    /** @var int */
-    private $position = 0;
 
     /**
      * @param string $bytes
@@ -93,11 +94,10 @@ class Block extends BlockHeader implements BlockInterface, Iterator
 
     /**
      * @return string
-     * @throws Exception
      */
     public function calculateMerkleRoot(): string
     {
-        $root = [];
+        $root = [str_repeat("\x0", 32)];
 
         foreach ($this as $idx => $trx) {
             $root[$idx] = $trx->getHash();
@@ -147,6 +147,20 @@ class Block extends BlockHeader implements BlockInterface, Iterator
     }
 
     /**
+     * @param SecretKeyInterface $secretKey
+     * @return BlockInterface
+     * @throws Exception
+     */
+    public function sign(SecretKeyInterface $secretKey): BlockInterface
+    {
+        $this->setMerkleRootHash($this->calculateMerkleRoot());
+        $this->setPublicKey($secretKey->getPublicKey());
+        $this->setSignature($secretKey->sign(substr(parent::toBytes(), 0, 103)));
+
+        return $this;
+    }
+
+    /**
      * @return bool
      */
     public function verify(): bool
@@ -160,46 +174,5 @@ class Block extends BlockHeader implements BlockInterface, Iterator
     public function toBytes(): string
     {
         return parent::toBytes() . join('', $this->trxs);
-    }
-
-    /**
-     * @return TransactionInterface
-     * @throws Exception
-     */
-    public function current(): TransactionInterface
-    {
-        return $this->getTransaction($this->position);
-    }
-
-    /**
-     * @return void
-     */
-    public function next(): void
-    {
-        ++$this->position;
-    }
-
-    /**
-     * @return int
-     */
-    public function key(): int
-    {
-        return $this->position;
-    }
-
-    /**
-     * @return bool
-     */
-    public function valid(): bool
-    {
-        return array_key_exists($this->position, $this->trxs);
-    }
-
-    /**
-     * @return void
-     */
-    public function rewind(): void
-    {
-        $this->position = 0;
     }
 }

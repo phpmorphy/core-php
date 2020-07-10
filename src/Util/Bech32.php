@@ -30,6 +30,7 @@ use Exception;
 
 /**
  * Class Bech32
+ * @package UmiTop\UmiCore\Util
  */
 class Bech32
 {

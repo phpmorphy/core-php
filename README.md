@@ -26,210 +26,277 @@
 </p>
 
 ## Оглавление
--   Введение
+-   [Введение](#введение)
 
 -   [Установка](#установка)
-    - Composer
+    - [Composer](#composer)
 
 -   [Примеры](#примеры)
+    -   [Мнемоники](#мнемоники)
+        - [Seed из мнемонической фразы](#seed-из-мнемонической-фразы)
+
     -   [Ключи](#ключи)
-        - Приватный ключ из seed
-        - Приватный ключ из мнемонической фразы
-        - Создание и проверка цифровой подписи
+        - [Ключи из seed'а](#ключи-из-seed'а)
+        - [Подписать сообщение](#подписать-сообщение)
+        - [Проверить подпись](#проверить-подпись)
 
     -   [Адреса](#адреса)
-        - Адреса в формате Bech32
-        - Адрес из приватного или публичного ключа
-        - Установка и смена префикса адреса
+        - [Адрес в формате Bech32](#адрес-в-формате-bech32)
+        - [Адрес из приватного или публичного ключа](#адрес-из-приватного-или-публичного-ключа)
+        - [Установить префикс адреса](#установить-префикс-адреса)
 
     -   [Транзакции](#транзакции)
-        - Отправка монет
-        - Создание структуры
-        - Обновление настроек структуры
-        - Установка адреса для начисления профита
-        - Установка адреса для перевода комиссии
-        - Активация транзитного адреса
-        - Деактивация транзитного адреса
+        - [Отправить монеты](#отправить-монеты)
+        - [Создать структуру](#создать-структуру)
+        - [Обновить настройки структуры](#обновить-настройки-структуры)
+        - [Установить адрес для начисления профита](#установить-адрес-для-начисления-профита)
+        - [Установить адрес для перевода комиссии](#установить-адрес-для-перевода-комиссии)
+        - [Активировать транзитный адрес](#активировать-транзитный-адрес)
+        - [Деактивировать транзитный адрес](#деактивировать-транзитный-адрес)
 
     -   [Блоки](#блоки)
-        - Создание и подпись блоков
-        - Парсинг блоков
+        - Создать и подписать блок
+        - Распарсить блок
 
 -   [Лицензия](#лицензия)
 
 ## Введение
 
 ## Установка
-### npm
+
+### Composer
+
 ```bash
 composer require umi-top/umi-core-php
 ```
 
-### Addresses
-Create Address from Mnemonic
-```php
-<?php declare(strict_types=1);
+## Примеры
 
-include __DIR__ . '/vendor/autoload.php';
+### Мнемоники
 
-use UmiTop\UmiCore\Key\SecretKeyFactory;
-use UmiTop\UmiCore\Address\AddressFactory;
-use BitWasp\Bitcoin\Mnemonic\Bip39\Bip39SeedGenerator;
+UMI не накладывает никаких ограничений на способ генерации и хранения приватных
+ключей, предоставляя полную свободу действий разработчикам приложений.
 
-$mnemonic = 'mix tooth like stock powder emerge protect index magic';
-$seed = (new Bip39SeedGenerator())->getSeed($mnemonic)->getBinary();
-$secKey = SecretKeyFactory::fromSeed($seed);
-$pubKey = $secKey->getPublicKey();
-$address = AddressFactory::fromPublicKey($pubKey);
+Использование [bip39](https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki)
+для генерации мнемонических фраз носит исключительно рекомендательный характер.
 
-echo $address->toBech32(), PHP_EOL; // umi1u3dam33jaf64z4s008g7su62j4za72ljqff9dthsataq8k806nfsgrhdhg
-```
-Change Address Prefix
-```php
-<?php declare(strict_types=1);
+#### Seed из мнемонической фразы
 
-include __DIR__ . '/vendor/autoload.php';
+Для примера будем использовать библиотеку [bip39](https://www.npmjs.com/package/bip39):
 
-use UmiTop\UmiCore\Address\AddressFactory;
+```javascript
+// npm install bip39
 
-$bech32 = 'umi1kzsn227tel8aj5p5upaecz7e72k3k8w0lel3lffrnvg3d5rkh5uq3a8598';
-$address = AddressFactory::fromBech32($bech32);
-$address->setPrefix('sss');
-
-echo $address->toBech32(), PHP_EOL; // sss1kzsn227tel8aj5p5upaecz7e72k3k8w0lel3lffrnvg3d5rkh5uqv9z0az
+const bip39 = require('bip39')
+const mnemonic = bip39.generateMnemonic(256)
+const seed = bip39.mnemonicToSeedSync(mnemonic)
 ```
 
-### Transactions
-Basic Transaction
-```php
-<?php
-declare(strict_types=1);
+### Ключи
 
-include __DIR__ . '/vendor/autoload.php';
+В UMI применяется Ed25519 ([rfc8032](https://tools.ietf.org/html/rfc8032)) —
+схема подписи [EdDSA](https://ru.wikipedia.org/wiki/EdDSA) использующая
+SHA-512 и Curve25519. 
 
-use UmiTop\UmiCore\Key\SecretKeyFactory;
-use UmiTop\UmiCore\Address\AddressFactory;
-use UmiTop\UmiCore\Transaction\Transaction;
-use BitWasp\Bitcoin\Mnemonic\Bip39\Bip39SeedGenerator;
+#### Ключи из seed'а
 
+Seed может быть любой длины, включая нулевую.
+Оптимальным вариантом является длина 32 байта (256 бит).
 
-$mnemonic = 'mix tooth like stock powder emerge protect index magic';
-$bech32 = 'xxx1hztcwh6rh63ftkw8y8cwt63n4256u3packsxh05wv5x5cpa79raqyf98d5';
-
-$seed = (new Bip39SeedGenerator())->getSeed($mnemonic)->getBinary();
-$secKey = SecretKeyFactory::fromSeed($seed);
-$sender = AddressFactory::fromSecretKey($secKey);
-$recipient = AddressFactory::fromBech32($bech32);
-
-$tx1 = (new Transaction())
-    ->setVersion(Transaction::BASIC)
-    ->setSender($sender)
-    ->setRecipient($recipient)
-    ->setValue(18446744073709551615)
-    ->sign($secKey);
-
-$tx2 = new Transaction($tx1->toBytes());
-
-var_dump(
-    [
-        'hash' => bin2hex($tx2->getHash()),
-        'version' => $tx2->getVersion(),
-        'sender' => $tx2->getSender()->toBech32(),
-        'recipient' => $tx2->getRecipient()->toBech32(),
-        'value' => gmp_strval($tx2->getValue()),
-        'signature' => bin2hex($tx2->getSignature()),
-        'verify' => $tx2->verify()
-    ]
-);
+```javascript
+const seed = new Uint8Array(32)
+const secretKey = umi.SecretKey.fromSeed(seed)
+const publicKey = secretKey.getPublicKey()
 ```
-Create Structure
-```php
-<?php
 
-declare(strict_types=1);
+#### Подписать сообщение
 
-include __DIR__ . '/vendor/autoload.php';
-
-use UmiTop\UmiCore\Key\SecretKeyFactory;
-use UmiTop\UmiCore\Address\AddressFactory;
-use UmiTop\UmiCore\Transaction\Transaction;
-use BitWasp\Bitcoin\Mnemonic\Bip39\Bip39SeedGenerator;
-
-
-$mnemonic = 'mix tooth like stock powder emerge protect index magic';
-$bech32 = 'xxx1hztcwh6rh63ftkw8y8cwt63n4256u3packsxh05wv5x5cpa79raqyf98d5';
-
-$seed = (new Bip39SeedGenerator())->getSeed($mnemonic)->getBinary();
-$secKey = SecretKeyFactory::fromSeed($seed);
-
-$tx1 = (new Transaction())
-    ->setVersion(Transaction::CREATE_STRUCTURE)
-    ->setSender(AddressFactory::fromSecretKey($secKey))
-    ->setPrefix('www')
-    ->setName('World Wide Web')
-    ->setProfitPercent(456) // 4.56%
-    ->setFeePercent(1234) // 12.34%
-    ->sign($secKey);
-
-$tx2 = new Transaction($tx1->toBytes());
-
-var_dump(
-    [
-        'hash' => bin2hex($tx2->getHash()),
-        'version' => $tx2->getVersion(),
-        'sender' => $tx2->getSender()->toBech32(),
-        'prefix' => $tx2->getPrefix(),
-        'name' => $tx2->getName(),
-        'profit' => $tx2->getProfitPercent(),
-        'fee' => $tx2->getFeePercent(),
-        'verify' => $tx2->verify()
-    ]
-);
+В метод `SecretKey#sign()` необходимо передать массив байтов, поэтому если
+требуется подписать текстовое сообщение его нужно преобразовать: 
+```javascript
+const message = new TextEncoder().encode('Hello World')
+const signature = secretKey.sign(message)
 ```
-Create Transit Address
-```php
-<?php
 
-declare(strict_types=1);
+#### Проверить подпись
 
-include __DIR__ . '/vendor/autoload.php';
+Метод `PublicKey#verifySignature()` принимает массив байтов, поэтому если
+подпись передается в текстовой кодировке ее необходимо декодировать.  
+Пример для Node.js:
 
-use UmiTop\UmiCore\Key\SecretKeyFactory;
-use UmiTop\UmiCore\Address\Address;
-use UmiTop\UmiCore\Address\AddressFactory;
-use UmiTop\UmiCore\Transaction\Transaction;
-use BitWasp\Bitcoin\Mnemonic\Bip39\Bip39SeedGenerator;
-
-
-$mnemonic = 'mix tooth like stock powder emerge protect index magic';
-$seed = (new Bip39SeedGenerator())->getSeed($mnemonic)->getBinary();
-$secKey = SecretKeyFactory::fromSeed($seed);
-
-$sender = new Address();
-$sender->setPublicKey($secKey->getPublicKey());
-
-$address = new Address();
-$address->fromBech32('www1hztcwh6rh63ftkw8y8cwt63n4256u3packsxh05wv5x5cpa79raq9g5cvs');
-
-$tx1 = new Transaction();
-$tx1->setVersion(Transaction::CREATE_TRANSIT_ADDRESS);
-$tx1->setSender($sender);
-$tx1->setRecipient($address);
-$tx1->sign($secKey);
-
-$tx2 = new Transaction($tx1->toBytes());
-
-var_dump(
-    [
-        'hash' => bin2hex($tx2->getHash()),
-        'version' => $tx2->getVersion(),
-        'sender' => $tx2->getSender()->toBech32(),
-        'prefix' => $tx2->getPrefix(),
-        'address' => $tx2->getRecipient()->toBech32(),
-        'verify' => $tx2->verify()
-    ]
-);
+```javascript
+const address = 'umi18d4z00xwk6jz6c4r4rgz5mcdwdjny9thrh3y8f36cpy2rz6emg5s6rxnf6'
+const message = new TextEncoder().encode('Hello World')
+const signature = Buffer.from('Jbi9YfwLcxiTMednl/wTvnSzsPP9mV9Bf2vvZytP87oyg1p1c9ZBkn4gNv15ZHwEFv3bVYlowgyIKmMwJLjJCw==', 'base64')
+const ver = umi.Address.fromBech32(address).getPublicKey().verifySignature(signature, message)
 ```
+
+### Адреса
+
+UMI использует адреса в формате Bech32
+([bip173](https://github.com/bitcoin/bips/blob/master/bip-0173.mediawiki))
+длиной 62 символа и трёхбуквенный префикс.  
+Специальным случаем являются Genesis-адреса, существующие только
+в Genesis-блоке, такие адреса имеют длину 65 символов
+и всегда имеют префикс `genesis`.
+
+#### Адрес в формате Bech32
+
+Создать адрес из строки Bech32 можно используя статический метод `Address.fromBech32()`
+и конвертировать обратно с помощью `Address#toBech32()`:
+
+```javascript
+const bech32 = 'umi18d4z00xwk6jz6c4r4rgz5mcdwdjny9thrh3y8f36cpy2rz6emg5s6rxnf6'
+const address = umi.Address.fromBech32(bech32)
+console.log(address.toBech32())
+```
+ 
+#### Адрес из приватного или публичного ключа
+
+Статический метод `Address.fromKey()` создает адрес из приватного
+или публичного ключа:
+
+```javascript
+const seed = new Uint8Array(32)
+const secKey = umi.SecretKey.fromSeed(seed)
+const pubKey = secKey.getPublicKey()
+const address1 = umi.Address.fromKey(secKey)
+const address2 = umi.Address.fromKey(pubKey)
+```
+
+#### Установить префикс адреса
+
+По умолчанию адреса имеют префикс `umi`.
+Изменить префикс можно при помощи метода `Address#setPrefix()`:
+
+```javascript
+const bech32 = 'umi18d4z00xwk6jz6c4r4rgz5mcdwdjny9thrh3y8f36cpy2rz6emg5s6rxnf6'
+const address = umi.Address.fromBech32(bech32).setPrefix('aaa')
+console.log(address.toBech32())
+```
+
+### Транзакции
+
+#### Отправить монеты
+
+```javascript
+const secKey = umi.SecretKey.fromSeed(new Uint8Array(32))
+const sender = umi.Address.fromKey(secKey).setPrefix('umi')
+const recipient = umi.Address.fromKey(secKey).setPrefix('aaa')
+const tx = new umi.Transaction()
+  .setVersion(umi.Transaction.Basic)
+  .setSender(sender)
+  .setRecipient(recipient)
+  .setValue(42)
+  .sign(secKey)
+
+console.log(tx.verify())
+console.log(tx.toBase64())
+```
+
+#### Создать структуру
+
+```javascript
+const secKey = umi.SecretKey.fromSeed(new Uint8Array(32))
+const sender = umi.Address.fromKey(secKey).setPrefix('umi')
+const tx = new umi.Transaction()
+  .setVersion(umi.Transaction.UpdateStructure)
+  .setSender(sender)
+  .setPrefix('aaa')
+  .setName('🙂')
+  .setProfitPercent(500)
+  .setFeePercent(2000)
+  .sign(secKey)
+
+console.log(tx.verify())
+console.log(tx.toBase64())
+```
+
+#### Обновить настройки структуры
+
+Необходимо задать все поля, даже если они не изменились:
+
+```javascript
+const secKey = umi.SecretKey.fromSeed(new Uint8Array(32))
+const sender = umi.Address.fromKey(secKey).setPrefix('umi')
+const tx = new umi.Transaction()
+  .setVersion(umi.Transaction.UpdateStructure)
+  .setSender(sender)
+  .setPrefix('aaa')
+  .setName('🙂')
+  .setProfitPercent(500)
+  .setFeePercent(2000)
+  .sign(secKey)
+
+console.log(tx.verify())
+console.log(tx.toBase64())
+```
+
+#### Установить адрес для начисления профита
+
+```javascript
+const secKey = umi.SecretKey.fromSeed(new Uint8Array(32))
+const sender = umi.Address.fromKey(secKey).setPrefix('umi')
+const newPrf = umi.Address.fromBech32('aaa18d4z00xwk6jz6c4r4rgz5mcdwdjny9thrh3y8f36cpy2rz6emg5svsuw66')
+const tx = new umi.Transaction()
+  .setVersion(umi.Transaction.UpdateProfitAddress)
+  .setSender(sender)
+  .setRecipient(newPrf)
+  .sign(secKey)
+
+console.log(tx.verify())
+console.log(tx.toBase64())
+```
+
+#### Установить адрес для перевода комиссии
+
+```javascript
+const secKey = umi.SecretKey.fromSeed(new Uint8Array(32))
+const sender = umi.Address.fromKey(secKey).setPrefix('umi')
+const newPrf = umi.Address.fromBech32('aaa18d4z00xwk6jz6c4r4rgz5mcdwdjny9thrh3y8f36cpy2rz6emg5svsuw66')
+const tx = new umi.Transaction()
+  .setVersion(umi.Transaction.UpdateProfitAddress)
+  .setSender(sender)
+  .setRecipient(newPrf)
+  .sign(secKey)
+
+console.log(tx.verify())
+console.log(tx.toBase64())
+```
+
+#### Активировать транзитный адрес
+
+```javascript
+const secKey = umi.SecretKey.fromSeed(new Uint8Array(32))
+const sender = umi.Address.fromKey(secKey).setPrefix('umi')
+const transit = umi.Address.fromBech32('aaa18d4z00xwk6jz6c4r4rgz5mcdwdjny9thrh3y8f36cpy2rz6emg5svsuw66')
+const tx = new umi.Transaction()
+  .setVersion(umi.Transaction.CreateTransitAddress)
+  .setSender(sender)
+  .setRecipient(transit)
+  .sign(secKey)
+
+console.log(tx.verify())
+console.log(tx.toBase64())
+```
+
+#### Деактивировать транзитный адрес
+
+```javascript
+const secKey = umi.SecretKey.fromSeed(new Uint8Array(32))
+const sender = umi.Address.fromKey(secKey).setPrefix('umi')
+const transit = umi.Address.fromBech32('aaa18d4z00xwk6jz6c4r4rgz5mcdwdjny9thrh3y8f36cpy2rz6emg5svsuw66')
+const tx = new umi.Transaction()
+  .setVersion(umi.Transaction.DeleteTransitAddress)
+  .setSender(sender)
+  .setRecipient(transit)
+  .sign(secKey)
+
+console.log(tx.verify())
+console.log(tx.toBase64())
+```
+
+### Блоки
 
 ## Лицензия
 
