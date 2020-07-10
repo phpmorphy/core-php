@@ -46,20 +46,11 @@ class Address implements AddressInterface
 
     /**
      * Address constructor.
-     * @param string|null $bytes Адрес в бинарном виде. Опциональный параметр.
-     * @throws Exception Ошибка в случае некорректной длины.
      */
-    public function __construct(string $bytes = null)
+    public function __construct()
     {
-        if ($bytes === null) {
-            $bytes = str_repeat("\x0", self::LENGTH);
-        }
-
-        if (strlen($bytes) !== self::LENGTH) {
-            throw new Exception('bytes size should be 34 bytes');
-        }
-
-        $this->bytes = $bytes;
+        $this->bytes = str_repeat("\x0", self::LENGTH);
+        $this->setPrefix('umi');
     }
 
     /**
@@ -69,10 +60,9 @@ class Address implements AddressInterface
      */
     public static function fromBech32(string $address): AddressInterface
     {
-        $bech32 = new Bech32();
-        $bytes = $bech32->decode($address);
+        $adr = new Address();
 
-        return new Address($bytes);
+        return $adr->setBech32($address);
     }
 
     /**
@@ -82,7 +72,9 @@ class Address implements AddressInterface
      */
     public static function fromBytes(string $bytes): AddressInterface
     {
-        return new Address($bytes);
+        $adr = new Address();
+
+        return $adr->setBytes($bytes);
     }
 
     /**
@@ -93,7 +85,34 @@ class Address implements AddressInterface
     {
         $adr = new Address();
 
-        return $adr->setPrefix('umi')->setPublicKey($key->getPublicKey());
+        return $adr->setPublicKey($key->getPublicKey());
+    }
+
+    /**
+     * @param string $bytes
+     * @return AddressInterface
+     * @throws Exception
+     */
+    public function setBytes(string $bytes): AddressInterface
+    {
+        if (strlen($bytes) !== self::LENGTH) {
+            throw new Exception('bytes size should be 34 bytes');
+        }
+        $this->bytes = $bytes;
+
+        return $this;
+    }
+
+    /**
+     * @param string $address
+     * @return AddressInterface
+     * @throws Exception
+     */
+    public function setBech32(string $address): AddressInterface
+    {
+        $bech32 = new Bech32();
+
+        return $this->setBytes($bech32->decode($address));
     }
 
     /**
@@ -104,7 +123,7 @@ class Address implements AddressInterface
     {
         $cnv = new Converter();
 
-        return $cnv->versionToPrefix($this->getVersion());
+        return $cnv->versionToPrefix((ord($this->bytes[0]) << 8) + ord($this->bytes[1]));
     }
 
     /**
@@ -115,8 +134,11 @@ class Address implements AddressInterface
     public function setPrefix(string $prefix): AddressInterface
     {
         $cnv = new Converter();
+        $version = $cnv->prefixToVersion($prefix);
+        $this->bytes[0] = chr($version >> 8 & 0xff);
+        $this->bytes[1] = chr($version & 0xff);
 
-        return $this->setVersion($cnv->prefixToVersion($prefix));
+        return $this;
     }
 
     /**
@@ -135,32 +157,6 @@ class Address implements AddressInterface
     public function setPublicKey(PublicKeyInterface $publicKey): AddressInterface
     {
         $this->bytes = substr_replace($this->bytes, $publicKey->toBytes(), 2, 32);
-
-        return $this;
-    }
-
-    /**
-     * @return integer
-     */
-    public function getVersion(): int
-    {
-        // Version - uin16, first 2 bytes.
-        return ((ord($this->bytes[0]) << 8) + ord($this->bytes[1]));
-    }
-
-    /**
-     * @param integer $version Версия в числовом виде.
-     * @return AddressInterface
-     * @throws Exception Ошибка в случае если версия не проходит валидацию.
-     */
-    public function setVersion(int $version): AddressInterface
-    {
-        // Validation.
-        $cnv = new Converter();
-        $cnv->versionToPrefix($version);
-
-        $this->bytes[0] = chr($version >> 8 & 0xff);
-        $this->bytes[1] = chr($version & 0xff);
 
         return $this;
     }

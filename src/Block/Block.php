@@ -38,27 +38,56 @@ use UmiTop\UmiCore\Transaction\TransactionInterface;
 class Block extends BlockHeader implements BlockInterface, Iterator
 {
     /** @var array<int, string> */
-    private $trxs;
+    private $trxs = [];
 
     /** @var int */
     private $position = 0;
 
     /**
-     * Block constructor.
-     * @param string|null $bytes Трназакция в бинарном виде. Опциональный параметр.
-     * @throws Exception Ошибка в случае некорректной длины.
+     * @param string $base64
+     * @return BlockInterface
+     * @throws Exception
+     * @override
      */
-    public function __construct(string $bytes = null)
+    public static function fromBase64(string $base64)
     {
-        if ($bytes === null) {
-            $bytes = str_repeat("\x0", BlockHeader::LENGTH);
+        $bytes = base64_decode($base64, true);
+
+        if ($bytes === false) {
+            throw new Exception('could not decode base64');
         }
 
+        $blk = new Block();
+
+        return $blk->setBytes($bytes);
+    }
+
+    /**
+     * @param string $bytes
+     * @return BlockInterface
+     * @throws Exception
+     * @override
+     */
+    public static function fromBytes(string $bytes)
+    {
+        $blk = new Block();
+
+        return $blk->setBytes($bytes);
+    }
+
+    /**
+     * @param string $bytes
+     * @return BlockInterface
+     * @throws Exception
+     * @override
+     */
+    public function setBytes(string $bytes)
+    {
         if (strlen($bytes) < BlockHeader::LENGTH) {
             throw new Exception('bytes size should be at least 167 bytes');
         }
 
-        parent::__construct(substr($bytes, 0, BlockHeader::LENGTH));
+        parent::setBytes(substr($bytes, 0, BlockHeader::LENGTH));
 
         $blockLen = BlockHeader::LENGTH + (Transaction::LENGTH * $this->getTransactionCount());
 
@@ -67,6 +96,8 @@ class Block extends BlockHeader implements BlockInterface, Iterator
         }
 
         $this->trxs = str_split(substr($bytes, BlockHeader::LENGTH), Transaction::LENGTH);
+
+        return $this;
     }
 
     /**
@@ -74,7 +105,9 @@ class Block extends BlockHeader implements BlockInterface, Iterator
      */
     public function getHeader(): BlockHeaderInterface
     {
-        return new BlockHeader(parent::toBytes());
+        $hdr = new BlockHeader();
+
+        return $hdr->setBytes(parent::toBytes());
     }
 
     /**
@@ -127,7 +160,9 @@ class Block extends BlockHeader implements BlockInterface, Iterator
             throw new Exception('incorrect index');
         }
 
-        return new Transaction($this->trxs[$index]);
+        $trx = new Transaction();
+
+        return $trx->setBytes($this->trxs[$index]);
     }
 
     /**
@@ -144,6 +179,15 @@ class Block extends BlockHeader implements BlockInterface, Iterator
     public function toBytes(): string
     {
         return parent::toBytes() . join('', $this->trxs);
+    }
+
+    /**
+     * @return string
+     * @override
+     */
+    public function toBase64(): string
+    {
+        return base64_encode($this->toBytes());
     }
 
     /**

@@ -18,7 +18,7 @@ class BlockHeaderTest extends TestCase
         $this->assertEquals(str_repeat("\x0", BlockHeader::LENGTH), $obj->toBytes());
     }
 
-    public function testConstructorException(): void
+    public function testFromBytesException(): void
     {
         if (method_exists($this, 'expectException')) {
             $this->expectException('Exception');
@@ -26,20 +26,18 @@ class BlockHeaderTest extends TestCase
             $this->setExpectedException('Exception'); // PHPUnit 4
         }
 
-        new BlockHeader('');
+        BlockHeader::fromBytes('');
     }
 
-    public function testGetters(): void
+    public function testFromBase64(): void
     {
-        $bytes = base64_decode(
-            'Aaqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqu7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7vMzMzM3d3u7u7' .
-            'u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7v////////////////////////////////////////////////////////////' .
-            '////////////////////////8='
-        );
+        $base64 = 'Aaqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqu7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7vMzMzM3d3u7u7'
+            . 'u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7v////////////////////////////////////////////////////////////'
+            . '////////////////////////8=';
 
-        $obj = new BlockHeader($bytes);
+        $obj = BlockHeader::fromBase64($base64);
 
-        $this->assertEquals($bytes, $obj->toBytes());
+        $this->assertEquals($base64, $obj->toBase64());
         $this->assertEquals(0x01, $obj->getVersion());
         $this->assertEquals(str_repeat("\xaa", 32), $obj->getPreviousBlockHash());
         $this->assertEquals(0xcccccccc, $obj->getTimestamp());
@@ -47,6 +45,17 @@ class BlockHeaderTest extends TestCase
         $this->assertEquals(str_repeat("\xee", 32), $obj->getPublicKey()->toBytes());
         $this->assertEquals(str_repeat("\xff", 64), $obj->getSignature());
         $this->assertFalse($obj->verify());
+    }
+
+    public function testFromBase64Exception(): void
+    {
+        if (method_exists($this, 'expectException')) {
+            $this->expectException('Exception');
+        } elseif (method_exists($this, 'setExpectedException')) {
+            $this->setExpectedException('Exception'); // PHPUnit 4
+        }
+
+        BlockHeader::fromBase64('A');
     }
 
     public function testTransactionCount(): void

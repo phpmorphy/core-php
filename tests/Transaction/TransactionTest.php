@@ -24,6 +24,18 @@ class TransactionTest extends TestCase
         $this->assertEquals($bytes, $actual->toBytes());
     }
 
+    public function testFromBytesException(): void
+    {
+        if (method_exists($this, 'expectException')) {
+            $this->expectException('Exception');
+        } elseif (method_exists($this, 'setExpectedException')) {
+            $this->setExpectedException('Exception'); // PHPUnit 4
+        }
+
+        $bytes = str_repeat("\x0", Transaction::LENGTH - 1);
+        Transaction::fromBytes($bytes);
+    }
+
     public function testFromBase64Exception(): void
     {
         if (method_exists($this, 'expectException')) {
@@ -33,18 +45,6 @@ class TransactionTest extends TestCase
         }
 
         Transaction::fromBase64('zzzzz');
-    }
-
-    public function testConstructorException(): void
-    {
-        if (method_exists($this, 'expectException')) {
-            $this->expectException('Exception');
-        } elseif (method_exists($this, 'setExpectedException')) {
-            $this->setExpectedException('Exception'); // PHPUnit 4
-        }
-
-        $bytes = str_repeat("\x0", Transaction::LENGTH - 1);
-        new Transaction($bytes);
     }
 
     public function testHash(): void
@@ -137,6 +137,21 @@ class TransactionTest extends TestCase
         $trx->setName($name);
     }
 
+    public function testNameExceptionBytes(): void
+    {
+        if (method_exists($this, 'expectException')) {
+            $this->expectException('Exception');
+        } elseif (method_exists($this, 'setExpectedException')) {
+            $this->setExpectedException('Exception'); // PHPUnit 4
+        }
+
+        $bytes = str_repeat("\x0", 150);
+        $bytes[41] = chr(255);
+
+        $trx = new Transaction();
+        $trx->setBytes($bytes)->getName();
+    }
+
     public function testName(): void
     {
         $expected = 'Hello World!';
@@ -212,8 +227,8 @@ class TransactionTest extends TestCase
      */
     public function testGetPowBits(string $bytes, int $powBits): void
     {
-        $obj = new Transaction(base64_decode($bytes));
-        $this->assertEquals($powBits, $obj->getPowBits());
+        $actual = Transaction::fromBase64($bytes)->getPowBits();
+        $this->assertEquals($powBits, $actual);
     }
 
     /**
@@ -258,5 +273,13 @@ class TransactionTest extends TestCase
                 'bits' => 0
             ]
         ];
+    }
+
+    public function testToBase64(): void
+    {
+        $expected = str_repeat('A', 200);
+        $obj = new Transaction();
+        $actual = $obj->toBase64();
+        $this->assertEquals($expected, $actual);
     }
 }

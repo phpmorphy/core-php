@@ -56,17 +56,6 @@ interface AddressInterface
     public function setPublicKey(PublicKeyInterface $publicKey): AddressInterface;
 
     /**
-     * @return integer
-     */
-    public function getVersion(): int;
-
-    /**
-     * @param integer $version Версия в числовом виде.
-     * @return AddressInterface
-     */
-    public function setVersion(int $version): AddressInterface;
-
-    /**
      * @return string
      */
     public function toBech32(): string;

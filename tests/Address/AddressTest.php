@@ -13,7 +13,7 @@ use UmiTop\UmiCore\Key\PublicKey;
  */
 class AddressTest extends TestCase
 {
-    public function testConstructorException(): void
+    public function testSetFromBytesException(): void
     {
         if (method_exists($this, 'expectException')) {
             $this->expectException('Exception');
@@ -22,17 +22,7 @@ class AddressTest extends TestCase
         }
 
         $bytes = str_repeat('a', Address::LENGTH - 1);
-        new Address($bytes);
-    }
-
-    public function testVersion(): void
-    {
-        $obj = new Address();
-
-        $expected = 1057; // 'aaa'
-        $actual = $obj->setVersion($expected)->getVersion();
-
-        $this->assertEquals($expected, $actual);
+        Address::fromBytes($bytes);
     }
 
     public function testPrefix(): void

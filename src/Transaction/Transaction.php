@@ -45,20 +45,10 @@ class Transaction implements TransactionInterface
 
     /**
      * Transaction constructor.
-     * @param string|null $bytes Транзакция в бинарном виде. Опциональный параметр.
-     * @throws Exception Ошибка в случае некорректной длины транзакции.
      */
-    public function __construct(string $bytes = null)
+    public function __construct()
     {
-        if ($bytes === null) {
-            $bytes = str_repeat("\x0", self::LENGTH);
-        }
-
-        if (strlen($bytes) !== self::LENGTH) {
-            throw new Exception('bytes length must be 150 bytes');
-        }
-
-        $this->bytes = $bytes;
+        $this->bytes = str_repeat("\x0", self::LENGTH);
     }
 
     /**
@@ -68,7 +58,9 @@ class Transaction implements TransactionInterface
      */
     public static function fromBytes(string $bytes): TransactionInterface
     {
-        return new Transaction($bytes);
+        $trx = new Transaction();
+
+        return $trx->setBytes($bytes);
     }
 
     /**
@@ -84,7 +76,24 @@ class Transaction implements TransactionInterface
             throw new Exception('could not decode base64');
         }
 
-        return new Transaction($bytes);
+        $trx = new Transaction();
+
+        return $trx->setBytes($bytes);
+    }
+
+    /**
+     * @param string $bytes
+     * @return TransactionInterface
+     * @throws Exception
+     */
+    public function setBytes(string $bytes): TransactionInterface
+    {
+        if (strlen($bytes) !== self::LENGTH) {
+            throw new Exception('bytes length must be 150 bytes');
+        }
+        $this->bytes = $bytes;
+
+        return $this;
     }
 
     /**
@@ -123,10 +132,14 @@ class Transaction implements TransactionInterface
 
     /**
      * @return string
+     * @throws Exception
      */
     public function getName(): string
     {
-        // Name offset - 41.
+        if (ord($this->bytes[41]) > 35) {
+            throw new Exception('incorrect length');
+        }
+
         return substr($this->bytes, 42, ord($this->bytes[41]));
     }
 
@@ -137,13 +150,12 @@ class Transaction implements TransactionInterface
      */
     public function setName(string $name): TransactionInterface
     {
-        // Name offset - 41.
-        // Name length - 36.
-        if (strlen($name) >= 36) {
+        if (strlen($name) > 35) {
             throw new Exception('name too long');
         }
 
         $this->bytes[41] = chr(strlen($name));
+        $this->bytes = substr_replace($this->bytes, str_repeat("\x0", 35), 42, 35); // wipe
         $this->bytes = substr_replace($this->bytes, $name, 42, strlen($name));
 
         return $this;
@@ -248,9 +260,9 @@ class Transaction implements TransactionInterface
      */
     public function getRecipient(): AddressInterface
     {
-        // Recipient offset - 35.
-        // Recipient length - 34.
-        return new Address(substr($this->bytes, 35, 34));
+        $adr = new Address();
+
+        return $adr->setBytes(substr($this->bytes, 35, 34));
     }
 
     /**
@@ -259,8 +271,6 @@ class Transaction implements TransactionInterface
      */
     public function setRecipient(AddressInterface $address): TransactionInterface
     {
-        // Recipient offset - 35.
-        // Recipient length - 34.
         $this->bytes = substr_replace($this->bytes, $address->toBytes(), 35, 34);
 
         return $this;
@@ -272,9 +282,9 @@ class Transaction implements TransactionInterface
      */
     public function getSender(): AddressInterface
     {
-        // Sender offset - 1.
-        // Sender length - 34.
-        return new Address(substr($this->bytes, 1, 34));
+        $adr = new Address();
+
+        return $adr->setBytes(substr($this->bytes, 1, 34));
     }
 
     /**
@@ -438,6 +448,14 @@ class Transaction implements TransactionInterface
     public function toBytes(): string
     {
         return $this->bytes;
+    }
+
+    /**
+     * @return string
+     */
+    public function toBase64(): string
+    {
+        return base64_encode($this->bytes);
     }
 
     /**

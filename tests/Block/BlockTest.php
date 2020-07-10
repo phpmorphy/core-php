@@ -26,10 +26,18 @@ class BlockTest extends TestCase
         $this->assertEquals($expected, $actual);
     }
 
-    /**
-     * @dataProvider invalidBlockProvider
-     */
-    public function testConstructorException(string $bytes): void
+    public function testFromBase64(): void
+    {
+        $bytes = str_repeat("\x0", BlockHeader::LENGTH + Transaction::LENGTH);
+        $bytes[70] = chr(1);
+        $expected = base64_encode($bytes);
+
+        $actual = Block::fromBase64($expected)->toBase64();
+
+        $this->assertEquals($expected, $actual);
+    }
+
+    public function testFromBase64Exception(): void
     {
         if (method_exists($this, 'expectException')) {
             $this->expectException('Exception');
@@ -37,7 +45,31 @@ class BlockTest extends TestCase
             $this->setExpectedException('Exception'); // PHPUnit 4
         }
 
-        new Block($bytes);
+        Block::fromBase64('A');
+    }
+
+    public function testFromBytes(): void
+    {
+        $expected = str_repeat("\x0", BlockHeader::LENGTH + Transaction::LENGTH);
+        $expected[70] = chr(1);
+
+        $actual = Block::fromBytes($expected)->toBytes();
+
+        $this->assertEquals($expected, $actual);
+    }
+
+    /**
+     * @dataProvider invalidBlockProvider
+     */
+    public function testFromBytesException(string $bytes): void
+    {
+        if (method_exists($this, 'expectException')) {
+            $this->expectException('Exception');
+        } elseif (method_exists($this, 'setExpectedException')) {
+            $this->setExpectedException('Exception'); // PHPUnit 4
+        }
+
+        Block::fromBytes($bytes);
     }
 
     /**
@@ -49,23 +81,11 @@ class BlockTest extends TestCase
             'too short' => [
                 'bytes' => str_repeat("\x0", BlockHeader::LENGTH - 1)
             ],
-            'incorrect' => [
+            'too long' => [
                 'bytes' => str_repeat("\x0", BlockHeader::LENGTH + 1)
             ]
         ];
     }
-
-    public function testConstructorException2(): void
-    {
-        if (method_exists($this, 'expectException')) {
-            $this->expectException('Exception');
-        } elseif (method_exists($this, 'setExpectedException')) {
-            $this->setExpectedException('Exception'); // PHPUnit 4
-        }
-
-        new Block(str_repeat("\x0", BlockHeader::LENGTH + 1));
-    }
-
 
     public function testGetHash(): void
     {
@@ -136,7 +156,7 @@ class BlockTest extends TestCase
         $obj = new Block();
 
         $expected = str_repeat("\xff", Transaction::LENGTH);
-        $actual = $obj->appendTransaction(new Transaction($expected))->getTransaction(0)->toBytes();
+        $actual = $obj->appendTransaction(Transaction::fromBytes($expected))->getTransaction(0)->toBytes();
 
         $this->assertEquals($expected, $actual);
         $this->assertEquals(1, $obj->getTransactionCount());
@@ -165,18 +185,6 @@ class BlockTest extends TestCase
         $this->assertTrue($obj->verify());
     }
 
-    public function testMerkleException(): void
-    {
-        if (method_exists($this, 'expectException')) {
-            $this->expectException('Exception');
-        } elseif (method_exists($this, 'setExpectedException')) {
-            $this->setExpectedException('Exception'); // PHPUnit 4
-        }
-
-        $obj = new Block();
-        $obj->calculateMerkleRoot();
-    }
-
     /**
      * @dataProvider merkleProvider
      */
@@ -186,7 +194,7 @@ class BlockTest extends TestCase
 
         for ($i = 0; $i < $txCount; $i++) {
             $bytes = str_repeat(chr($i), Transaction::LENGTH);
-            $trx = new Transaction($bytes);
+            $trx = Transaction::fromBytes($bytes);
             $obj->appendTransaction($trx);
         }
 

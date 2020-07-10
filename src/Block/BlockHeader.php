@@ -50,20 +50,56 @@ class BlockHeader implements BlockHeaderInterface
 
     /**
      * BlockHeader constructor.
-     * @param string|null $bytes
+     */
+    public function __construct()
+    {
+        $this->bytes = str_repeat("\x0", self::LENGTH);
+    }
+
+    /**
+     * @param string $bytes
+     * @return BlockHeaderInterface
      * @throws Exception
      */
-    public function __construct(string $bytes = null)
+    public static function fromBytes(string $bytes)
     {
-        if ($bytes === null) {
-            $bytes = str_repeat("\x0", self::LENGTH);
+        $hdr = new BlockHeader();
+
+        return $hdr->setBytes($bytes);
+    }
+
+    /**
+     * @param string $base64
+     * @return BlockHeaderInterface
+     * @throws Exception
+     */
+    public static function fromBase64(string $base64)
+    {
+        $bytes = base64_decode($base64, true);
+
+        if ($bytes === false) {
+            throw new Exception('could not decode base64');
         }
 
+        $hdr = new BlockHeader();
+
+        return $hdr->setBytes($bytes);
+    }
+
+    /**
+     * @param string $bytes
+     * @return BlockHeaderInterface
+     * @throws Exception
+     */
+    public function setBytes(string $bytes)
+    {
         if (strlen($bytes) !== self::LENGTH) {
-            throw new Exception('некорректная длина');
+            throw new Exception('incorrect length');
         }
 
         $this->bytes = $bytes;
+
+        return $this;
     }
 
     /**
@@ -98,8 +134,6 @@ class BlockHeader implements BlockHeaderInterface
      */
     public function getPreviousBlockHash(): string
     {
-        // Prev block hash offset = 1.
-        // Prev block hash length = 32.
         return substr($this->bytes, 1, 32);
     }
 
@@ -109,8 +143,6 @@ class BlockHeader implements BlockHeaderInterface
      */
     public function setPreviousBlockHash(string $hash): BlockHeaderInterface
     {
-        // Prev block hash offset = 1.
-        // Prev block hash length = 32.
         $this->bytes = substr_replace($this->bytes, $hash, 1, 32);
 
         return $this;
@@ -121,8 +153,6 @@ class BlockHeader implements BlockHeaderInterface
      */
     public function getMerkleRootHash(): string
     {
-        // Merkle hash offset = 33.
-        // Merkle hash offset = 32.
         return substr($this->bytes, 33, 32);
     }
 
@@ -132,8 +162,6 @@ class BlockHeader implements BlockHeaderInterface
      */
     public function setMerkleRootHash(string $hash): BlockHeaderInterface
     {
-        // Merkle hash offset = 33.
-        // Merkle hash offset = 32.
         $this->bytes = substr_replace($this->bytes, $hash, 33, 32);
 
         return $this;
@@ -144,8 +172,6 @@ class BlockHeader implements BlockHeaderInterface
      */
     public function getTimestamp(): int
     {
-        // Timestamp offset = 65.
-        // Timestamp length = 4.
         return intval(unpack('N', substr($this->bytes, 65, 4))[1]);
     }
 
@@ -155,8 +181,6 @@ class BlockHeader implements BlockHeaderInterface
      */
     public function setTimestamp(int $epoch): BlockHeaderInterface
     {
-        // Timestamp offset = 65.
-        // Timestamp length = 4. unsigned long, big endian.
         $this->bytes = substr_replace($this->bytes, pack('N', $epoch), 65, 4);
 
         return $this;
@@ -167,8 +191,6 @@ class BlockHeader implements BlockHeaderInterface
      */
     public function getPublicKey(): PublicKeyInterface
     {
-        // Public key offset = 71.
-        // Public key length = 32.
         return new PublicKey(substr($this->bytes, 71, 32));
     }
 
@@ -178,8 +200,6 @@ class BlockHeader implements BlockHeaderInterface
      */
     public function setPublicKey(PublicKeyInterface $publicKey): BlockHeaderInterface
     {
-        // Public key offset = 71.
-        // Public key length = 32.
         $this->bytes = substr_replace($this->bytes, $publicKey->toBytes(), 71, 32);
 
         return $this;
@@ -190,8 +210,6 @@ class BlockHeader implements BlockHeaderInterface
      */
     public function getSignature(): string
     {
-        // Signature offset = 103.
-        // Signature length = 64.
         return substr($this->bytes, 103, 64);
     }
 
@@ -201,8 +219,6 @@ class BlockHeader implements BlockHeaderInterface
      */
     public function setSignature(string $signature): BlockHeaderInterface
     {
-        // Signature offset = 103.
-        // Signature length = 64.
         $this->bytes = substr_replace($this->bytes, $signature, 103, 64);
 
         return $this;
@@ -213,8 +229,6 @@ class BlockHeader implements BlockHeaderInterface
      */
     public function getTransactionCount(): int
     {
-        // Tx count offset = 69.
-        // Tx count length = 2.
         return intval(unpack('n', substr($this->bytes, 69, 2))[1]);
     }
 
@@ -229,8 +243,6 @@ class BlockHeader implements BlockHeaderInterface
             throw new Exception('invalid count');
         }
 
-        // Tx count offset = 69.
-        // Tx count length = 2. unsigned short, big endian.
         $this->bytes = substr_replace($this->bytes, pack('n', $count), 69, 2);
 
         return $this;
@@ -242,8 +254,6 @@ class BlockHeader implements BlockHeaderInterface
      */
     public function sign(SecretKeyInterface $secretKey): BlockHeaderInterface
     {
-        // Unsigned offset = 0.
-        // Unsigned length = 103.
         $this->setPublicKey($secretKey->getPublicKey());
         $this->setSignature($secretKey->sign(substr($this->bytes, 0, 103)));
 
@@ -255,8 +265,6 @@ class BlockHeader implements BlockHeaderInterface
      */
     public function verify(): bool
     {
-        // Unsigned offset = 0.
-        // Unsigned length = 103.
         return $this->getPublicKey()->verifySignature($this->getSignature(), substr($this->bytes, 0, 103));
     }
 
@@ -266,5 +274,13 @@ class BlockHeader implements BlockHeaderInterface
     public function toBytes(): string
     {
         return $this->bytes;
+    }
+
+    /**
+     * @return string
+     */
+    public function toBase64(): string
+    {
+        return base64_encode($this->bytes);
     }
 }
