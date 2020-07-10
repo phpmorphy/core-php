@@ -12,31 +12,6 @@ use UmiTop\UmiCore\Util\Ed25519\Ed25519;
  */
 class Ed25519Test extends TestCase
 {
-//    public function testPublicKeyFromSecretKey(): void
-//    {
-//        $secKey = base64_decode(
-//            'm8SzWB0okW5pliiqCbAFbMrrh+3z+914V12x0uB19FsqSoVJFNJIHaOO9ktXJvhOP9AY2cmtzZ5KFKbTMvFN2Q=='
-//        );
-//        $expected = base64_decode('KkqFSRTSSB2jjvZLVyb4Tj/QGNnJrc2eShSm0zLxTdk=');
-//
-//        $obj = new Ed25519();
-//        $actual = $obj->publicKeyFromSecretKey($secKey);
-//
-//        $this->assertEquals($expected, $actual);
-//    }
-
-//    public function testPublicKeyFromSecretKeyException(): void
-//    {
-//        if (method_exists($this, 'expectException')) {
-//            $this->expectException('Exception');
-//        } elseif (method_exists($this, 'setExpectedException')) {
-//            $this->setExpectedException('Exception'); // PHPUnit 4
-//        }
-//
-//        $obj = new Ed25519();
-//        $obj->publicKeyFromSecretKey(str_repeat("\x0", Ed25519::SECRET_KEY_BYTES - 1));
-//    }
-
     public function testSecretKeyFromSeed(): void
     {
         $seed = base64_decode('xfg17XxfdmQGBaG81VhujlaXeBXohAA+PUGyAm7K6xc=');
@@ -49,18 +24,6 @@ class Ed25519Test extends TestCase
 
         $this->assertEquals($expected, $actual);
     }
-
-//    public function testSecretKeyFromSeedException(): void
-//    {
-//        if (method_exists($this, 'expectException')) {
-//            $this->expectException('Exception');
-//        } elseif (method_exists($this, 'setExpectedException')) {
-//            $this->setExpectedException('Exception'); // PHPUnit 4
-//        }
-//
-//        $obj = new Ed25519();
-//        $obj->secretKeyFromSeed(str_repeat("\x0", Ed25519::SEED_BYTES - 1));
-//    }
 
     public function testSign(): void
     {
@@ -77,18 +40,6 @@ class Ed25519Test extends TestCase
 
         $this->assertEquals($expected, $actual);
     }
-
-//    public function testSignException(): void
-//    {
-//        if (method_exists($this, 'expectException')) {
-//            $this->expectException('Exception');
-//        } elseif (method_exists($this, 'setExpectedException')) {
-//            $this->setExpectedException('Exception'); // PHPUnit 4
-//        }
-//
-//        $obj = new Ed25519();
-//        $obj->sign('', str_repeat("\x0", Ed25519::SECRET_KEY_BYTES - 1));
-//    }
 
     /**
      * @dataProvider signatureProvider
@@ -124,34 +75,4 @@ class Ed25519Test extends TestCase
             ]
         ];
     }
-
-//    public function testVerifyExceptionSignature(): void
-//    {
-//        if (method_exists($this, 'expectException')) {
-//            $this->expectException('Exception');
-//        } elseif (method_exists($this, 'setExpectedException')) {
-//            $this->setExpectedException('Exception'); // PHPUnit 4
-//        }
-//
-//        $sig = str_repeat("\x0", Ed25519::SIGNATURE_BYTES - 1);
-//        $msg = '';
-//        $pub = str_repeat("\x0", Ed25519::PUBLIC_KEY_BYTES);
-//        $obj = new Ed25519();
-//        $obj->verify($sig, $msg, $pub);
-//    }
-
-//    public function testVerifyExceptionPublicKey(): void
-//    {
-//        if (method_exists($this, 'expectException')) {
-//            $this->expectException('Exception');
-//        } elseif (method_exists($this, 'setExpectedException')) {
-//            $this->setExpectedException('Exception'); // PHPUnit 4
-//        }
-//
-//        $sig = str_repeat("\x0", Ed25519::SIGNATURE_BYTES);
-//        $msg = '';
-//        $pub = str_repeat("\x0", Ed25519::PUBLIC_KEY_BYTES - 1);
-//        $obj = new Ed25519();
-//        $obj->verify($sig, $msg, $pub);
-//    }
 }

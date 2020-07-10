@@ -31,13 +31,15 @@ use UmiTop\UmiCore\Key\KeyInterface;
 use UmiTop\UmiCore\Key\PublicKey;
 use UmiTop\UmiCore\Key\PublicKeyInterface;
 use UmiTop\UmiCore\Util\Bech32;
-use UmiTop\UmiCore\Util\Converter;
+use UmiTop\UmiCore\Util\ConverterTrait;
 
 /**
  * Class Address
  */
 class Address implements AddressInterface
 {
+    use ConverterTrait;
+
     /** @var int */
     public const LENGTH = 34;
 
@@ -98,6 +100,7 @@ class Address implements AddressInterface
         if (strlen($bytes) !== self::LENGTH) {
             throw new Exception('bytes size should be 34 bytes');
         }
+
         $this->bytes = $bytes;
 
         return $this;
@@ -121,9 +124,7 @@ class Address implements AddressInterface
      */
     public function getPrefix(): string
     {
-        $cnv = new Converter();
-
-        return $cnv->versionToPrefix((ord($this->bytes[0]) << 8) + ord($this->bytes[1]));
+        return $this->versionToPrefix((ord($this->bytes[0]) << 8) + ord($this->bytes[1]));
     }
 
     /**
@@ -133,8 +134,7 @@ class Address implements AddressInterface
      */
     public function setPrefix(string $prefix): AddressInterface
     {
-        $cnv = new Converter();
-        $version = $cnv->prefixToVersion($prefix);
+        $version = $this->prefixToVersion($prefix);
         $this->bytes[0] = chr($version >> 8 & 0xff);
         $this->bytes[1] = chr($version & 0xff);
 

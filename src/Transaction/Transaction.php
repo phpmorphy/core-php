@@ -30,13 +30,17 @@ use Exception;
 use UmiTop\UmiCore\Address\Address;
 use UmiTop\UmiCore\Address\AddressInterface;
 use UmiTop\UmiCore\Key\SecretKeyInterface;
-use UmiTop\UmiCore\Util\Converter;
+use UmiTop\UmiCore\Util\ConverterTrait;
+use UmiTop\UmiCore\Util\ValidatorTrait;
 
 /**
  * Class Transaction
  */
 class Transaction implements TransactionInterface
 {
+    use ValidatorTrait;
+    use ConverterTrait;
+
     /** @var int */
     public const LENGTH = 150;
 
@@ -204,11 +208,7 @@ class Transaction implements TransactionInterface
      */
     public function getPrefix(): string
     {
-        // Prefix offset - 35.
-        $version = ((ord($this->bytes[35]) << 8) + ord($this->bytes[36]));
-        $cnv = new Converter();
-
-        return $cnv->versionToPrefix($version);
+        return $this->versionToPrefix((ord($this->bytes[35]) << 8) + ord($this->bytes[36]));
     }
 
     /**
@@ -218,10 +218,7 @@ class Transaction implements TransactionInterface
      */
     public function setPrefix(string $prefix): TransactionInterface
     {
-        $cnv = new Converter();
-        $version = $cnv->prefixToVersion($prefix);
-
-        // Prefix offset - 35.
+        $version = $this->prefixToVersion($prefix);
         $this->bytes[35] = chr($version >> 8 & 0xff);
         $this->bytes[36] = chr($version & 0xff);
 
@@ -293,8 +290,6 @@ class Transaction implements TransactionInterface
      */
     public function setSender(AddressInterface $address): TransactionInterface
     {
-        // Sender offset - 1.
-        // Sender length - 34.
         $this->bytes = substr_replace($this->bytes, $address->toBytes(), 1, 34);
 
         return $this;
@@ -305,8 +300,6 @@ class Transaction implements TransactionInterface
      */
     public function getSignature(): string
     {
-        // Signature offset - 85.
-        // Signature length - 64.
         return substr($this->bytes, 85, 64);
     }
 
@@ -316,8 +309,6 @@ class Transaction implements TransactionInterface
      */
     public function setSignature(string $signature): TransactionInterface
     {
-        // Signature offset - 85.
-        // Signature length - 64.
         $this->bytes = substr_replace($this->bytes, $signature, 85, strlen($signature));
 
         return $this;
@@ -468,22 +459,5 @@ class Transaction implements TransactionInterface
         return $this->getSender()
             ->getPublicKey()
             ->verifySignature($this->getSignature(), substr($this->bytes, 0, 85));
-    }
-
-    /**
-     * @param int $val
-     * @param int|null $min
-     * @param int|null $max
-     * @throws Exception
-     */
-    private function validateInt(int $val, int $min = null, int $max = null): void
-    {
-        if ($min !== null && $val < $min) {
-            throw new Exception('invalid value');
-        }
-
-        if ($max !== null && $val > $max) {
-            throw new Exception('invalid value');
-        }
     }
 }

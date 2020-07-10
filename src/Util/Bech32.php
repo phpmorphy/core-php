@@ -33,6 +33,8 @@ use Exception;
  */
 class Bech32
 {
+    use ConverterTrait;
+
     /** @var string */
     private $alphabet = 'qpzry9x8gf2tvdw0s3jn54khce6mua7l';
 
@@ -60,8 +62,7 @@ class Bech32
         }
 
         $pfx = substr($bech32, 0, $sepPos);
-        $cnv = new Converter();
-        $ver = $cnv->prefixToVersion($pfx);
+        $ver = $this->prefixToVersion($pfx);
 
         $data = substr($bech32, ($sepPos + 1));
         $this->checkAlphabet($data);
@@ -79,9 +80,8 @@ class Bech32
      */
     public function encode(string $bytes): string
     {
-        $cnv = new Converter();
         $version = (ord($bytes[0]) << 8) + ord($bytes[1]);
-        $prefix = $cnv->versionToPrefix($version);
+        $prefix = $this->versionToPrefix($version);
 
         $data = $this->convert8to5(substr($bytes, 2, 32));
         $checksum = $this->createChecksum($prefix, $data);

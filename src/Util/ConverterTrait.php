@@ -29,16 +29,16 @@ namespace UmiTop\UmiCore\Util;
 use Exception;
 
 /**
- * Class Converter
+ * Trait ConverterTrait
  */
-class Converter
+trait ConverterTrait
 {
     /**
      * @param int $version
      * @return string
      * @throws Exception
      */
-    public function versionToPrefix(int $version): string
+    private function versionToPrefix(int $version): string
     {
         if ($version === 0) {
             return 'genesis';
@@ -58,7 +58,7 @@ class Converter
      * @return int
      * @throws Exception
      */
-    public function prefixToVersion(string $prefix): int
+    private function prefixToVersion(string $prefix): int
     {
         if ($prefix === 'genesis') {
             return 0;

@@ -44,25 +44,6 @@ class Block extends BlockHeader implements BlockInterface, Iterator
     private $position = 0;
 
     /**
-     * @param string $base64
-     * @return BlockInterface
-     * @throws Exception
-     * @override
-     */
-    public static function fromBase64(string $base64)
-    {
-        $bytes = base64_decode($base64, true);
-
-        if ($bytes === false) {
-            throw new Exception('could not decode base64');
-        }
-
-        $blk = new Block();
-
-        return $blk->setBytes($bytes);
-    }
-
-    /**
      * @param string $bytes
      * @return BlockInterface
      * @throws Exception
@@ -179,15 +160,6 @@ class Block extends BlockHeader implements BlockInterface, Iterator
     public function toBytes(): string
     {
         return parent::toBytes() . join('', $this->trxs);
-    }
-
-    /**
-     * @return string
-     * @override
-     */
-    public function toBase64(): string
-    {
-        return base64_encode($this->toBytes());
     }
 
     /**

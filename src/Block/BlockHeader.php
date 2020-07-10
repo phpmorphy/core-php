@@ -81,9 +81,7 @@ class BlockHeader implements BlockHeaderInterface
             throw new Exception('could not decode base64');
         }
 
-        $hdr = new BlockHeader();
-
-        return $hdr->setBytes($bytes);
+        return static::fromBytes($bytes);
     }
 
     /**
@@ -281,6 +279,6 @@ class BlockHeader implements BlockHeaderInterface
      */
     public function toBase64(): string
     {
-        return base64_encode($this->bytes);
+        return base64_encode($this->toBytes());
     }
 }
