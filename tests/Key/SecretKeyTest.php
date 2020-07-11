@@ -7,9 +7,6 @@ namespace Tests\Key;
 use PHPUnit\Framework\TestCase;
 use UmiTop\UmiCore\Key\SecretKey;
 
-/**
- * @SuppressWarnings(PHPMD.StaticAccess)
- */
 class SecretKeyTest extends TestCase
 {
     public function testConstructor(): void
@@ -18,7 +15,7 @@ class SecretKeyTest extends TestCase
             'u1mzvCnmyIbgs8RNM9GGGHOWcBdMvD7GIKC0m9zTFcaGXaAPQMbuPdZ1oAnTCfR/1rHTyC3J5n7x+dlFimHM8w=='
         );
         $key = new SecretKey($expected);
-        $actual = $key->toBytes();
+        $actual = $key->getBytes();
 
         $this->assertEquals($expected, $actual);
     }
@@ -42,7 +39,7 @@ class SecretKeyTest extends TestCase
         );
         $expected = base64_decode('hl2gD0DG7j3WdaAJ0wn0f9ax08gtyeZ+8fnZRYphzPM=');
         $secKey = new SecretKey($bytes);
-        $actual = $secKey->getPublicKey()->toBytes();
+        $actual = $secKey->getPublicKey()->getBytes();
 
         $this->assertEquals($expected, $actual);
     }
@@ -52,8 +49,11 @@ class SecretKeyTest extends TestCase
      */
     public function testFromSeed(string $seed, string $expected): void
     {
-        $actual = SecretKey::fromSeed(base64_decode($seed))->getPublicKey()->toBytes();
-        $this->assertEquals($actual, base64_decode($expected));
+        $seed = base64_decode($seed);
+        $expected = base64_decode($expected);
+        $actual = SecretKey::fromSeed($seed)->getPublicKey()->getBytes();
+
+        $this->assertEquals($actual, $expected);
     }
 
     /**
@@ -82,9 +82,13 @@ class SecretKeyTest extends TestCase
      */
     public function testSign(string $key, string $message, string $expected): void
     {
-        $obj = new SecretKey(base64_decode($key));
-        $actual = $obj->sign(base64_decode($message));
-        $this->assertEquals($actual, base64_decode($expected));
+        $key = base64_decode($key);
+        $message = base64_decode($message);
+        $expected = base64_decode($expected);
+
+        $obj = new SecretKey($key);
+        $actual = $obj->sign($message);
+        $this->assertEquals($actual, $expected);
     }
 
     /**

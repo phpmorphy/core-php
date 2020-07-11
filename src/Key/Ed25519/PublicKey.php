@@ -37,7 +37,7 @@ use UmiTop\UmiCore\Util\Ed25519\Ed25519;
 class PublicKey implements PublicKeyInterface
 {
     /** @var int */
-    public const LENGTH = Ed25519::PUBLIC_KEY_BYTES;
+    public const LENGTH = 32;
 
     /** @var string */
     private $bytes;
@@ -57,19 +57,19 @@ class PublicKey implements PublicKeyInterface
     }
 
     /**
+     * @return string
+     */
+    public function getBytes(): string
+    {
+        return $this->bytes;
+    }
+
+    /**
      * @return PublicKeyInterface
      */
     public function getPublicKey(): PublicKeyInterface
     {
         return $this;
-    }
-
-    /**
-     * @return string
-     */
-    public function toBytes(): string
-    {
-        return $this->bytes;
     }
 
     /**

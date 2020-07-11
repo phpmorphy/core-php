@@ -27,6 +27,7 @@ declare(strict_types=1);
 namespace UmiTop\UmiCore\Block;
 
 use UmiTop\UmiCore\Key\PublicKeyInterface;
+use UmiTop\UmiCore\Key\SecretKeyInterface;
 
 /**
  * Interface BlockHeaderInterface
@@ -34,6 +35,14 @@ use UmiTop\UmiCore\Key\PublicKeyInterface;
  */
 interface BlockHeaderInterface
 {
+    public function getBase64(): string;
+
+    public function setBase64(string $base64): BlockHeaderInterface;
+
+    public function getBytes(): string;
+
+    public function setBytes(string $bytes): BlockHeaderInterface;
+
     public function getHash(): string;
 
     public function getMerkleRootHash(): string;
@@ -54,7 +63,7 @@ interface BlockHeaderInterface
 
     public function getTimestamp(): int;
 
-    public function setTimestamp(int $epoch): BlockHeaderInterface;
+    public function setTimestamp(int $time): BlockHeaderInterface;
 
     public function getTransactionCount(): int;
 
@@ -64,9 +73,7 @@ interface BlockHeaderInterface
 
     public function setVersion(int $version): BlockHeaderInterface;
 
-    public function toBase64(): string;
-
-    public function toBytes(): string;
+    public function sign(SecretKeyInterface $secretKey): BlockHeaderInterface;
 
     public function verify(): bool;
 }

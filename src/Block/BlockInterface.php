@@ -33,15 +33,27 @@ use UmiTop\UmiCore\Transaction\TransactionInterface;
  * Interface BlockInterface
  * @package UmiTop\UmiCore\Block
  */
-interface BlockInterface extends BlockHeaderInterface
+interface BlockInterface
 {
     public function appendTransaction(TransactionInterface $transaction): BlockInterface;
 
     public function calculateMerkleRoot(): string;
 
-    public function getTransaction(int $index): TransactionInterface;
+    public function getBase64(): string;
+
+    public function setBase64(string $base64): BlockInterface;
+
+    public function getBytes(): string;
+
+    public function setBytes(string $bytes): BlockInterface;
 
     public function getHeader(): BlockHeaderInterface;
 
+    public function setHeader(BlockHeaderInterface $header): BlockInterface;
+
+    public function getTransaction(int $index): TransactionInterface;
+
     public function sign(SecretKeyInterface $secretKey): BlockInterface;
+
+    public function verify(): bool;
 }

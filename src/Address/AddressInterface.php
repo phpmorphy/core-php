@@ -37,10 +37,32 @@ interface AddressInterface
     /**
      * @return string
      */
+    public function getBech32(): string;
+
+    /**
+     * @param string $bech32
+     * @return AddressInterface
+     */
+    public function setBech32(string $bech32): AddressInterface;
+
+    /**
+     * @return string
+     */
+    public function getBytes(): string;
+
+    /**
+     * @param string $bytes
+     * @return AddressInterface
+     */
+    public function setBytes(string $bytes): AddressInterface;
+
+    /**
+     * @return string
+     */
     public function getPrefix(): string;
 
     /**
-     * @param string $prefix Перфикс. Три символа латиницы в нижнем регистре.
+     * @param string $prefix Префикс. Три символа латиницы в нижнем регистре.
      * @return AddressInterface
      */
     public function setPrefix(string $prefix): AddressInterface;
@@ -55,14 +77,4 @@ interface AddressInterface
      * @return AddressInterface
      */
     public function setPublicKey(PublicKeyInterface $publicKey): AddressInterface;
-
-    /**
-     * @return string
-     */
-    public function toBech32(): string;
-
-    /**
-     * @return string
-     */
-    public function toBytes(): string;
 }

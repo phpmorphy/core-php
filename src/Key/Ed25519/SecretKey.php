@@ -38,7 +38,7 @@ use UmiTop\UmiCore\Util\Ed25519\Ed25519;
 class SecretKey implements SecretKeyInterface
 {
     /** @var int */
-    public const LENGTH = Ed25519::SECRET_KEY_BYTES;
+    public const LENGTH = 64;
 
     /** @var string */
     private $bytes;
@@ -46,7 +46,7 @@ class SecretKey implements SecretKeyInterface
     /**
      * SecretKey constructor.
      * @param string $bytes Байты.
-     * @throws Exception еуые.
+     * @throws Exception
      */
     public function __construct(string $bytes)
     {
@@ -83,13 +83,19 @@ class SecretKey implements SecretKeyInterface
     }
 
     /**
+     * @return string
+     */
+    public function getBytes(): string
+    {
+        return $this->bytes;
+    }
+
+    /**
      * @return PublicKeyInterface
      */
     public function getPublicKey(): PublicKeyInterface
     {
-        $bytes = substr($this->bytes, 32, 32);
-
-        return new PublicKey($bytes);
+        return new PublicKey(substr($this->bytes, 32, 32));
     }
 
     /**
@@ -106,13 +112,5 @@ class SecretKey implements SecretKeyInterface
         $ed25519 = new Ed25519();
 
         return $ed25519->sign($message, $this->bytes);
-    }
-
-    /**
-     * @return string
-     */
-    public function toBytes(): string
-    {
-        return $this->bytes;
     }
 }

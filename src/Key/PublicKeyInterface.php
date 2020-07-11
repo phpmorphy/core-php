@@ -35,7 +35,7 @@ interface PublicKeyInterface extends KeyInterface
     /**
      * @param string $signature Цифровая подпись в бинарном виде.
      * @param string $message   Сообщение в бинарном виде.
-     * @return boolean
+     * @return bool
      */
     public function verifySignature(string $signature, string $message): bool;
 }

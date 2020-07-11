@@ -10,7 +10,6 @@ use UmiTop\UmiCore\Address\Address;
 use UmiTop\UmiCore\Key\SecretKey;
 
 /**
- * @SuppressWarnings(PHPMD.StaticAccess)
  * @SuppressWarnings(PHPMD.TooManyMethods)
  * @SuppressWarnings(PHPMD.TooManyPublicMethods)
  */
@@ -19,12 +18,12 @@ class TransactionTest extends TestCase
     public function testFromBytes(): void
     {
         $bytes = str_repeat("\x0", Transaction::LENGTH);
-        $actual = Transaction::fromBytes($bytes);
+        $actual = Transaction::fromBytes($bytes)->getBytes();
 
-        $this->assertEquals($bytes, $actual->toBytes());
+        $this->assertEquals($bytes, $actual);
     }
 
-    public function testFromBytesException(): void
+    public function testSetBytesException(): void
     {
         if (method_exists($this, 'expectException')) {
             $this->expectException('Exception');
@@ -33,10 +32,11 @@ class TransactionTest extends TestCase
         }
 
         $bytes = str_repeat("\x0", Transaction::LENGTH - 1);
-        Transaction::fromBytes($bytes);
+        $obj = new Transaction();
+        $obj->setBytes($bytes);
     }
 
-    public function testFromBase64Exception(): void
+    public function testSetBase64Exception(): void
     {
         if (method_exists($this, 'expectException')) {
             $this->expectException('Exception');
@@ -44,7 +44,8 @@ class TransactionTest extends TestCase
             $this->setExpectedException('Exception'); // PHPUnit 4
         }
 
-        Transaction::fromBase64('zzzzz');
+        $obj = new Transaction();
+        $obj->setBase64('zzzzz');
     }
 
     public function testHash(): void
@@ -69,20 +70,26 @@ class TransactionTest extends TestCase
 
     public function testSender(): void
     {
-        $expected = Address::fromBytes(str_repeat("\x1", Address::LENGTH));
-        $trx = new Transaction();
-        $actual = $trx->setSender($expected)->getSender();
+        $adr = new Address();
+        $adr->setBytes(str_repeat("\x11", Address::LENGTH));
+        $expected = $adr->getBytes();
 
-        $this->assertEquals($expected->toBytes(), $actual->toBytes());
+        $trx = new Transaction();
+        $actual = $trx->setSender($adr)->getSender()->getBytes();
+
+        $this->assertEquals($expected, $actual);
     }
 
     public function testRecipient(): void
     {
-        $expected = Address::fromBytes(str_repeat("\x1", Address::LENGTH));
-        $trx = new Transaction();
-        $actual = $trx->setRecipient($expected)->getRecipient();
+        $adr = new Address();
+        $adr->setBytes(str_repeat("\x22", Address::LENGTH));
+        $expected = $adr->getBytes();
 
-        $this->assertEquals($expected->toBytes(), $actual->toBytes());
+        $trx = new Transaction();
+        $actual = $trx->setRecipient($adr)->getRecipient()->getBytes();
+
+        $this->assertEquals($expected, $actual);
     }
 
     public function testSetValueException(): void
@@ -203,12 +210,18 @@ class TransactionTest extends TestCase
         $this->assertEquals($expected, $actual);
     }
 
+    /**
+     * @SuppressWarnings(PHPMD.StaticAccess)
+     */
     public function testSign(): void
     {
-        $key = SecretKey::fromSeed(str_repeat("\x0", 32));
-        $adr = Address::fromKey($key);
+        $key = SecretKey::fromSeed(str_repeat("\x42", 32));
+        $adr = new Address();
+        $adr->setPublicKey($key->getPublicKey());
+
         $trx = new Transaction();
         $actual = $trx->setSender($adr)->sign($key)->verify();
+
         $this->assertTrue($actual);
     }
 
@@ -275,11 +288,11 @@ class TransactionTest extends TestCase
         ];
     }
 
-    public function testToBase64(): void
+    public function testGetBase64(): void
     {
         $expected = str_repeat('A', 200);
         $obj = new Transaction();
-        $actual = $obj->toBase64();
+        $actual = $obj->getBase64();
         $this->assertEquals($expected, $actual);
     }
 }

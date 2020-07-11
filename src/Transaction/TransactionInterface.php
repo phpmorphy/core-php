@@ -59,6 +59,14 @@ interface TransactionInterface
     /** @var int */
     public const DELETE_TRANSIT_ADDRESS = 7;
 
+    public function getBase64(): string;
+
+    public function setBase64(string $base64): TransactionInterface;
+
+    public function getBytes(): string;
+
+    public function setBytes(string $bytes): TransactionInterface;
+
     public function getFeePercent(): int;
 
     public function setFeePercent(int $percent): TransactionInterface;
@@ -104,10 +112,6 @@ interface TransactionInterface
     public function setVersion(int $version): TransactionInterface;
 
     public function sign(SecretKeyInterface $secretKey, int $powBits = null): TransactionInterface;
-
-    public function toBytes(): string;
-
-    public function toBase64(): string;
 
     public function verify(): bool;
 }

@@ -27,6 +27,7 @@ declare(strict_types=1);
 namespace UmiTop\UmiCore\Block;
 
 use Exception;
+use UmiTop\UmiCore\Transaction\TransactionInterface;
 
 /**
  * Trait BlockIteratorTrait
@@ -38,7 +39,8 @@ trait BlockIteratorTrait
     private $position = 0;
 
     /**
-     * @throws Exception
+     * Return the current element
+     * @link https://php.net/manual/en/iterator.current.php
      */
     public function current()
     {
@@ -46,15 +48,18 @@ trait BlockIteratorTrait
     }
 
     /**
+     * Move forward to next element
+     * @link https://php.net/manual/en/iterator.next.php
      * @return void
      */
     public function next(): void
     {
-        ++$this->position;
+        $this->position += 1;
     }
 
     /**
-     *
+     * Return the key of the current element
+     * @link https://php.net/manual/en/iterator.key.php
      */
     public function key()
     {
@@ -62,6 +67,8 @@ trait BlockIteratorTrait
     }
 
     /**
+     * Checks if current position is valid
+     * @link https://php.net/manual/en/iterator.valid.php
      * @return bool
      */
     public function valid(): bool
@@ -70,6 +77,8 @@ trait BlockIteratorTrait
     }
 
     /**
+     * Rewind the Iterator to the first element
+     * @link https://php.net/manual/en/iterator.rewind.php
      * @return void
      */
     public function rewind(): void

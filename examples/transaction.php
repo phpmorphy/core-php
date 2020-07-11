@@ -20,7 +20,8 @@ $trx1 = (new Transaction())
     ->setValue(42)
     ->sign($secKey);
 
-echo 'Ver1: ', $trx1->toBase64(), PHP_EOL;
+echo 'Ver1: ', $trx1->getBase64(), PHP_EOL;
+
 
 // Create Structure
 
@@ -35,7 +36,8 @@ $trx2 = (new Transaction())
     ->setFeePercent(2000)
     ->sign($secKey);
 
-echo 'Ver2: ', $trx2->toBase64(), PHP_EOL;
+echo 'Ver2: ', $trx2->getBase64(), PHP_EOL;
+
 
 // Update Structure
 
@@ -50,7 +52,8 @@ $trx3 = (new Transaction())
     ->setFeePercent(1000)
     ->sign($secKey);
 
-echo 'Ver3: ', $trx3->toBase64(), PHP_EOL;
+echo 'Ver3: ', $trx3->getBase64(), PHP_EOL;
+
 
 // Update Profit Address
 
@@ -63,7 +66,8 @@ $trx4 = (new Transaction())
     ->setRecipient($newProfit)
     ->sign($secKey);
 
-echo 'Ver4: ', $trx4->toBase64(), PHP_EOL;
+echo 'Ver4: ', $trx4->getBase64(), PHP_EOL;
+
 
 // Update Fee Address
 
@@ -76,7 +80,8 @@ $trx5 = (new Transaction())
     ->setRecipient($newFee)
     ->sign($secKey);
 
-echo 'Ver5: ', $trx5->toBase64(), PHP_EOL;
+echo 'Ver5: ', $trx5->getBase64(), PHP_EOL;
+
 
 // Create Transit Address
 
@@ -89,7 +94,8 @@ $trx6 = (new Transaction())
     ->setRecipient($newTransit)
     ->sign($secKey);
 
-echo 'Ver6: ', $trx6->toBase64(), PHP_EOL;
+echo 'Ver6: ', $trx6->getBase64(), PHP_EOL;
+
 
 // Delete Transit Address
 
@@ -102,4 +108,4 @@ $trx7 = (new Transaction())
     ->setRecipient($oldTransit)
     ->sign($secKey);
 
-echo 'Ver7: ', $trx7->toBase64(), PHP_EOL;
+echo 'Ver7: ', $trx7->getBase64(), PHP_EOL;

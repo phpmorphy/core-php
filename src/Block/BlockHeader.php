@@ -56,18 +56,7 @@ class BlockHeader implements BlockHeaderInterface
     {
         $this->bytes = str_repeat("\x0", self::LENGTH);
         $this->setVersion(self::BASIC);
-    }
-
-    /**
-     * @param string $bytes
-     * @return BlockHeaderInterface
-     * @throws Exception
-     */
-    public static function fromBytes(string $bytes)
-    {
-        $hdr = new BlockHeader();
-
-        return $hdr->setBytes($bytes);
+        $this->setTimestamp(time());
     }
 
     /**
@@ -75,15 +64,11 @@ class BlockHeader implements BlockHeaderInterface
      * @return BlockHeaderInterface
      * @throws Exception
      */
-    public static function fromBase64(string $base64)
+    public static function fromBase64(string $base64): BlockHeaderInterface
     {
-        $bytes = base64_decode($base64, true);
+        $hdr = new BlockHeader();
 
-        if ($bytes === false) {
-            throw new Exception('could not decode base64');
-        }
-
-        return static::fromBytes($bytes);
+        return $hdr->setBase64($base64);
     }
 
     /**
@@ -91,7 +76,51 @@ class BlockHeader implements BlockHeaderInterface
      * @return BlockHeaderInterface
      * @throws Exception
      */
-    public function setBytes(string $bytes)
+    public static function fromBytes(string $bytes): BlockHeaderInterface
+    {
+        $hdr = new BlockHeader();
+
+        return $hdr->setBytes($bytes);
+    }
+
+    /**
+     * @return string
+     */
+    public function getBase64(): string
+    {
+        return base64_encode($this->bytes);
+    }
+
+    /**
+     * @param string $base64
+     * @return BlockHeaderInterface
+     * @throws Exception
+     */
+    public function setBase64(string $base64): BlockHeaderInterface
+    {
+        $bytes = base64_decode($base64, true);
+
+        if ($bytes === false) {
+            throw new Exception('could not decode base64');
+        }
+
+        return $this->setBytes($bytes);
+    }
+
+    /**
+     * @return string
+     */
+    public function getBytes(): string
+    {
+        return $this->bytes;
+    }
+
+    /**
+     * @param string $bytes
+     * @return BlockHeaderInterface
+     * @throws Exception
+     */
+    public function setBytes(string $bytes): BlockHeaderInterface
     {
         if (strlen($bytes) !== self::LENGTH) {
             throw new Exception('incorrect length');
@@ -111,20 +140,20 @@ class BlockHeader implements BlockHeaderInterface
     }
 
     /**
-     * @return integer
+     * @return string
      */
-    public function getVersion(): int
+    public function getMerkleRootHash(): string
     {
-        return ord($this->bytes[0]);
+        return substr($this->bytes, 33, 32);
     }
 
     /**
-     * @param integer $version
+     * @param string $hash
      * @return BlockHeaderInterface
      */
-    public function setVersion(int $version): BlockHeaderInterface
+    public function setMerkleRootHash(string $hash): BlockHeaderInterface
     {
-        $this->bytes[0] = chr($version);
+        $this->bytes = substr_replace($this->bytes, $hash, 33, 32);
 
         return $this;
     }
@@ -149,44 +178,6 @@ class BlockHeader implements BlockHeaderInterface
     }
 
     /**
-     * @return string
-     */
-    public function getMerkleRootHash(): string
-    {
-        return substr($this->bytes, 33, 32);
-    }
-
-    /**
-     * @param string $hash
-     * @return BlockHeaderInterface
-     */
-    public function setMerkleRootHash(string $hash): BlockHeaderInterface
-    {
-        $this->bytes = substr_replace($this->bytes, $hash, 33, 32);
-
-        return $this;
-    }
-
-    /**
-     * @return integer
-     */
-    public function getTimestamp(): int
-    {
-        return intval(unpack('N', substr($this->bytes, 65, 4))[1]);
-    }
-
-    /**
-     * @param integer $epoch
-     * @return BlockHeaderInterface
-     */
-    public function setTimestamp(int $epoch): BlockHeaderInterface
-    {
-        $this->bytes = substr_replace($this->bytes, pack('N', $epoch), 65, 4);
-
-        return $this;
-    }
-
-    /**
      * @return PublicKeyInterface
      */
     public function getPublicKey(): PublicKeyInterface
@@ -200,7 +191,7 @@ class BlockHeader implements BlockHeaderInterface
      */
     public function setPublicKey(PublicKeyInterface $publicKey): BlockHeaderInterface
     {
-        $this->bytes = substr_replace($this->bytes, $publicKey->toBytes(), 71, 32);
+        $this->bytes = substr_replace($this->bytes, $publicKey->getBytes(), 71, 32);
 
         return $this;
     }
@@ -227,13 +218,32 @@ class BlockHeader implements BlockHeaderInterface
     /**
      * @return int
      */
+    public function getTimestamp(): int
+    {
+        return intval(unpack('N', substr($this->bytes, 65, 4))[1]);
+    }
+
+    /**
+     * @param int $time
+     * @return BlockHeaderInterface
+     */
+    public function setTimestamp(int $time): BlockHeaderInterface
+    {
+        $this->bytes = substr_replace($this->bytes, pack('N', $time), 65, 4);
+
+        return $this;
+    }
+
+    /**
+     * @return int
+     */
     public function getTransactionCount(): int
     {
         return intval(unpack('n', substr($this->bytes, 69, 2))[1]);
     }
 
     /**
-     * @param integer $count
+     * @param int $count
      * @return BlockHeaderInterface
      * @throws Exception
      */
@@ -249,26 +259,42 @@ class BlockHeader implements BlockHeaderInterface
     }
 
     /**
+     * @return int
+     */
+    public function getVersion(): int
+    {
+        return ord($this->bytes[0]);
+    }
+
+    /**
+     * @param int $version
+     * @return BlockHeaderInterface
+     */
+    public function setVersion(int $version): BlockHeaderInterface
+    {
+        $this->bytes[0] = chr($version);
+
+        return $this;
+    }
+
+    /**
+     * @param SecretKeyInterface $secretKey
+     * @return BlockHeaderInterface
+     * @throws Exception
+     */
+    public function sign(SecretKeyInterface $secretKey): BlockHeaderInterface
+    {
+        $this->setPublicKey($secretKey->getPublicKey());
+        $this->setSignature($secretKey->sign(substr($this->bytes, 0, 103)));
+
+        return $this;
+    }
+
+    /**
      * @return bool
      */
     public function verify(): bool
     {
         return $this->getPublicKey()->verifySignature($this->getSignature(), substr($this->bytes, 0, 103));
-    }
-
-    /**
-     * @return string
-     */
-    public function toBytes(): string
-    {
-        return $this->bytes;
-    }
-
-    /**
-     * @return string
-     */
-    public function toBase64(): string
-    {
-        return base64_encode($this->toBytes());
     }
 }

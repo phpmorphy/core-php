@@ -92,19 +92,13 @@ class Address implements AddressInterface
     }
 
     /**
-     * @param string $bytes
-     * @return AddressInterface
-     * @throws Exception
+     * @return string
      */
-    public function setBytes(string $bytes): AddressInterface
+    public function getBech32(): string
     {
-        if (strlen($bytes) !== self::LENGTH) {
-            throw new Exception('bytes size should be 34 bytes');
-        }
+        $bech32 = new Bech32();
 
-        $this->bytes = $bytes;
-
-        return $this;
+        return $bech32->encode($this->bytes);
     }
 
     /**
@@ -121,6 +115,30 @@ class Address implements AddressInterface
 
     /**
      * @return string
+     */
+    public function getBytes(): string
+    {
+        return $this->bytes;
+    }
+
+    /**
+     * @param string $bytes
+     * @return AddressInterface
+     * @throws Exception
+     */
+    public function setBytes(string $bytes): AddressInterface
+    {
+        if (strlen($bytes) !== self::LENGTH) {
+            throw new Exception('bytes size should be 34 bytes');
+        }
+
+        $this->bytes = $bytes;
+
+        return $this;
+    }
+
+    /**
+     * @return string
      * @throws Exception Ошибка в случае если префикс не проходит валидацию.
      */
     public function getPrefix(): string
@@ -129,7 +147,7 @@ class Address implements AddressInterface
     }
 
     /**
-     * @param string $prefix Префикс. Три байта лайтинцы в нижнем регистре.
+     * @param string $prefix Префикс. Три байта латиницы в нижнем регистре.
      * @return AddressInterface
      * @throws Exception Ошибка в случае, если префикс не проходит валидацию.
      */
@@ -144,7 +162,6 @@ class Address implements AddressInterface
 
     /**
      * @return PublicKeyInterface
-     * @throws Exception Ошибка, в случае если прубличный ключ не был установлен.
      */
     public function getPublicKey(): PublicKeyInterface
     {
@@ -157,26 +174,8 @@ class Address implements AddressInterface
      */
     public function setPublicKey(PublicKeyInterface $publicKey): AddressInterface
     {
-        $this->bytes = substr_replace($this->bytes, $publicKey->toBytes(), 2, 32);
+        $this->bytes = substr_replace($this->bytes, $publicKey->getBytes(), 2, 32);
 
         return $this;
-    }
-
-    /**
-     * @return string
-     */
-    public function toBech32(): string
-    {
-        $bech32 = new Bech32();
-
-        return $bech32->encode($this->bytes);
-    }
-
-    /**
-     * @return string
-     */
-    public function toBytes(): string
-    {
-        return $this->bytes;
     }
 }

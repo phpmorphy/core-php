@@ -10,7 +10,7 @@ use UmiTop\UmiCore\Key\SecretKey;
 
 $seed = random_bytes(32);
 $secKey = SecretKey::fromSeed($seed);
-$bytes = $secKey->toBytes();
+$bytes = $secKey->getBytes();
 
 echo 'SecKey: ', base64_encode($bytes), PHP_EOL;
 
@@ -19,7 +19,7 @@ echo 'SecKey: ', base64_encode($bytes), PHP_EOL;
 $secKey = new SecretKey($bytes);
 $pubKey = $secKey->getPublicKey();
 
-echo 'PubKey: ', base64_encode($pubKey->toBytes()), PHP_EOL;
+echo 'PubKey: ', base64_encode($pubKey->getBytes()), PHP_EOL;
 
 // Sign
 

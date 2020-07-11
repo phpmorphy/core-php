@@ -1,8 +1,12 @@
 <?php
 
-declare(strict_types=1);
+/**
+ * composer require bitwasp/bitcoin
+ *
+ * @see https://github.com/Bit-Wasp/bitcoin-lib-php
+ */
 
-// composer require bitwasp/bitcoin
+declare(strict_types=1);
 
 include __DIR__ . '/../vendor/autoload.php';
 
@@ -12,8 +16,9 @@ use UmiTop\UmiCore\Address\Address;
 
 $mnemonic = 'mix tooth like stock powder emerge protect index magic';
 
-$seed = (new Bip39SeedGenerator())->getSeed($mnemonic)->getBinary();
+$bip39 = new Bip39SeedGenerator();
+$seed = $bip39->getSeed($mnemonic)->getBinary();
 
 $address = Address::fromKey(SecretKey::fromSeed($seed));
 
-echo $address->toBech32(), PHP_EOL;
+echo $address->getBech32(), PHP_EOL;

@@ -33,12 +33,12 @@ namespace UmiTop\UmiCore\Key;
 interface KeyInterface
 {
     /**
+     * @return string
+     */
+    public function getBytes(): string;
+
+    /**
      * @return PublicKeyInterface
      */
     public function getPublicKey(): PublicKeyInterface;
-
-    /**
-     * @return string
-     */
-    public function toBytes(): string;
 }

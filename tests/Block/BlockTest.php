@@ -7,37 +7,28 @@ namespace Tests\Block;
 use PHPUnit\Framework\TestCase;
 use UmiTop\UmiCore\Block\Block;
 use UmiTop\UmiCore\Block\BlockHeader;
-use UmiTop\UmiCore\Key\PublicKey;
 use UmiTop\UmiCore\Key\SecretKey;
 use UmiTop\UmiCore\Transaction\Transaction;
 
 /**
- * @SuppressWarnings(PHPMD.StaticAccess)
  * @SuppressWarnings(PHPMD.TooManyMethods)
  * @SuppressWarnings(PHPMD.TooManyPublicMethods)
  */
 class BlockTest extends TestCase
 {
-    public function testConstructor(): void
-    {
-        $expected = "\x01" . str_repeat("\x0", BlockHeader::LENGTH - 1);
-        $obj = new Block();
-        $actual = $obj->toBytes();
-        $this->assertEquals($expected, $actual);
-    }
-
     public function testFromBase64(): void
     {
-        $bytes = str_repeat("\x0", BlockHeader::LENGTH + Transaction::LENGTH);
-        $bytes[70] = chr(1);
-        $expected = base64_encode($bytes);
-
-        $actual = Block::fromBase64($expected)->toBase64();
+        $expected = 'AQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABfCTUPAAEAA'
+            . 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
+            . 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
+            . 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
+            . 'AAAAAAAAAAAAAAAAA=';
+        $actual = Block::fromBase64($expected)->getBase64();
 
         $this->assertEquals($expected, $actual);
     }
 
-    public function testFromBase64Exception(): void
+    public function testSetBase64Exception(): void
     {
         if (method_exists($this, 'expectException')) {
             $this->expectException('Exception');
@@ -45,15 +36,19 @@ class BlockTest extends TestCase
             $this->setExpectedException('Exception'); // PHPUnit 4
         }
 
-        Block::fromBase64('A');
+        $obj = new Block();
+        $obj->setBase64('A');
     }
 
     public function testFromBytes(): void
     {
-        $expected = str_repeat("\x0", BlockHeader::LENGTH + Transaction::LENGTH);
-        $expected[70] = chr(1);
-
-        $actual = Block::fromBytes($expected)->toBytes();
+        $expected = 'AQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABfCTUPAAEAA'
+            . 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
+            . 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
+            . 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
+            . 'AAAAAAAAAAAAAAAAA=';
+        $expected = base64_decode($expected);
+        $actual = Block::fromBytes($expected)->getBytes();
 
         $this->assertEquals($expected, $actual);
     }
@@ -61,7 +56,7 @@ class BlockTest extends TestCase
     /**
      * @dataProvider invalidBlockProvider
      */
-    public function testFromBytesException(string $bytes): void
+    public function testSetBytesException(string $bytes): void
     {
         if (method_exists($this, 'expectException')) {
             $this->expectException('Exception');
@@ -69,7 +64,8 @@ class BlockTest extends TestCase
             $this->setExpectedException('Exception'); // PHPUnit 4
         }
 
-        Block::fromBytes($bytes);
+        $obj = new Block();
+        $obj->setBytes($bytes);
     }
 
     /**
@@ -87,79 +83,36 @@ class BlockTest extends TestCase
         ];
     }
 
-    public function testGetHash(): void
+    public function testHeader(): void
     {
-        $expected = hash('sha256', "\x01" . str_repeat("\x0", BlockHeader::LENGTH - 1), true);
-        $obj = new Block();
-        $actual = $obj->getHash();
-        $this->assertEquals($expected, $actual);
-    }
+        $hdr = new BlockHeader();
+        $hdr->setBytes(str_repeat("\x01", BlockHeader::LENGTH));
+        $expected = $hdr->getBytes();
 
-    public function testGetHeader(): void
-    {
-        $expected = "\x01" . str_repeat("\x0", BlockHeader::LENGTH - 1);
         $obj = new Block();
-        $actual = $obj->getHeader()->toBytes();
-        $this->assertEquals($expected, $actual);
-    }
+        $actual = $obj->setHeader($hdr)->getHeader()->getBytes();
 
-    public function testVersion(): void
-    {
-        $obj = new Block();
-        $expected = 1;
-        $actual = $obj->setVersion($expected)->getVersion();
-        $this->assertEquals($expected, $actual);
-    }
-
-    public function testPreviousBlockHash(): void
-    {
-        $obj = new Block();
-        $expected = str_repeat("\xab", 32);
-        $actual = $obj->setPreviousBlockHash($expected)->getPreviousBlockHash();
-        $this->assertEquals($expected, $actual);
-    }
-
-    public function testMerkleRootHash(): void
-    {
-        $obj = new Block();
-        $expected = str_repeat("\xcd", 32);
-        $actual = $obj->setMerkleRootHash($expected)->getMerkleRootHash();
-        $this->assertEquals($expected, $actual);
-    }
-
-    public function testTimestamp(): void
-    {
-        $obj = new Block();
-        $expected = 0x12345678;
-        $actual = $obj->setTimestamp($expected)->getTimestamp();
-        $this->assertEquals($expected, $actual);
-    }
-
-    public function testPublicKey(): void
-    {
-        $obj = new Block();
-        $expected = new PublicKey(str_repeat("\x12", 32));
-        $actual = $obj->setPublicKey($expected)->getPublicKey();
-        $this->assertEquals($expected->toBytes(), $actual->toBytes());
-    }
-
-    public function testSignature(): void
-    {
-        $obj = new Block();
-        $expected = str_repeat("\xff", 64);
-        $actual = $obj->setSignature($expected)->getSignature();
         $this->assertEquals($expected, $actual);
     }
 
     public function testTransaction(): void
     {
-        $obj = new Block();
+        $trx = new Transaction();
+        $trx->setBytes(str_repeat("\x01", Transaction::LENGTH));
+        $expected = $trx->getBytes();
 
-        $expected = str_repeat("\xff", Transaction::LENGTH);
-        $actual = $obj->appendTransaction(Transaction::fromBytes($expected))->getTransaction(0)->toBytes();
+        $obj = new Block();
+        $actual = $obj->appendTransaction($trx)->getTransaction(0)->getBytes();
 
         $this->assertEquals($expected, $actual);
-        $this->assertEquals(1, $obj->getTransactionCount());
+    }
+
+    public function testTransactionCount(): void
+    {
+        $obj = new Block();
+        $actual = $obj->appendTransaction(new Transaction())->getHeader()->getTransactionCount();
+
+        $this->assertEquals(1, $actual);
     }
 
     public function testGetTransactionException(): void
@@ -191,10 +144,11 @@ class BlockTest extends TestCase
     public function testMerkle(string $merkleRoot, int $txCount): void
     {
         $obj = new Block();
+        $trx = new Transaction();
 
         for ($i = 0; $i < $txCount; $i++) {
             $bytes = str_repeat(chr($i), Transaction::LENGTH);
-            $trx = Transaction::fromBytes($bytes);
+            $trx->setBytes($bytes);
             $obj->appendTransaction($trx);
         }
 

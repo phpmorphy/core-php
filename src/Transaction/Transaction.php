@@ -75,15 +75,41 @@ class Transaction implements TransactionInterface
      */
     public static function fromBase64(string $base64): TransactionInterface
     {
+        $trx = new Transaction();
+
+        return $trx->setBase64($base64);
+    }
+
+    /**
+     * @return string
+     */
+    public function getBase64(): string
+    {
+        return base64_encode($this->bytes);
+    }
+
+    /**
+     * @param string $base64
+     * @return TransactionInterface
+     * @throws Exception
+     */
+    public function setBase64(string $base64): TransactionInterface
+    {
         $bytes = base64_decode($base64, true);
 
         if ($bytes === false) {
             throw new Exception('could not decode base64');
         }
 
-        $trx = new Transaction();
+        return $this->setBytes($bytes);
+    }
 
-        return $trx->setBytes($bytes);
+    /**
+     * @return string
+     */
+    public function getBytes(): string
+    {
+        return $this->bytes;
     }
 
     /**
@@ -269,7 +295,7 @@ class Transaction implements TransactionInterface
      */
     public function setRecipient(AddressInterface $address): TransactionInterface
     {
-        $this->bytes = substr_replace($this->bytes, $address->toBytes(), 35, 34);
+        $this->bytes = substr_replace($this->bytes, $address->getBytes(), 35, 34);
 
         return $this;
     }
@@ -291,7 +317,7 @@ class Transaction implements TransactionInterface
      */
     public function setSender(AddressInterface $address): TransactionInterface
     {
-        $this->bytes = substr_replace($this->bytes, $address->toBytes(), 1, 34);
+        $this->bytes = substr_replace($this->bytes, $address->getBytes(), 1, 34);
 
         return $this;
     }
@@ -432,22 +458,6 @@ class Transaction implements TransactionInterface
 
         // Unsigned length = 85.
         return $this->setSignature($secretKey->sign(substr($this->bytes, 0, 85)));
-    }
-
-    /**
-     * @return string
-     */
-    public function toBytes(): string
-    {
-        return $this->bytes;
-    }
-
-    /**
-     * @return string
-     */
-    public function toBase64(): string
-    {
-        return base64_encode($this->bytes);
     }
 
     /**

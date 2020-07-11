@@ -34,7 +34,8 @@
         "phpstan": "phpstan analyse",
         "phpcs": "phpcs",
         "phpmd": "phpmd ./src text cleancode,codesize,controversial,design,naming,unusedcode",
-        "lint": ["@phpmd", "@phpcs", "@psalm", "@phpstan"]
+        "phpmd2": "phpmd ./tests text cleancode,codesize,controversial,design,naming,unusedcode",
+        "lint": ["@phpmd", "@phpmd2", "@phpcs", "@psalm", "@phpstan"]
     },
     "archive": {
         "exclude": ["*", "!LICENSE", "!README.md", "!composer.json", "!src"]

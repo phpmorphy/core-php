@@ -37,20 +37,43 @@ use UmiTop\UmiCore\Transaction\TransactionInterface;
  * @package UmiTop\UmiCore\Block
  * @implements Iterator<int, TransactionInterface>
  */
-class Block extends BlockHeader implements BlockInterface, Iterator
+class Block implements BlockInterface, Iterator
 {
     use BlockIteratorTrait;
 
-    /** @var array<int, string> */
-    private $trxs = [];
+    /** @var BlockHeaderInterface */
+    private $header;
+
+    /** @var string[] */
+    private $trxs;
+
+    /**
+     * Block constructor.
+     */
+    public function __construct()
+    {
+        $this->header = new BlockHeader();
+        $this->trxs = [];
+    }
+
+    /**
+     * @param string $base64
+     * @return BlockInterface
+     * @throws Exception
+     */
+    public static function fromBase64(string $base64): BlockInterface
+    {
+        $blk = new Block();
+
+        return $blk->setBase64($base64);
+    }
 
     /**
      * @param string $bytes
      * @return BlockInterface
      * @throws Exception
-     * @override
      */
-    public static function fromBytes(string $bytes)
+    public static function fromBytes(string $bytes): BlockInterface
     {
         $blk = new Block();
 
@@ -58,38 +81,22 @@ class Block extends BlockHeader implements BlockInterface, Iterator
     }
 
     /**
-     * @param string $bytes
+     * @param TransactionInterface $transaction
      * @return BlockInterface
      * @throws Exception
-     * @override
      */
-    public function setBytes(string $bytes)
+    public function appendTransaction(TransactionInterface $transaction): BlockInterface
     {
-        if (strlen($bytes) < BlockHeader::LENGTH) {
-            throw new Exception('bytes size should be at least 167 bytes');
+        $txCount = $this->header->getTransactionCount();
+
+        if ($txCount === 65535) {
+            throw new Exception('too many transactions');
         }
 
-        parent::setBytes(substr($bytes, 0, BlockHeader::LENGTH));
-
-        $blockLen = BlockHeader::LENGTH + (Transaction::LENGTH * $this->getTransactionCount());
-
-        if (strlen($bytes) !== $blockLen) {
-            throw new Exception('incorrect length');
-        }
-
-        $this->trxs = str_split(substr($bytes, BlockHeader::LENGTH), Transaction::LENGTH);
+        $this->trxs[$txCount] = $transaction->getBytes();
+        $this->header->setTransactionCount(++$txCount);
 
         return $this;
-    }
-
-    /**
-     * @return BlockHeaderInterface
-     */
-    public function getHeader(): BlockHeaderInterface
-    {
-        $hdr = new BlockHeader();
-
-        return $hdr->setBytes(parent::toBytes());
     }
 
     /**
@@ -118,26 +125,89 @@ class Block extends BlockHeader implements BlockInterface, Iterator
     }
 
     /**
-     * @param TransactionInterface $transaction
-     * @return BlockInterface
+     * @return string
      */
-    public function appendTransaction(TransactionInterface $transaction): BlockInterface
+    public function getBase64(): string
     {
-        $txCount = $this->getTransactionCount();
-        $this->trxs[$txCount] = $transaction->toBytes();
-        $this->setTransactionCount(++$txCount);
+        return base64_encode($this->getBytes());
+    }
+
+    /**
+     * @param string $base64
+     * @return BlockInterface
+     * @throws Exception
+     */
+    public function setBase64(string $base64): BlockInterface
+    {
+        $bytes = base64_decode($base64, true);
+
+        if ($bytes === false) {
+            throw new Exception('could not decode base64');
+        }
+
+        return $this->setBytes($bytes);
+    }
+
+    /**
+     * @return string
+     */
+    public function getBytes(): string
+    {
+        return $this->header->getBytes() . join('', $this->trxs);
+    }
+
+    /**
+     * @param string $bytes
+     * @return BlockInterface
+     * @throws Exception
+     * @override
+     */
+    public function setBytes(string $bytes): BlockInterface
+    {
+        if (strlen($bytes) < BlockHeader::LENGTH) {
+            throw new Exception('bytes size should be at least 167 bytes');
+        }
+
+        $this->header->setBytes(substr($bytes, 0, BlockHeader::LENGTH));
+
+        $blockLen = BlockHeader::LENGTH + (Transaction::LENGTH * $this->header->getTransactionCount());
+
+        if (strlen($bytes) !== $blockLen) {
+            throw new Exception('incorrect length');
+        }
+
+        $this->trxs = str_split(substr($bytes, BlockHeader::LENGTH), Transaction::LENGTH);
 
         return $this;
     }
 
     /**
-     * @param integer $index
+     * @return BlockHeaderInterface
+     */
+    public function getHeader(): BlockHeaderInterface
+    {
+        return $this->header;
+    }
+
+    /**
+     * @param BlockHeaderInterface $header
+     * @return BlockInterface
+     */
+    public function setHeader(BlockHeaderInterface $header): BlockInterface
+    {
+        $this->header = $header;
+
+        return $this;
+    }
+
+    /**
+     * @param int $index
      * @return TransactionInterface
      * @throws Exception
      */
     public function getTransaction(int $index): TransactionInterface
     {
-        if ($index < 0 || $index >= $this->getTransactionCount()) {
+        if ($index < 0 || $index >= $this->header->getTransactionCount()) {
             throw new Exception('incorrect index');
         }
 
@@ -148,14 +218,13 @@ class Block extends BlockHeader implements BlockInterface, Iterator
 
     /**
      * @param SecretKeyInterface $secretKey
-     * @return BlockInterface
+     * @return $this
      * @throws Exception
      */
     public function sign(SecretKeyInterface $secretKey): BlockInterface
     {
-        $this->setMerkleRootHash($this->calculateMerkleRoot());
-        $this->setPublicKey($secretKey->getPublicKey());
-        $this->setSignature($secretKey->sign(substr(parent::toBytes(), 0, 103)));
+        $this->header->setMerkleRootHash($this->calculateMerkleRoot());
+        $this->header->sign($secretKey);
 
         return $this;
     }
@@ -165,14 +234,6 @@ class Block extends BlockHeader implements BlockInterface, Iterator
      */
     public function verify(): bool
     {
-        return parent::verify();
-    }
-
-    /**
-     * @return string
-     */
-    public function toBytes(): string
-    {
-        return parent::toBytes() . join('', $this->trxs);
+        return $this->header->verify();
     }
 }
