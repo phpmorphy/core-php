@@ -36,7 +36,7 @@
         - [Seed из мнемонической фразы](#seed-из-мнемонической-фразы)
 
     -   [Ключи](#ключи)
-        - [Ключи из seed'а](#ключи-из-seed'а)
+        - [Ключи из seed](#ключи-из-seed)
         - [Подписать сообщение](#подписать-сообщение)
         - [Проверить подпись](#проверить-подпись)
 
@@ -56,7 +56,7 @@
         - [Отправить транзакцию в сеть](#отправить-транзакцию-в-сеть)
 
     -   [Блоки](#блоки)
-        - [Создать и подписать блок](#cоздать-и-подписать-блок)
+        - [Создать и подписать блок](#создать-и-подписать-блок)
         - [Распарсить блок](#распарсить-блок)
 
 -   [Лицензия](#лицензия)
@@ -118,7 +118,7 @@ echo $address->getBech32(), PHP_EOL;
 [SHA-512](https://en.wikipedia.org/wiki/SHA-2)
 и [Curve25519](https://en.wikipedia.org/wiki/Curve25519). 
 
-#### Ключи из seed'а
+#### Ключи из seed
 
 Seed может быть любой длины, включая нулевую.
 Оптимальным вариантом является длина 32 байта (256 бит).
@@ -456,9 +456,9 @@ $payload = json_encode(
 $ch = curl_init();
 
 curl_setopt($ch, CURLOPT_URL, "https://testnet.umi.top/json-rpc");
-curl_setopt( $ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
-curl_setopt( $ch, CURLOPT_POSTFIELDS, $payload);
-curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true);
+curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 curl_setopt($ch, CURLOPT_HEADER, false);
 curl_setopt($ch, CURLOPT_VERBOSE, true);
 
