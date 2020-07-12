@@ -31,6 +31,7 @@ use Iterator;
 use UmiTop\UmiCore\Key\SecretKeyInterface;
 use UmiTop\UmiCore\Transaction\Transaction;
 use UmiTop\UmiCore\Transaction\TransactionInterface;
+use UmiTop\UmiCore\Util\ValidatorTrait;
 
 /**
  * Class Block
@@ -39,6 +40,7 @@ use UmiTop\UmiCore\Transaction\TransactionInterface;
  */
 class Block implements BlockInterface, Iterator
 {
+    use ValidatorTrait;
     use BlockIteratorTrait;
 
     /** @var BlockHeaderInterface */
@@ -54,18 +56,6 @@ class Block implements BlockInterface, Iterator
     {
         $this->header = new BlockHeader();
         $this->trxs = [];
-    }
-
-    /**
-     * @param string $base64
-     * @return BlockInterface
-     * @throws Exception
-     */
-    public static function fromBase64(string $base64): BlockInterface
-    {
-        $blk = new Block();
-
-        return $blk->setBase64($base64);
     }
 
     /**
@@ -88,11 +78,7 @@ class Block implements BlockInterface, Iterator
     public function appendTransaction(TransactionInterface $transaction): BlockInterface
     {
         $txCount = $this->header->getTransactionCount();
-
-        if ($txCount === 65535) {
-            throw new Exception('too many transactions');
-        }
-
+        $this->validateInt($txCount, 0, 65534);
         $this->trxs[$txCount] = $transaction->getBytes();
         $this->header->setTransactionCount(++$txCount);
 
@@ -127,30 +113,6 @@ class Block implements BlockInterface, Iterator
     /**
      * @return string
      */
-    public function getBase64(): string
-    {
-        return base64_encode($this->getBytes());
-    }
-
-    /**
-     * @param string $base64
-     * @return BlockInterface
-     * @throws Exception
-     */
-    public function setBase64(string $base64): BlockInterface
-    {
-        $bytes = base64_decode($base64, true);
-
-        if ($bytes === false) {
-            throw new Exception('could not decode base64');
-        }
-
-        return $this->setBytes($bytes);
-    }
-
-    /**
-     * @return string
-     */
     public function getBytes(): string
     {
         return $this->header->getBytes() . join('', $this->trxs);
@@ -160,22 +122,14 @@ class Block implements BlockInterface, Iterator
      * @param string $bytes
      * @return BlockInterface
      * @throws Exception
-     * @override
      */
     public function setBytes(string $bytes): BlockInterface
     {
-        if (strlen($bytes) < BlockHeader::LENGTH) {
-            throw new Exception('bytes size should be at least 167 bytes');
-        }
-
+        $this->validateInt(strlen($bytes), BlockHeader::LENGTH, 9830417);
         $this->header->setBytes(substr($bytes, 0, BlockHeader::LENGTH));
 
         $blockLen = BlockHeader::LENGTH + (Transaction::LENGTH * $this->header->getTransactionCount());
-
-        if (strlen($bytes) !== $blockLen) {
-            throw new Exception('incorrect length');
-        }
-
+        $this->validateInt(strlen($bytes), $blockLen, $blockLen);
         $this->trxs = str_split(substr($bytes, BlockHeader::LENGTH), Transaction::LENGTH);
 
         return $this;
@@ -207,18 +161,17 @@ class Block implements BlockInterface, Iterator
      */
     public function getTransaction(int $index): TransactionInterface
     {
-        if ($index < 0 || $index >= $this->header->getTransactionCount()) {
-            throw new Exception('incorrect index');
-        }
+        $this->validateInt($index, 0, $this->header->getTransactionCount() - 1);
 
         $trx = new Transaction();
+        $trx->setBytes($this->trxs[$index]);
 
-        return $trx->setBytes($this->trxs[$index]);
+        return $trx;
     }
 
     /**
      * @param SecretKeyInterface $secretKey
-     * @return $this
+     * @return BlockInterface
      * @throws Exception
      */
     public function sign(SecretKeyInterface $secretKey): BlockInterface

@@ -14,14 +14,6 @@ use UmiTop\UmiCore\Key\PublicKey;
  */
 class BlockHeaderTest extends TestCase
 {
-    public function testFromBase64(): void
-    {
-        $expected = base64_encode(str_repeat("\x01", BlockHeader::LENGTH));
-        $actual = BlockHeader::fromBase64($expected)->getBase64();
-
-        $this->assertEquals($expected, $actual);
-    }
-
     public function testFromBytes(): void
     {
         $expected = str_repeat("\x01", BlockHeader::LENGTH);
@@ -42,16 +34,17 @@ class BlockHeaderTest extends TestCase
         $obj->setBytes('');
     }
 
-    public function testSetBase64(): void
+    public function testGetters(): void
     {
         $base64 = 'Aaqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqu7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7vMzMzM3d3u7u7'
             . 'u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7v////////////////////////////////////////////////////////////'
             . '////////////////////////8=';
+        $bytes = base64_decode($base64);
 
         $obj = new BlockHeader();
-        $obj->setBase64($base64);
+        $obj->setBytes($bytes);
 
-        $this->assertEquals($base64, $obj->getBase64());
+        $this->assertEquals($bytes, $obj->getBytes());
         $this->assertEquals(0x01, $obj->getVersion());
         $this->assertEquals(str_repeat("\xaa", 32), $obj->getPreviousBlockHash());
         $this->assertEquals(0xcccccccc, $obj->getTimestamp());
@@ -59,18 +52,6 @@ class BlockHeaderTest extends TestCase
         $this->assertEquals(str_repeat("\xee", 32), $obj->getPublicKey()->getBytes());
         $this->assertEquals(str_repeat("\xff", 64), $obj->getSignature());
         $this->assertFalse($obj->verify());
-    }
-
-    public function testSetBase64Exception(): void
-    {
-        if (method_exists($this, 'expectException')) {
-            $this->expectException('Exception');
-        } elseif (method_exists($this, 'setExpectedException')) {
-            $this->setExpectedException('Exception'); // PHPUnit 4
-        }
-
-        $obj = new BlockHeader();
-        $obj->setBase64('A');
     }
 
     public function testTransactionCount(): void

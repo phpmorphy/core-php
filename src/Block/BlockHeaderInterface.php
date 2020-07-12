@@ -35,10 +35,6 @@ use UmiTop\UmiCore\Key\SecretKeyInterface;
  */
 interface BlockHeaderInterface
 {
-    public function getBase64(): string;
-
-    public function setBase64(string $base64): BlockHeaderInterface;
-
     public function getBytes(): string;
 
     public function setBytes(string $bytes): BlockHeaderInterface;

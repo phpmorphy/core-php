@@ -3,7 +3,7 @@
 /**
  * composer require bitwasp/bitcoin
  *
- * @see https://github.com/Bit-Wasp/bitcoin-lib-php
+ * @see https://github.com/Bit-Wasp/bitcoin-php
  */
 
 declare(strict_types=1);

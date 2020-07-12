@@ -32,6 +32,7 @@ use UmiTop\UmiCore\Key\PublicKey;
 use UmiTop\UmiCore\Key\PublicKeyInterface;
 use UmiTop\UmiCore\Util\Bech32;
 use UmiTop\UmiCore\Util\ConverterTrait;
+use UmiTop\UmiCore\Util\ValidatorTrait;
 
 /**
  * Class Address
@@ -40,6 +41,7 @@ use UmiTop\UmiCore\Util\ConverterTrait;
 class Address implements AddressInterface
 {
     use ConverterTrait;
+    use ValidatorTrait;
 
     /** @var int */
     public const LENGTH = 34;
@@ -59,7 +61,7 @@ class Address implements AddressInterface
     /**
      * @param string $address Адрес в формате Bech32.
      * @return AddressInterface
-     * @throws Exception Ошибка в случае если адрес имеет некорректный формат.
+     * @throws Exception
      */
     public static function fromBech32(string $address): AddressInterface
     {
@@ -71,7 +73,7 @@ class Address implements AddressInterface
     /**
      * @param string $bytes Адрес в бинарном виде.
      * @return AddressInterface
-     * @throws Exception Ошибка в случае некорректной длины.
+     * @throws Exception
      */
     public static function fromBytes(string $bytes): AddressInterface
     {
@@ -128,10 +130,7 @@ class Address implements AddressInterface
      */
     public function setBytes(string $bytes): AddressInterface
     {
-        if (strlen($bytes) !== self::LENGTH) {
-            throw new Exception('bytes size should be 34 bytes');
-        }
-
+        $this->validateStr($bytes, self::LENGTH);
         $this->bytes = $bytes;
 
         return $this;
@@ -139,23 +138,21 @@ class Address implements AddressInterface
 
     /**
      * @return string
-     * @throws Exception Ошибка в случае если префикс не проходит валидацию.
+     * @throws Exception
      */
     public function getPrefix(): string
     {
-        return $this->versionToPrefix((ord($this->bytes[0]) << 8) + ord($this->bytes[1]));
+        return $this->bytesToPrefix(substr($this->bytes, 0, 2));
     }
 
     /**
-     * @param string $prefix Префикс. Три байта латиницы в нижнем регистре.
+     * @param string $prefix Префикс. Три символа латиницы в нижнем регистре.
      * @return AddressInterface
-     * @throws Exception Ошибка в случае, если префикс не проходит валидацию.
+     * @throws Exception
      */
     public function setPrefix(string $prefix): AddressInterface
     {
-        $version = $this->prefixToVersion($prefix);
-        $this->bytes[0] = chr($version >> 8 & 0xff);
-        $this->bytes[1] = chr($version & 0xff);
+        $this->bytes = substr_replace($this->bytes, $this->prefixToBytes($prefix), 0, 2);
 
         return $this;
     }

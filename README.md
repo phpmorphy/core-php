@@ -46,7 +46,7 @@
         - [Установить префикс адреса](#установить-префикс-адреса)
 
     -   [Транзакции](#транзакции)
-        - [Отправить монеты](#отправить-монеты)
+        - [Перевести монеты](#перевести-монеты)
         - [Создать структуру](#создать-структуру)
         - [Обновить настройки структуры](#обновить-настройки-структуры)
         - [Установить адрес для начисления профита](#установить-адрес-для-начисления-профита)
@@ -55,14 +55,20 @@
         - [Деактивировать транзитный адрес](#деактивировать-транзитный-адрес)
 
     -   [Блоки](#блоки)
-        - Создать и подписать блок
-        - Распарсить блок
+        - [Создать и подписать блок](#cоздать-и-подписать-блок)
+        - [Распарсить блок](#распарсить-блок)
 
 -   [Лицензия](#лицензия)
 
 ## Введение
 
+Для работы библиотеки требуются 64-битная версия PHP >= 5.4 и стандартное
+расширение [hash](https://www.php.net/manual/en/function.hash.php).
+
 ## Установка
+
+Библиотека опубликована в репозитории [Packagist](https://packagist.org) и может
+быть установлена с помощью менеджера зависимостей [Composer](https://getcomposer.org).
 
 ### Composer
 
@@ -82,53 +88,84 @@ UMI не накладывает никаких ограничений на сп�
 
 #### Seed из мнемонической фразы
 
-Для примера будем использовать библиотеку [bip39](https://www.npmjs.com/package/bip39):
+Для примера будем использовать библиотеку [bitcoin-php](https://github.com/Bit-Wasp/bitcoin-php):
 
-```javascript
-// npm install bip39
+```php
+<?php declare(strict_types=1);
 
-const bip39 = require('bip39')
-const mnemonic = bip39.generateMnemonic(256)
-const seed = bip39.mnemonicToSeedSync(mnemonic)
+include __DIR__ . '/../vendor/autoload.php';
+
+use BitWasp\Bitcoin\Mnemonic\Bip39\Bip39SeedGenerator;
+use UmiTop\UmiCore\Key\SecretKey;
+use UmiTop\UmiCore\Address\Address;
+
+$mnemonic = 'mix tooth like stock powder emerge protect index magic';
+
+$bip39 = new Bip39SeedGenerator();
+$seed = $bip39->getSeed($mnemonic)->getBinary();
+
+$address = Address::fromKey(SecretKey::fromSeed($seed));
+
+echo $address->getBech32(), PHP_EOL;
 ```
 
 ### Ключи
 
-В UMI применяется Ed25519 ([rfc8032](https://tools.ietf.org/html/rfc8032)) —
+В UMI применяется [Ed25519](https://ed25519.cr.yp.to)
+([RFC 8032](https://tools.ietf.org/html/rfc8032)) —
 схема подписи [EdDSA](https://ru.wikipedia.org/wiki/EdDSA) использующая
-SHA-512 и Curve25519. 
+[SHA-512](https://en.wikipedia.org/wiki/SHA-2)
+и [Curve25519](https://en.wikipedia.org/wiki/Curve25519). 
 
 #### Ключи из seed'а
 
 Seed может быть любой длины, включая нулевую.
 Оптимальным вариантом является длина 32 байта (256 бит).
 
-```javascript
-const seed = new Uint8Array(32)
-const secretKey = umi.SecretKey.fromSeed(seed)
-const publicKey = secretKey.getPublicKey()
+```php
+<?php declare(strict_types=1);
+
+include __DIR__ . '/../vendor/autoload.php';
+
+use UmiTop\UmiCore\Key\SecretKey;
+
+$seed = random_bytes(32);
+$secKey = SecretKey::fromSeed($seed);
+$bytes = $secKey->getBytes();
 ```
 
 #### Подписать сообщение
 
-В метод `SecretKey#sign()` необходимо передать массив байтов, поэтому если
-требуется подписать текстовое сообщение его нужно преобразовать: 
-```javascript
-const message = new TextEncoder().encode('Hello World')
-const signature = secretKey.sign(message)
+```php
+<?php declare(strict_types=1);
+
+include __DIR__ . '/../vendor/autoload.php';
+
+use UmiTop\UmiCore\Key\SecretKey;
+
+$secKey = SecretKey::fromSeed(random_bytes(32));
+$message = 'Hello World';
+$signature = $secKey->sign($message);
+
+echo base64_encode($signature), PHP_EOL;
 ```
 
 #### Проверить подпись
 
-Метод `PublicKey#verifySignature()` принимает массив байтов, поэтому если
-подпись передается в текстовой кодировке ее необходимо декодировать.  
-Пример для Node.js:
+```php
+<?php declare(strict_types=1);
+      
+include __DIR__ . '/../vendor/autoload.php';
 
-```javascript
-const address = 'umi18d4z00xwk6jz6c4r4rgz5mcdwdjny9thrh3y8f36cpy2rz6emg5s6rxnf6'
-const message = new TextEncoder().encode('Hello World')
-const signature = Buffer.from('Jbi9YfwLcxiTMednl/wTvnSzsPP9mV9Bf2vvZytP87oyg1p1c9ZBkn4gNv15ZHwEFv3bVYlowgyIKmMwJLjJCw==', 'base64')
-const ver = umi.Address.fromBech32(address).getPublicKey().verifySignature(signature, message)
+use UmiTop\UmiCore\Address\Address;
+
+$address = 'umi18d4z00xwk6jz6c4r4rgz5mcdwdjny9thrh3y8f36cpy2rz6emg5s6rxnf6';
+$message = 'Hello World';
+$signature = base64_decode('Jbi9YfwLcxiTMednl/wTvnSzsPP9mV9Bf2vvZytP87oyg1p1c9ZBkn4gNv15ZHwEFv3bVYlowgyIKmMwJLjJCw==');
+$pubKey = Address::fromBech32($address)->getPublicKey();
+$isValid = $pubKey->verifySignature($signature, $message);
+
+var_dump($isValid);
 ```
 
 ### Адреса
@@ -142,161 +179,342 @@ UMI использует адреса в формате Bech32
 
 #### Адрес в формате Bech32
 
-Создать адрес из строки Bech32 можно используя статический метод `Address.fromBech32()`
-и конвертировать обратно с помощью `Address#toBech32()`:
+Создать адрес из строки Bech32 можно используя статический метод `Address::fromBech32()`
+и конвертировать обратно с помощью `Address->toBech32()`:
 
-```javascript
-const bech32 = 'umi18d4z00xwk6jz6c4r4rgz5mcdwdjny9thrh3y8f36cpy2rz6emg5s6rxnf6'
-const address = umi.Address.fromBech32(bech32)
-console.log(address.toBech32())
+```php
+<?php declare(strict_types=1);
+      
+include __DIR__ . '/../vendor/autoload.php';
+
+use UmiTop\UmiCore\Address\Address;
+
+$bech32 = 'umi18d4z00xwk6jz6c4r4rgz5mcdwdjny9thrh3y8f36cpy2rz6emg5s6rxnf6';
+$address = Address::fromBech32($bech32);
+
+echo $address->toBech32(), PHP_EOL;
 ```
  
 #### Адрес из приватного или публичного ключа
 
-Статический метод `Address.fromKey()` создает адрес из приватного
+Статический метод `Address::fromKey()` создает адрес из приватного
 или публичного ключа:
 
-```javascript
-const seed = new Uint8Array(32)
-const secKey = umi.SecretKey.fromSeed(seed)
-const pubKey = secKey.getPublicKey()
-const address1 = umi.Address.fromKey(secKey)
-const address2 = umi.Address.fromKey(pubKey)
+```php
+<?php declare(strict_types=1);
+      
+include __DIR__ . '/../vendor/autoload.php';
+
+use UmiTop\UmiCore\Address\Address;
+use UmiTop\UmiCore\Key\SecretKey;
+use UmiTop\UmiCore\Key\PublicKey;
+
+$secKey = SecretKey::fromSeed(random_bytes(32));
+$address1 = Address::fromKey($secKey);
+
+echo $address1->getBech32(), PHP_EOL;
+
+$pubKey = new PublicKey(random_bytes(32));
+$address2 = Address::fromKey($pubKey);
+
+echo $address2->getBech32(), PHP_EOL;
 ```
 
 #### Установить префикс адреса
 
 По умолчанию адреса имеют префикс `umi`.
-Изменить префикс можно при помощи метода `Address#setPrefix()`:
+Изменить префикс можно при помощи метода `Address->setPrefix()`:
 
-```javascript
-const bech32 = 'umi18d4z00xwk6jz6c4r4rgz5mcdwdjny9thrh3y8f36cpy2rz6emg5s6rxnf6'
-const address = umi.Address.fromBech32(bech32).setPrefix('aaa')
-console.log(address.toBech32())
+```php
+<?php declare(strict_types=1);
+      
+include __DIR__ . '/../vendor/autoload.php';
+
+use UmiTop\UmiCore\Address\Address;
+
+$bech32 = 'umi18d4z00xwk6jz6c4r4rgz5mcdwdjny9thrh3y8f36cpy2rz6emg5s6rxnf6';
+$address = Address::fromBech32($bech32)->setPrefix('aaa');
+
+echo $bech32, PHP_EOL;
+echo $address->getBech32(), PHP_EOL;
 ```
 
 ### Транзакции
 
-#### Отправить монеты
+#### Перевести монеты
 
-```javascript
-const secKey = umi.SecretKey.fromSeed(new Uint8Array(32))
-const sender = umi.Address.fromKey(secKey).setPrefix('umi')
-const recipient = umi.Address.fromKey(secKey).setPrefix('aaa')
-const tx = new umi.Transaction()
-  .setVersion(umi.Transaction.Basic)
-  .setSender(sender)
-  .setRecipient(recipient)
-  .setValue(42)
-  .sign(secKey)
+```php
+<?php declare(strict_types=1);
 
-console.log(tx.verify())
-console.log(tx.toBase64())
+include __DIR__ . '/../vendor/autoload.php';
+
+use UmiTop\UmiCore\Address\Address;
+use UmiTop\UmiCore\Key\SecretKey;
+use UmiTop\UmiCore\Transaction\Transaction;
+
+$secKey = SecretKey::fromSeed(random_bytes(32));
+$sender = Address::fromKey($secKey)->setPrefix('umi');
+$recipient = Address::fromKey($secKey)->setPrefix('aaa');
+$value = 42;
+
+$trx = new Transaction();
+$trx->setVersion(Transaction::BASIC)
+    ->setSender($sender)
+    ->setRecipient($recipient)
+    ->setValue($value)
+    ->sign($secKey);
+
+echo 'isValid: ', ($trx->verify() ? 'true' : 'false'), PHP_EOL;
+echo 'base64:  ', base64_encode($trx->getBytes()), PHP_EOL;
 ```
 
 #### Создать структуру
 
-```javascript
-const secKey = umi.SecretKey.fromSeed(new Uint8Array(32))
-const sender = umi.Address.fromKey(secKey).setPrefix('umi')
-const tx = new umi.Transaction()
-  .setVersion(umi.Transaction.UpdateStructure)
-  .setSender(sender)
-  .setPrefix('aaa')
-  .setName('🙂')
-  .setProfitPercent(500)
-  .setFeePercent(2000)
-  .sign(secKey)
+```php
+<?php declare(strict_types=1);
 
-console.log(tx.verify())
-console.log(tx.toBase64())
+include __DIR__ . '/../vendor/autoload.php';
+
+use UmiTop\UmiCore\Address\Address;
+use UmiTop\UmiCore\Key\SecretKey;
+use UmiTop\UmiCore\Transaction\Transaction;
+
+$secKey = SecretKey::fromSeed(random_bytes(32));
+$sender = Address::fromKey($secKey)->setPrefix('umi');
+
+$trx = new Transaction();
+$trx->setVersion(Transaction::CREATE_STRUCTURE)
+    ->setSender($sender)
+    ->setPrefix('aaa')
+    ->setName('🙂')
+    ->setProfitPercent(500)
+    ->setFeePercent(2000)
+    ->sign($secKey);
+
+echo 'isValid: ', ($trx->verify() ? 'true' : 'false'), PHP_EOL;
+echo 'base64:  ', base64_encode($trx->getBytes()), PHP_EOL;
 ```
 
 #### Обновить настройки структуры
 
 Необходимо задать все поля, даже если они не изменились:
 
-```javascript
-const secKey = umi.SecretKey.fromSeed(new Uint8Array(32))
-const sender = umi.Address.fromKey(secKey).setPrefix('umi')
-const tx = new umi.Transaction()
-  .setVersion(umi.Transaction.UpdateStructure)
-  .setSender(sender)
-  .setPrefix('aaa')
-  .setName('🙂')
-  .setProfitPercent(500)
-  .setFeePercent(2000)
-  .sign(secKey)
+```php
+<?php declare(strict_types=1);
 
-console.log(tx.verify())
-console.log(tx.toBase64())
+include __DIR__ . '/../vendor/autoload.php';
+
+use UmiTop\UmiCore\Address\Address;
+use UmiTop\UmiCore\Key\SecretKey;
+use UmiTop\UmiCore\Transaction\Transaction;
+
+$secKey = SecretKey::fromSeed(random_bytes(32));
+$sender = Address::fromKey($secKey)->setPrefix('umi');
+
+$trx = new Transaction();
+$trx->setVersion(Transaction::UPDATE_STRUCTURE)
+    ->setSender($sender)
+    ->setPrefix('aaa')
+    ->setName('🙂')
+    ->setProfitPercent(500)
+    ->setFeePercent(2000)
+    ->sign($secKey);
+
+echo 'isValid: ', ($trx->verify() ? 'true' : 'false'), PHP_EOL;
+echo 'base64:  ', base64_encode($trx->getBytes()), PHP_EOL;
 ```
 
 #### Установить адрес для начисления профита
 
-```javascript
-const secKey = umi.SecretKey.fromSeed(new Uint8Array(32))
-const sender = umi.Address.fromKey(secKey).setPrefix('umi')
-const newPrf = umi.Address.fromBech32('aaa18d4z00xwk6jz6c4r4rgz5mcdwdjny9thrh3y8f36cpy2rz6emg5svsuw66')
-const tx = new umi.Transaction()
-  .setVersion(umi.Transaction.UpdateProfitAddress)
-  .setSender(sender)
-  .setRecipient(newPrf)
-  .sign(secKey)
+```php
+<?php declare(strict_types=1);
 
-console.log(tx.verify())
-console.log(tx.toBase64())
+include __DIR__ . '/../vendor/autoload.php';
+
+use UmiTop\UmiCore\Address\Address;
+use UmiTop\UmiCore\Key\SecretKey;
+use UmiTop\UmiCore\Transaction\Transaction;
+
+$secKey = SecretKey::fromSeed(random_bytes(32));
+$sender = Address::fromKey($secKey)->setPrefix('umi');
+$newPrf = Address::fromBech32('aaa18d4z00xwk6jz6c4r4rgz5mcdwdjny9thrh3y8f36cpy2rz6emg5svsuw66');
+
+$trx = new Transaction();
+$trx->setVersion(Transaction::UPDATE_PROFIT_ADDRESS)
+    ->setSender($sender)
+    ->setRecipient($newPrf)
+    ->sign($secKey);
+
+echo 'isValid: ', ($trx->verify() ? 'true' : 'false'), PHP_EOL;
+echo 'base64:  ', base64_encode($trx->getBytes()), PHP_EOL;
 ```
 
 #### Установить адрес для перевода комиссии
 
-```javascript
-const secKey = umi.SecretKey.fromSeed(new Uint8Array(32))
-const sender = umi.Address.fromKey(secKey).setPrefix('umi')
-const newPrf = umi.Address.fromBech32('aaa18d4z00xwk6jz6c4r4rgz5mcdwdjny9thrh3y8f36cpy2rz6emg5svsuw66')
-const tx = new umi.Transaction()
-  .setVersion(umi.Transaction.UpdateProfitAddress)
-  .setSender(sender)
-  .setRecipient(newPrf)
-  .sign(secKey)
+```php
+<?php declare(strict_types=1);
 
-console.log(tx.verify())
-console.log(tx.toBase64())
+include __DIR__ . '/../vendor/autoload.php';
+
+use UmiTop\UmiCore\Address\Address;
+use UmiTop\UmiCore\Key\SecretKey;
+use UmiTop\UmiCore\Transaction\Transaction;
+
+$secKey = SecretKey::fromSeed(random_bytes(32));
+$sender = Address::fromKey($secKey)->setPrefix('umi');
+$newFee = Address::fromBech32('aaa18d4z00xwk6jz6c4r4rgz5mcdwdjny9thrh3y8f36cpy2rz6emg5svsuw66');
+
+$trx = new Transaction();
+$trx->setVersion(Transaction::UPDATE_FEE_ADDRESS)
+    ->setSender($sender)
+    ->setRecipient($newFee)
+    ->sign($secKey);
+
+echo 'isValid: ', ($trx->verify() ? 'true' : 'false'), PHP_EOL;
+echo 'base64:  ', base64_encode($trx->getBytes()), PHP_EOL;
 ```
 
 #### Активировать транзитный адрес
 
-```javascript
-const secKey = umi.SecretKey.fromSeed(new Uint8Array(32))
-const sender = umi.Address.fromKey(secKey).setPrefix('umi')
-const transit = umi.Address.fromBech32('aaa18d4z00xwk6jz6c4r4rgz5mcdwdjny9thrh3y8f36cpy2rz6emg5svsuw66')
-const tx = new umi.Transaction()
-  .setVersion(umi.Transaction.CreateTransitAddress)
-  .setSender(sender)
-  .setRecipient(transit)
-  .sign(secKey)
+```php
+<?php declare(strict_types=1);
 
-console.log(tx.verify())
-console.log(tx.toBase64())
+include __DIR__ . '/../vendor/autoload.php';
+
+use UmiTop\UmiCore\Address\Address;
+use UmiTop\UmiCore\Key\SecretKey;
+use UmiTop\UmiCore\Transaction\Transaction;
+
+$secKey = SecretKey::fromSeed(random_bytes(32));
+$sender = Address::fromKey($secKey)->setPrefix('umi');
+$transit = Address::fromBech32('aaa18d4z00xwk6jz6c4r4rgz5mcdwdjny9thrh3y8f36cpy2rz6emg5svsuw66');
+
+$trx = new Transaction();
+$trx->setVersion(Transaction::CREATE_TRANSIT_ADDRESS)
+    ->setSender($sender)
+    ->setRecipient($transit)
+    ->sign($secKey);
+
+echo 'isValid: ', ($trx->verify() ? 'true' : 'false'), PHP_EOL;
+echo 'base64:  ', base64_encode($trx->getBytes()), PHP_EOL;
 ```
 
 #### Деактивировать транзитный адрес
 
-```javascript
-const secKey = umi.SecretKey.fromSeed(new Uint8Array(32))
-const sender = umi.Address.fromKey(secKey).setPrefix('umi')
-const transit = umi.Address.fromBech32('aaa18d4z00xwk6jz6c4r4rgz5mcdwdjny9thrh3y8f36cpy2rz6emg5svsuw66')
-const tx = new umi.Transaction()
-  .setVersion(umi.Transaction.DeleteTransitAddress)
-  .setSender(sender)
-  .setRecipient(transit)
-  .sign(secKey)
+```php
+<?php declare(strict_types=1);
 
-console.log(tx.verify())
-console.log(tx.toBase64())
+include __DIR__ . '/../vendor/autoload.php';
+
+use UmiTop\UmiCore\Address\Address;
+use UmiTop\UmiCore\Key\SecretKey;
+use UmiTop\UmiCore\Transaction\Transaction;
+
+$secKey = SecretKey::fromSeed(random_bytes(32));
+$sender = Address::fromKey($secKey)->setPrefix('umi');
+$transit = Address::fromBech32('aaa18d4z00xwk6jz6c4r4rgz5mcdwdjny9thrh3y8f36cpy2rz6emg5svsuw66');
+
+$trx = new Transaction();
+$trx->setVersion(Transaction::DELETE_TRANSIT_ADDRESS)
+    ->setSender($sender)
+    ->setRecipient($transit)
+    ->sign($secKey);
+
+echo 'isValid: ', ($trx->verify() ? 'true' : 'false'), PHP_EOL;
+echo 'base64:  ', base64_encode($trx->getBytes()), PHP_EOL;
 ```
 
 ### Блоки
+
+#### Создать и подписать блок
+
+```php
+<?php declare(strict_types=1);
+
+include __DIR__ . '/../vendor/autoload.php';
+
+use UmiTop\UmiCore\Key\SecretKey;
+use UmiTop\UmiCore\Transaction\Transaction;
+use UmiTop\UmiCore\Block\Block;
+
+$key = SecretKey::fromSeed(random_bytes(32));
+
+$blk = new Block();
+$blk->getHeader()->setPreviousBlockHash(random_bytes(32));
+
+for ($i = 0; $i < 8; $i++) {
+    $trx = new Transaction();
+    $trx->setVersion($i)->sign($key);
+
+    $blk->appendTransaction($trx);
+}
+
+$blk->sign($key);
+
+echo base64_encode($blk->getBytes()), PHP_EOL;
+````
+
+#### Распарсить блок
+
+```php
+<?php declare(strict_types=1);
+
+include __DIR__ . '/../vendor/autoload.php';
+
+use UmiTop\UmiCore\Transaction\Transaction;
+use UmiTop\UmiCore\Block\Block;
+
+$base64 = 'AQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAALrlbZ39raFUA8r896UgeKppkfwULfPMqU5SOxqJmOAtfCqcuAAFvNXzt5N4'
+    . 'tj+cmZt4NPbWh1PAD9bXP8iJPM+QAuVDx2yD+iEdfwhDtiyuqU/PBFMLAqUQazv4xwvLcT12jhegBuj0Ri2EzWpZE+EonywsJkX5fhVWV/Y'
+    . 'Fo7JFoW5YJkwwBValvNXzt5N4tj+cmZt4NPbWh1PAD9bXP8iJPM+QAuVDx2173bzV87eTeLY/nJmbeDT21odTwA/W1z/IiTzPkALlQ8dsAA'
+    . 'AAAAAAAKgAAACUgKU4ByUyp77RER3NDPns8AgOzFkIaI9H5LDtozNZLrjlyOlRxHU+AoAuunUmVAXg4lw0B7zSLalqV/F2PLCpoPKVdAAA=';
+
+$blk = Block::fromBytes(base64_decode($base64));
+
+echo 'Prv Hash:   ', bin2hex($blk->getHeader()->getPreviousBlockHash()), PHP_EOL;
+echo 'Blk Hash:   ', bin2hex($blk->getHeader()->getHash()), PHP_EOL;
+echo 'Blk Merkle: ', bin2hex($blk->getHeader()->getMerkleRootHash()), PHP_EOL;
+echo 'Transactions:', PHP_EOL, PHP_EOL;
+
+foreach ($blk as $idx => $trx) {
+    echo 'tx index:   ', $idx, PHP_EOL;
+    echo 'tx type:    ', $trx->getVersion(), PHP_EOL;
+    echo 'tx hash:    ', bin2hex($trx->getHash()), PHP_EOL;
+    echo 'sender:     ', $trx->getSender()->getBech32(), PHP_EOL;
+
+    switch ($trx->getVersion()) {
+        case Transaction::GENESIS:
+        case Transaction::BASIC:
+            echo 'recipient:  ', $trx->getRecipient()->getBech32(), PHP_EOL;
+            echo 'value:      ', number_format($trx->getValue() / 100, 2), ' UMI', PHP_EOL;
+            break;
+        case Transaction::CREATE_STRUCTURE:
+        case Transaction::UPDATE_STRUCTURE:
+            echo 'prefix:     ', $trx->getPrefix(), PHP_EOL;
+            echo 'name:       ', $trx->getName(), PHP_EOL;
+            echo 'profit (%): ', number_format($trx->getProfitPercent() / 100, 2), PHP_EOL;
+            echo 'fee (%):    ', number_format($trx->getFeePercent() / 100, 2), PHP_EOL;
+            break;
+        case Transaction::UPDATE_PROFIT_ADDRESS:
+            echo 'new profit: ', $trx->getRecipient()->getBech32(), PHP_EOL;
+            break;
+        case Transaction::UPDATE_FEE_ADDRESS:
+            echo 'new fee:    ', $trx->getRecipient()->getBech32(), PHP_EOL;
+            break;
+        case Transaction::CREATE_TRANSIT_ADDRESS:
+            echo 'new transit:', $trx->getRecipient()->getBech32(), PHP_EOL;
+            break;
+        case Transaction::DELETE_TRANSIT_ADDRESS:
+            echo 'del transit:', $trx->getRecipient()->getBech32(), PHP_EOL;
+            break;
+        default:
+            echo 'unknown tx version', PHP_EOL;
+    }
+
+    echo PHP_EOL;
+}
+````
+
 
 ## Лицензия
 

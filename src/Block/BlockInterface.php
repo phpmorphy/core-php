@@ -39,10 +39,6 @@ interface BlockInterface
 
     public function calculateMerkleRoot(): string;
 
-    public function getBase64(): string;
-
-    public function setBase64(string $base64): BlockInterface;
-
     public function getBytes(): string;
 
     public function setBytes(string $bytes): BlockInterface;

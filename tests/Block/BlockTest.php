@@ -16,30 +16,6 @@ use UmiTop\UmiCore\Transaction\Transaction;
  */
 class BlockTest extends TestCase
 {
-    public function testFromBase64(): void
-    {
-        $expected = 'AQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABfCTUPAAEAA'
-            . 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
-            . 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
-            . 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
-            . 'AAAAAAAAAAAAAAAAA=';
-        $actual = Block::fromBase64($expected)->getBase64();
-
-        $this->assertEquals($expected, $actual);
-    }
-
-    public function testSetBase64Exception(): void
-    {
-        if (method_exists($this, 'expectException')) {
-            $this->expectException('Exception');
-        } elseif (method_exists($this, 'setExpectedException')) {
-            $this->setExpectedException('Exception'); // PHPUnit 4
-        }
-
-        $obj = new Block();
-        $obj->setBase64('A');
-    }
-
     public function testFromBytes(): void
     {
         $expected = 'AQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABfCTUPAAEAA'

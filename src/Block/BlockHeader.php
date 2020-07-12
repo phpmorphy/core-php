@@ -30,6 +30,8 @@ use Exception;
 use UmiTop\UmiCore\Key\PublicKey;
 use UmiTop\UmiCore\Key\PublicKeyInterface;
 use UmiTop\UmiCore\Key\SecretKeyInterface;
+use UmiTop\UmiCore\Util\ConverterTrait;
+use UmiTop\UmiCore\Util\ValidatorTrait;
 
 /**
  * Class BlockHeader
@@ -37,6 +39,9 @@ use UmiTop\UmiCore\Key\SecretKeyInterface;
  */
 class BlockHeader implements BlockHeaderInterface
 {
+    use ValidatorTrait;
+    use ConverterTrait;
+
     /** @var int */
     public const GENESIS = 0;
 
@@ -60,18 +65,6 @@ class BlockHeader implements BlockHeaderInterface
     }
 
     /**
-     * @param string $base64
-     * @return BlockHeaderInterface
-     * @throws Exception
-     */
-    public static function fromBase64(string $base64): BlockHeaderInterface
-    {
-        $hdr = new BlockHeader();
-
-        return $hdr->setBase64($base64);
-    }
-
-    /**
      * @param string $bytes
      * @return BlockHeaderInterface
      * @throws Exception
@@ -81,30 +74,6 @@ class BlockHeader implements BlockHeaderInterface
         $hdr = new BlockHeader();
 
         return $hdr->setBytes($bytes);
-    }
-
-    /**
-     * @return string
-     */
-    public function getBase64(): string
-    {
-        return base64_encode($this->bytes);
-    }
-
-    /**
-     * @param string $base64
-     * @return BlockHeaderInterface
-     * @throws Exception
-     */
-    public function setBase64(string $base64): BlockHeaderInterface
-    {
-        $bytes = base64_decode($base64, true);
-
-        if ($bytes === false) {
-            throw new Exception('could not decode base64');
-        }
-
-        return $this->setBytes($bytes);
     }
 
     /**
@@ -122,10 +91,7 @@ class BlockHeader implements BlockHeaderInterface
      */
     public function setBytes(string $bytes): BlockHeaderInterface
     {
-        if (strlen($bytes) !== self::LENGTH) {
-            throw new Exception('incorrect length');
-        }
-
+        $this->validateStr($bytes, self::LENGTH);
         $this->bytes = $bytes;
 
         return $this;
@@ -150,9 +116,11 @@ class BlockHeader implements BlockHeaderInterface
     /**
      * @param string $hash
      * @return BlockHeaderInterface
+     * @throws Exception
      */
     public function setMerkleRootHash(string $hash): BlockHeaderInterface
     {
+        $this->validateStr($hash, 32);
         $this->bytes = substr_replace($this->bytes, $hash, 33, 32);
 
         return $this;
@@ -169,9 +137,11 @@ class BlockHeader implements BlockHeaderInterface
     /**
      * @param string $hash
      * @return BlockHeaderInterface
+     * @throws Exception
      */
     public function setPreviousBlockHash(string $hash): BlockHeaderInterface
     {
+        $this->validateStr($hash, 32);
         $this->bytes = substr_replace($this->bytes, $hash, 1, 32);
 
         return $this;
@@ -207,9 +177,11 @@ class BlockHeader implements BlockHeaderInterface
     /**
      * @param string $signature
      * @return BlockHeaderInterface
+     * @throws Exception
      */
     public function setSignature(string $signature): BlockHeaderInterface
     {
+        $this->validateStr($signature, 64);
         $this->bytes = substr_replace($this->bytes, $signature, 103, 64);
 
         return $this;
@@ -220,7 +192,7 @@ class BlockHeader implements BlockHeaderInterface
      */
     public function getTimestamp(): int
     {
-        return intval(unpack('N', substr($this->bytes, 65, 4))[1]);
+        return $this->bytesToUint32(substr($this->bytes, 65, 4));
     }
 
     /**
@@ -229,7 +201,7 @@ class BlockHeader implements BlockHeaderInterface
      */
     public function setTimestamp(int $time): BlockHeaderInterface
     {
-        $this->bytes = substr_replace($this->bytes, pack('N', $time), 65, 4);
+        $this->bytes = substr_replace($this->bytes, $this->uint32ToBytes($time), 65, 4);
 
         return $this;
     }
@@ -239,7 +211,7 @@ class BlockHeader implements BlockHeaderInterface
      */
     public function getTransactionCount(): int
     {
-        return intval(unpack('n', substr($this->bytes, 69, 2))[1]);
+        return $this->bytesToUint16(substr($this->bytes, 69, 2));
     }
 
     /**
@@ -249,11 +221,8 @@ class BlockHeader implements BlockHeaderInterface
      */
     public function setTransactionCount(int $count): BlockHeaderInterface
     {
-        if ($count < 0 || $count > 0xffff) {
-            throw new Exception('invalid count');
-        }
-
-        $this->bytes = substr_replace($this->bytes, pack('n', $count), 69, 2);
+        $this->validateInt($count, 0, 0xffff);
+        $this->bytes = substr_replace($this->bytes, $this->uint16ToBytes($count), 69, 2);
 
         return $this;
     }

@@ -50,4 +50,16 @@ trait ValidatorTrait
             throw new Exception('invalid value');
         }
     }
+
+    /**
+     * @param string $val
+     * @param int $length
+     * @throws Exception
+     */
+    private function validateStr(string $val, int $length): void
+    {
+        if (strlen($val) !== $length) {
+            throw new Exception('invalid length');
+        }
+    }
 }

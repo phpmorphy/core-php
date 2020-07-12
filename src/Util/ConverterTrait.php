@@ -49,9 +49,19 @@ trait ConverterTrait
         $ch2 = $version >> 5 & 0x1F;
         $ch3 = $version & 0x1F;
 
-        $this->checkChars([$ch1, $ch2, $ch3]);
+        $this->checkPrefixChars([$ch1, $ch2, $ch3]);
 
         return chr($ch1 + 96) . chr($ch2 + 96) . chr($ch3 + 96);
+    }
+
+    /**
+     * @param string $bytes
+     * @return string
+     * @throws Exception
+     */
+    private function bytesToPrefix(string $bytes): string
+    {
+        return $this->versionToPrefix($this->bytesToUint16($bytes));
     }
 
     /**
@@ -73,21 +83,89 @@ trait ConverterTrait
         $ch2 = ord($prefix[1]) - 96;
         $ch3 = ord($prefix[2]) - 96;
 
-        $this->checkChars([$ch1, $ch2, $ch3]);
+        $this->checkPrefixChars([$ch1, $ch2, $ch3]);
 
         return ($ch1 << 10) + ($ch2 << 5) + $ch3;
+    }
+
+    /**
+     * @param string $prefix
+     * @return string
+     * @throws Exception
+     */
+    private function prefixToBytes(string $prefix): string
+    {
+        return $this->uint16ToBytes($this->prefixToVersion($prefix));
     }
 
     /**
      * @param array<int, int> $chars
      * @throws Exception
      */
-    private function checkChars(array $chars): void
+    private function checkPrefixChars(array $chars): void
     {
         foreach ($chars as $chr) {
             if ($chr < 1 || $chr > 26) {
                 throw new Exception('bech32: invalid prefix character');
             }
         }
+    }
+
+    /**
+     * @param int $value
+     * @return string
+     */
+    private function uint16ToBytes(int $value): string
+    {
+        return (chr($value >> 8 & 0xff) . chr($value & 0xff));
+    }
+
+    /**
+     * @param string $bytes
+     * @return int
+     */
+    private function bytesToUint16(string $bytes): int
+    {
+        return ((ord($bytes[0]) << 8) + ord($bytes[1]));
+    }
+
+    /**
+     * @param int $value
+     * @return string
+     */
+    private function int64ToBytes(int $value): string
+    {
+        return chr($value >> 56 & 0xff) . chr($value >> 48 & 0xff) . chr($value >> 40 & 0xff)
+            . chr($value >> 32 & 0xff) . chr($value >> 24 & 0xff) . chr($value >> 16 & 0xff)
+            . chr($value >> 8 & 0xff) . chr($value & 0xff);
+    }
+
+    /**
+     * @param string $bytes
+     * @return int
+     */
+    private function bytesToInt64(string $bytes): int
+    {
+        return (ord($bytes[0]) << 56) | (ord($bytes[1]) << 48) | (ord($bytes[2]) << 40) | (ord($bytes[3]) << 32)
+            | (ord($bytes[4]) << 24) | (ord($bytes[5]) << 16) | (ord($bytes[6]) << 8) | (ord($bytes[7]));
+    }
+
+    /**
+     * @param int $value
+     * @return string
+     */
+    private function uint32ToBytes(int $value): string
+    {
+        return chr($value >> 24 & 0xff) . chr($value >> 16 & 0xff) . chr($value >> 8 & 0xff)
+            . chr($value & 0xff);
+    }
+
+    /**
+     * @param string $bytes
+     * @return int
+     */
+    private function bytesToUint32(string $bytes): int
+    {
+        return (ord($bytes[0]) << 24) | (ord($bytes[1]) << 16) | (ord($bytes[2]) << 8) | (ord($bytes[3]));
     }
 }
