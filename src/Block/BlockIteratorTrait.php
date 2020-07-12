@@ -26,9 +26,6 @@ declare(strict_types=1);
 
 namespace UmiTop\UmiCore\Block;
 
-use Exception;
-use UmiTop\UmiCore\Transaction\TransactionInterface;
-
 /**
  * Trait BlockIteratorTrait
  * @package UmiTop\UmiCore\Block
@@ -44,7 +41,7 @@ trait BlockIteratorTrait
      */
     public function current()
     {
-        return $this->getTransaction($this->position);
+        return $this->/** @scrutinizer ignore-call */ getTransaction($this->position);
     }
 
     /**

@@ -40,9 +40,7 @@ class Bech32
     private $alphabet = 'qpzry9x8gf2tvdw0s3jn54khce6mua7l';
 
     /** @var array<int, int> */
-    private $generator = [
-        0x3b6a57b2, 0x26508e6d, 0x1ea119fa, 0x3d4233dd, 0x2a1462b3
-    ];
+    private $generator = [0x3b6a57b2, 0x26508e6d, 0x1ea119fa, 0x3d4233dd, 0x2a1462b3];
 
     /**
      * @param string $bech32
@@ -63,15 +61,11 @@ class Bech32
         }
 
         $pfx = substr($bech32, 0, $sepPos);
-        $ver = $this->prefixToVersion($pfx);
-
         $data = substr($bech32, ($sepPos + 1));
         $this->checkAlphabet($data);
         $this->verifyChecksum($pfx, $data);
 
-        $bytes = $this->convert5to8(substr($data, 0, -6));
-
-        return chr($ver >> 8 & 0xff) . chr($ver & 0xff) . $bytes;
+        return $this->prefixToBytes($pfx) . $this->convert5to8(substr($data, 0, -6));
     }
 
     /**
@@ -81,9 +75,7 @@ class Bech32
      */
     public function encode(string $bytes): string
     {
-        $version = (ord($bytes[0]) << 8) + ord($bytes[1]);
-        $prefix = $this->versionToPrefix($version);
-
+        $prefix = $this->bytesToPrefix(substr($bytes, 0, 2));
         $data = $this->convert8to5(substr($bytes, 2, 32));
         $checksum = $this->createChecksum($prefix, $data);
 

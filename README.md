@@ -175,7 +175,7 @@ UMI использует адреса в формате Bech32
 #### Адрес в формате Bech32
 
 Создать адрес из строки Bech32 можно используя статический метод `Address::fromBech32()`
-и экспортировать с помощью `Address->toBech32()`:
+и экспортировать с помощью `Address->getBech32()`:
 
 ```php
 <?php declare(strict_types=1);
@@ -187,7 +187,7 @@ use UmiTop\UmiCore\Address\Address;
 $bech32 = 'umi18d4z00xwk6jz6c4r4rgz5mcdwdjny9thrh3y8f36cpy2rz6emg5s6rxnf6';
 $address = Address::fromBech32($bech32);
 
-echo $address->toBech32(), PHP_EOL;
+echo $address->getBech32(), PHP_EOL;
 ```
  
 #### Адрес из приватного или публичного ключа
