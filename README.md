@@ -43,7 +43,7 @@
     -   [Адреса](#адреса)
         - [Адрес в формате Bech32](#адрес-в-формате-bech32)
         - [Адрес из приватного или публичного ключа](#адрес-из-приватного-или-публичного-ключа)
-        - [Установить префикс адреса](#установить-префикс-адреса)
+        - [Префикс](#префикс)
 
     -   [Транзакции](#транзакции)
         - [Перевести монеты](#перевести-монеты)
@@ -53,6 +53,7 @@
         - [Установить адрес для перевода комиссии](#установить-адрес-для-перевода-комиссии)
         - [Активировать транзитный адрес](#активировать-транзитный-адрес)
         - [Деактивировать транзитный адрес](#деактивировать-транзитный-адрес)
+        - [Отправить транзакцию в сеть](#отправить-транзакцию-в-сеть)
 
     -   [Блоки](#блоки)
         - [Создать и подписать блок](#cоздать-и-подписать-блок)
@@ -161,7 +162,9 @@ use UmiTop\UmiCore\Address\Address;
 
 $address = 'umi18d4z00xwk6jz6c4r4rgz5mcdwdjny9thrh3y8f36cpy2rz6emg5s6rxnf6';
 $message = 'Hello World';
-$signature = base64_decode('Jbi9YfwLcxiTMednl/wTvnSzsPP9mV9Bf2vvZytP87oyg1p1c9ZBkn4gNv15ZHwEFv3bVYlowgyIKmMwJLjJCw==');
+$signature = base64_decode(
+    'Jbi9YfwLcxiTMednl/wTvnSzsPP9mV9Bf2vvZytP87oyg1p1c9ZBkn4gNv15ZHwEFv3bVYlowgyIKmMwJLjJCw=='
+);
 $pubKey = Address::fromBech32($address)->getPublicKey();
 $isValid = $pubKey->verifySignature($signature, $message);
 
@@ -220,7 +223,7 @@ $address2 = Address::fromKey($pubKey);
 echo $address2->getBech32(), PHP_EOL;
 ```
 
-#### Установить префикс адреса
+#### Префикс
 
 По умолчанию адреса имеют префикс `umi`.
 Изменить префикс можно при помощи метода `Address->setPrefix()`:
@@ -424,6 +427,48 @@ echo 'isValid: ', ($trx->verify() ? 'true' : 'false'), PHP_EOL;
 echo 'base64:  ', base64_encode($trx->getBytes()), PHP_EOL;
 ```
 
+#### Отправить транзакцию в сеть
+
+Пример с использованием расширений
+[cURL](https://www.php.net/manual/en/book.curl.php)
+и [JSON](https://www.php.net/manual/en/book.json.php):
+
+```php
+<?php declare(strict_types=1);
+
+include __DIR__ . '/../vendor/autoload.php';
+
+use UmiTop\UmiCore\Transaction\Transaction;
+
+$trx = new Transaction();
+
+$payload = json_encode(
+    [
+        'jsonrpc' => '2.0',
+        'id' => '',
+        'method' => 'sendTransaction',
+        'params' => [
+            'base64' => base64_encode($trx->getBytes())
+        ]
+    ]
+);
+
+$ch = curl_init();
+
+curl_setopt($ch, CURLOPT_URL, "https://testnet.umi.top/json-rpc");
+curl_setopt( $ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+curl_setopt( $ch, CURLOPT_POSTFIELDS, $payload);
+curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true);
+curl_setopt($ch, CURLOPT_HEADER, false);
+curl_setopt($ch, CURLOPT_VERBOSE, true);
+
+$response = curl_exec($ch);
+
+curl_close($ch);
+
+echo $response, PHP_EOL;
+```
+
 ### Блоки
 
 #### Создать и подписать блок
@@ -514,7 +559,6 @@ foreach ($blk as $idx => $trx) {
     echo PHP_EOL;
 }
 ````
-
 
 ## Лицензия
 

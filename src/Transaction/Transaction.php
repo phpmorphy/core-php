@@ -54,6 +54,7 @@ class Transaction implements TransactionInterface
     public function __construct()
     {
         $this->bytes = str_repeat("\x0", self::LENGTH);
+        $this->setVersion(self::BASIC);
     }
 
     /**
