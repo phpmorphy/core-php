@@ -35,7 +35,8 @@ use Exception;
 trait ConverterTrait
 {
     /**
-     * @param int $version
+     * Преобразует версию адреса в префикс.
+     * @param int $version Версия адреса.
      * @return string
      * @throws Exception
      */
@@ -55,7 +56,8 @@ trait ConverterTrait
     }
 
     /**
-     * @param string $bytes
+     * Преобразует бинарное представление версии в префикс.
+     * @param string $bytes Версия в бинарном виде, длина 2 байта.
      * @return string
      * @throws Exception
      */
@@ -65,7 +67,8 @@ trait ConverterTrait
     }
 
     /**
-     * @param string $prefix
+     * Преобразует префикс в версию.
+     * @param string $prefix Префикс адреса, три символа.
      * @return int
      * @throws Exception
      */
@@ -89,7 +92,8 @@ trait ConverterTrait
     }
 
     /**
-     * @param string $prefix
+     * Преобразует префикс в бинарное представление.
+     * @param string $prefix Префикс адреса, три символа.
      * @return string
      * @throws Exception
      */

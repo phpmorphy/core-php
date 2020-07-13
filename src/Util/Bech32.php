@@ -195,7 +195,6 @@ class Bech32
     }
 
     /**
-     * Expands the human readable part into a character array for checksumming.
      * @param string $prefix
      * @return array<int, int>
      */
@@ -227,8 +226,6 @@ class Bech32
     }
 
     /**
-     * Verifies the checksum given $hrp and $convertedDataChars.
-     *
      * @param string $prefix
      * @param string $data
      * @throws Exception
