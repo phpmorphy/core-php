@@ -1,5 +1,5 @@
 <h1 align="center">
-  <a href="https://umi.top"><img src="./logo.svg" alt="UMI" width="200"></a>
+  <a href="https://umi.top"><img src="https://umi-top.github.io/umi-core-js/logo.svg" alt="UMI" width="200"></a>
   <br>
   UMI Core - PHP Library
   <br>
@@ -7,22 +7,16 @@
 </h1>
 
 <p align="center">
-  <!-- release    --><a href="https://github.com/umi-top/umi-core-php"><img alt="GitHub release (latest SemVer)" src="https://img.shields.io/github/v/release/umi-top/umi-core-php?sort=semver"></a>
   <!-- build      --><a href="https://travis-ci.org/umi-top/umi-core-php"><img alt="travis" src="https://img.shields.io/travis/umi-top/umi-core-php/master"></a>
   <!-- coverage   --><img alt="Coveralls github branch" src="https://img.shields.io/coveralls/github/umi-top/umi-core-php/master">
   <!-- code style --><a href="https://www.php-fig.org/psr/psr-12/"><img alt="PSR-12" src="https://img.shields.io/badge/code_style-PSR--12-green"></a>
   <!-- license    --><a href="https://github.com/umi-top/umi-core-php/blob/master/LICENSE"><img alt="GitHub" src="https://img.shields.io/github/license/umi-top/umi-core-php"></a>
   <!-- PGP        --><a href="https://keybase.io/umitop"><img alt="Keybase PGP" src="https://img.shields.io/keybase/pgp/umitop"></a>
-  <br/><!-- master -->
+  <br/>
+  <!-- release    --><a href="https://github.com/umi-top/umi-core-php"><img alt="GitHub release (latest SemVer)" src="https://img.shields.io/github/v/release/umi-top/umi-core-php?sort=semver"></a>
   <!-- packagist  --><a href="https://packagist.org/packages/umi-top/umi-core-php"><img alt="Packagist Version" src="https://img.shields.io/packagist/v/umi-top/umi-core-php"></a>
   <!-- php support--><img alt="Packagist PHP Version Support" src="https://img.shields.io/packagist/php-v/umi-top/umi-core-php">
   <!-- downloads  --><img alt="Packagist Downloads" src="https://img.shields.io/packagist/dm/umi-top/umi-core-php">
-  <br/><!-- php70 -->
-  <!-- packagist  --><a href="https://packagist.org/packages/umi-top/umi-core-php"><img alt="Packagist Version" src="https://img.shields.io/badge/packagist-v1.0.70-orange"></a>
-  <!-- php support--><img alt="Packagist PHP Version Support (specify version)" src="https://img.shields.io/packagist/php-v/umi-top/umi-core-php/v0.9.2">
-  <br/><!-- php53 -->
-  <!-- packagist  --><a href="https://packagist.org/packages/umi-top/umi-core-php"><img alt="Packagist Version" src="https://img.shields.io/badge/packagist-v1.0.53-orange"></a>
-  <!-- php support--><img alt="Packagist PHP Version Support (specify version)" src="https://img.shields.io/packagist/php-v/umi-top/umi-core-php/v0.9.2">
 </p>
 
 ## Оглавление
@@ -33,7 +27,7 @@
   - [Мнемоники](#мнемоники)
     - [Seed из мнемонической фразы](#seed-из-мнемонической-фразы)
   - [Ключи](#ключи)
-    - [Ключи из seed](#ключи-из-seed)
+    - [Ключ из seed](#ключ-из-seed)
     - [Подписать сообщение](#подписать-сообщение)
     - [Проверить подпись](#проверить-подпись)
   - [Адреса](#адреса)
@@ -75,8 +69,7 @@ composer require umi-top/umi-core-php
 ### Мнемоники
 
 UMI не накладывает никаких ограничений на способ генерации и хранения приватных
-ключей, предоставляя полную свободу действий разработчикам приложений.
-
+ключей.  
 Для совместимости, рекомендуем использовать
 [bip39](https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki).
 
@@ -111,7 +104,7 @@ echo $address->getBech32(), PHP_EOL;
 [SHA-512](https://en.wikipedia.org/wiki/SHA-2)
 и [Curve25519](https://en.wikipedia.org/wiki/Curve25519). 
 
-#### Ключи из seed
+#### Ключ из seed
 
 Seed может быть любой длины. Оптимальным вариантом является длина 32 байта.
 
@@ -238,6 +231,9 @@ echo $address->getBech32(), PHP_EOL;
 
 #### Перевести монеты
 
+Поля `sender`, `recipient` и `value` являются обязательными.  
+Сумма указывается в UMI-центах, т.е. 1.23 UMI = 123.
+
 ```php
 <?php declare(strict_types=1);
 
@@ -259,11 +255,17 @@ $trx->setVersion(Transaction::BASIC)
     ->setValue($value)
     ->sign($secKey);
 
-echo 'isValid: ', ($trx->verify() ? 'true' : 'false'), PHP_EOL;
-echo 'base64:  ', base64_encode($trx->getBytes()), PHP_EOL;
+echo 'txid:   ', bin2hex($trx->getHash()), PHP_EOL;
+echo 'base64: ', base64_encode($trx->getBytes()), PHP_EOL;
 ```
 
 #### Создать структуру
+
+Поля `sender`, `prefix`, `name`, `profitPercent` и `feePercent` являются
+обязательными.  
+Префикс имеет длину 3 символа. Название указывается в кодировке UTF-8 и может
+иметь длину до 35 байтов. Проценты указываются в сотых долях процента,
+т.е. 1.23% = 123.
 
 ```php
 <?php declare(strict_types=1);
@@ -286,13 +288,15 @@ $trx->setVersion(Transaction::CREATE_STRUCTURE)
     ->setFeePercent(2000)
     ->sign($secKey);
 
-echo 'isValid: ', ($trx->verify() ? 'true' : 'false'), PHP_EOL;
-echo 'base64:  ', base64_encode($trx->getBytes()), PHP_EOL;
+echo 'txid:   ', bin2hex($trx->getHash()), PHP_EOL;
+echo 'base64: ', base64_encode($trx->getBytes()), PHP_EOL;
 ```
 
 #### Обновить настройки структуры
 
-Необходимо задать все поля, даже если они не изменились:
+Поля `sender`, `prefix`, `name`, `profitPercent` и `feePercent` являются
+обязательными.  
+Необходимо задать все поля, даже если они не изменились.
 
 ```php
 <?php declare(strict_types=1);
@@ -315,11 +319,14 @@ $trx->setVersion(Transaction::UPDATE_STRUCTURE)
     ->setFeePercent(2000)
     ->sign($secKey);
 
-echo 'isValid: ', ($trx->verify() ? 'true' : 'false'), PHP_EOL;
-echo 'base64:  ', base64_encode($trx->getBytes()), PHP_EOL;
+echo 'txid:   ', bin2hex($trx->getHash()), PHP_EOL;
+echo 'base64: ', base64_encode($trx->getBytes()), PHP_EOL;
 ```
 
 #### Установить адрес для начисления профита
+
+Поля `sender` и `recipient` являются обязательными.  
+Адрес для начисления профита должен принадлежать структуре.
 
 ```php
 <?php declare(strict_types=1);
@@ -340,11 +347,14 @@ $trx->setVersion(Transaction::UPDATE_PROFIT_ADDRESS)
     ->setRecipient($newPrf)
     ->sign($secKey);
 
-echo 'isValid: ', ($trx->verify() ? 'true' : 'false'), PHP_EOL;
-echo 'base64:  ', base64_encode($trx->getBytes()), PHP_EOL;
+echo 'txid:   ', bin2hex($trx->getHash()), PHP_EOL;
+echo 'base64: ', base64_encode($trx->getBytes()), PHP_EOL;
 ```
 
 #### Установить адрес для перевода комиссии
+
+Поля `sender` и `recipient` являются обязательными.  
+Адрес для перевода комиссии должен принадлежать структуре.
 
 ```php
 <?php declare(strict_types=1);
@@ -365,11 +375,14 @@ $trx->setVersion(Transaction::UPDATE_FEE_ADDRESS)
     ->setRecipient($newFee)
     ->sign($secKey);
 
-echo 'isValid: ', ($trx->verify() ? 'true' : 'false'), PHP_EOL;
-echo 'base64:  ', base64_encode($trx->getBytes()), PHP_EOL;
+echo 'txid:   ', bin2hex($trx->getHash()), PHP_EOL;
+echo 'base64: ', base64_encode($trx->getBytes()), PHP_EOL;
 ```
 
 #### Активировать транзитный адрес
+
+Поля `sender` и `recipient` являются обязательными.  
+Адрес должен принадлежать структуре.
 
 ```php
 <?php declare(strict_types=1);
@@ -390,11 +403,14 @@ $trx->setVersion(Transaction::CREATE_TRANSIT_ADDRESS)
     ->setRecipient($transit)
     ->sign($secKey);
 
-echo 'isValid: ', ($trx->verify() ? 'true' : 'false'), PHP_EOL;
-echo 'base64:  ', base64_encode($trx->getBytes()), PHP_EOL;
+echo 'txid:   ', bin2hex($trx->getHash()), PHP_EOL;
+echo 'base64: ', base64_encode($trx->getBytes()), PHP_EOL;
 ```
 
 #### Деактивировать транзитный адрес
+
+Поля `sender` и `recipient` являются обязательными.  
+Адрес должен принадлежать структуре.
 
 ```php
 <?php declare(strict_types=1);
@@ -415,8 +431,8 @@ $trx->setVersion(Transaction::DELETE_TRANSIT_ADDRESS)
     ->setRecipient($transit)
     ->sign($secKey);
 
-echo 'isValid: ', ($trx->verify() ? 'true' : 'false'), PHP_EOL;
-echo 'base64:  ', base64_encode($trx->getBytes()), PHP_EOL;
+echo 'txid:   ', bin2hex($trx->getHash()), PHP_EOL;
+echo 'base64: ', base64_encode($trx->getBytes()), PHP_EOL;
 ```
 
 #### Отправить транзакцию в сеть
@@ -550,7 +566,7 @@ foreach ($blk as $idx => $trx) {
 
     echo PHP_EOL;
 }
-````
+```
 
 ## Лицензия
 

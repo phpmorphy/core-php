@@ -32,20 +32,20 @@ use UmiTop\UmiCore\Key\SecretKeyInterface;
 use UmiTop\UmiCore\Util\Ed25519\Ed25519;
 
 /**
- * Class SecretKey
+ * Класс для работы с приватными ключами.
  * @package UmiTop\UmiCore\Key\Ed25519
  */
 class SecretKey implements SecretKeyInterface
 {
-    /** @var int */
+    /** @var int Длина приватного ключа в байтах. */
     public const LENGTH = 64;
 
-    /** @var string */
+    /** @var string Приватный ключ в бинарном виде. */
     private $bytes;
 
     /**
      * SecretKey constructor.
-     * @param string $bytes Байты.
+     * @param string $bytes Приватный ключ в бинарном виде. В формате libsodium, 64 байта.
      * @throws Exception
      */
     public function __construct(string $bytes)
@@ -58,7 +58,9 @@ class SecretKey implements SecretKeyInterface
     }
 
     /**
-     * @param string $seed Сид.
+     * Статический метод, создающий приватный ключ из seed.
+     * Libsodium принимает seed длиной 32 байта, поэтому если длина отличается, то берется sha256 хэш.
+     * @param string $seed Бинарная строка любой длины.
      * @return SecretKeyInterface
      * @codeCoverageIgnore
      */
@@ -83,6 +85,7 @@ class SecretKey implements SecretKeyInterface
     }
 
     /**
+     * Приватный ключ в бинарном виде. В формате libsodium, 64 байта.
      * @return string
      */
     public function getBytes(): string
@@ -91,6 +94,7 @@ class SecretKey implements SecretKeyInterface
     }
 
     /**
+     * Публичный ключ, соответствующий приватному ключу.
      * @return PublicKeyInterface
      */
     public function getPublicKey(): PublicKeyInterface
@@ -99,7 +103,8 @@ class SecretKey implements SecretKeyInterface
     }
 
     /**
-     * @param string $message Строка, для которой требуется создать подпись.
+     * Создает цифровую подпись сообщения.
+     * @param string $message Сообщение в бинарном виде.
      * @return string
      * @codeCoverageIgnore
      */

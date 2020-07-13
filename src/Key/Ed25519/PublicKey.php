@@ -31,21 +31,21 @@ use UmiTop\UmiCore\Key\PublicKeyInterface;
 use UmiTop\UmiCore\Util\Ed25519\Ed25519;
 
 /**
- * Class PublicKey
+ * Класс для работы с публичными ключами.
  * @package UmiTop\UmiCore\Key\Ed25519
  */
 class PublicKey implements PublicKeyInterface
 {
-    /** @var int */
+    /** @var int Длина публичного ключа в байтах. */
     public const LENGTH = 32;
 
-    /** @var string */
+    /** @var string Публичный ключ в бинарном виде. */
     private $bytes;
 
     /**
      * PublicKey constructor.
      * @param string $bytes Публичный ключ в бинарном виде, в формате libsodium.
-     * @throws Exception Ошибка в случае некорректной длины.
+     * @throws Exception
      */
     public function __construct(string $bytes)
     {
@@ -57,6 +57,7 @@ class PublicKey implements PublicKeyInterface
     }
 
     /**
+     * Публичный ключ в формате libsodium, длина 32 байта.
      * @return string
      */
     public function getBytes(): string
@@ -65,6 +66,7 @@ class PublicKey implements PublicKeyInterface
     }
 
     /**
+     * Публичный ключ.
      * @return PublicKeyInterface
      */
     public function getPublicKey(): PublicKeyInterface
@@ -73,9 +75,10 @@ class PublicKey implements PublicKeyInterface
     }
 
     /**
+     * Проверяет цифровую подпись.
      * @param string $signature Подпись в бинарном виде.
-     * @param string $message   Сообщение в бинарном виде.
-     * @return boolean
+     * @param string $message Сообщение в бинарном виде.
+     * @return bool
      * @codeCoverageIgnore
      */
     public function verifySignature(string $signature, string $message): bool

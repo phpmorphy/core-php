@@ -35,44 +35,52 @@ use UmiTop\UmiCore\Key\PublicKeyInterface;
 interface AddressInterface
 {
     /**
+     * Адрес в формате Bech32, длина 62 или 65 символов.
      * @return string
      */
     public function getBech32(): string;
 
     /**
+     * Устанавливает адрес из строки в формате Bech32 и возвращает $this.
      * @param string $bech32
      * @return AddressInterface
      */
     public function setBech32(string $bech32): AddressInterface;
 
     /**
+     * Адрес в бинарном виде, длина 34 байта.
      * @return string
      */
     public function getBytes(): string;
 
     /**
-     * @param string $bytes
+     * Устанавливает адрес из бинарной строки и возвращает $this.
+     * @param string $bytes Адрес в бинарном виде, длина 34 байта.
      * @return AddressInterface
      */
     public function setBytes(string $bytes): AddressInterface;
 
     /**
+     * Префикс адреса, три символа латиницы в нижнем регистре.
      * @return string
      */
     public function getPrefix(): string;
 
     /**
+     * Устанавливает префикс адреса и возвращает $this.
      * @param string $prefix Префикс. Три символа латиницы в нижнем регистре.
      * @return AddressInterface
      */
     public function setPrefix(string $prefix): AddressInterface;
 
     /**
+     * Публичный ключ.
      * @return PublicKeyInterface
      */
     public function getPublicKey(): PublicKeyInterface;
 
     /**
+     * Устанавливает публичный ключи и возвращает $this.
      * @param PublicKeyInterface $publicKey Публичный ключ.
      * @return AddressInterface
      */

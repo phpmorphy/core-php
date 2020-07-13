@@ -33,11 +33,13 @@ namespace UmiTop\UmiCore\Key;
 interface KeyInterface
 {
     /**
+     * Ключ в бинарном виде.
      * @return string
      */
     public function getBytes(): string;
 
     /**
+     * Публичный ключ.
      * @return PublicKeyInterface
      */
     public function getPublicKey(): PublicKeyInterface;

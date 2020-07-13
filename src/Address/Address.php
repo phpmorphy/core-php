@@ -35,7 +35,7 @@ use UmiTop\UmiCore\Util\ConverterTrait;
 use UmiTop\UmiCore\Util\ValidatorTrait;
 
 /**
- * Class Address
+ * Класс для работы с адресами.
  * @package UmiTop\UmiCore\Address
  */
 class Address implements AddressInterface
@@ -43,10 +43,10 @@ class Address implements AddressInterface
     use ConverterTrait;
     use ValidatorTrait;
 
-    /** @var int */
+    /** @var int Длина адреса в байтах. */
     public const LENGTH = 34;
 
-    /** @var string */
+    /** @var string Адрес в бинарном виде. */
     private $bytes;
 
     /**
@@ -59,6 +59,7 @@ class Address implements AddressInterface
     }
 
     /**
+     * Статический метод, создает объект из адреса в формате Bech32.
      * @param string $address Адрес в формате Bech32.
      * @return AddressInterface
      * @throws Exception
@@ -71,6 +72,7 @@ class Address implements AddressInterface
     }
 
     /**
+     * Статический метод, создает объект из бинарного представления.
      * @param string $bytes Адрес в бинарном виде.
      * @return AddressInterface
      * @throws Exception
@@ -83,6 +85,7 @@ class Address implements AddressInterface
     }
 
     /**
+     * Статический метод, создает объект из публичного или приватного ключа.
      * @param KeyInterface $key Приватный или публичный ключ.
      * @return AddressInterface
      */
@@ -94,6 +97,7 @@ class Address implements AddressInterface
     }
 
     /**
+     * Адрес в формате Bech32, длина 62 или 65 символов.
      * @return string
      */
     public function getBech32(): string
@@ -104,7 +108,8 @@ class Address implements AddressInterface
     }
 
     /**
-     * @param string $address
+     * Устанавливает адрес из строки в формате Bech32 и возвращает $this.
+     * @param string $address Адрес в формате Bech32.
      * @return AddressInterface
      * @throws Exception
      */
@@ -116,6 +121,7 @@ class Address implements AddressInterface
     }
 
     /**
+     * Адрес в бинарном виде, длина 34 байта.
      * @return string
      */
     public function getBytes(): string
@@ -124,7 +130,8 @@ class Address implements AddressInterface
     }
 
     /**
-     * @param string $bytes
+     * Устанавливает адрес из бинарной строки и возвращает $this.
+     * @param string $bytes Адрес в бинарном виде, длина 34 байта.
      * @return AddressInterface
      * @throws Exception
      */
@@ -137,6 +144,7 @@ class Address implements AddressInterface
     }
 
     /**
+     * Префикс адреса, три символа латиницы в нижнем регистре.
      * @return string
      * @throws Exception
      */
@@ -146,6 +154,7 @@ class Address implements AddressInterface
     }
 
     /**
+     * Устанавливает префикс адреса и возвращает $this.
      * @param string $prefix Префикс. Три символа латиницы в нижнем регистре.
      * @return AddressInterface
      * @throws Exception
@@ -158,6 +167,7 @@ class Address implements AddressInterface
     }
 
     /**
+     * Публичный ключ.
      * @return PublicKeyInterface
      */
     public function getPublicKey(): PublicKeyInterface
@@ -166,6 +176,7 @@ class Address implements AddressInterface
     }
 
     /**
+     * Устанавливает публичный ключи и возвращает $this.
      * @param PublicKeyInterface $publicKey Публичный ключ.
      * @return AddressInterface
      */

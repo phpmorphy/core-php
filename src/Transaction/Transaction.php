@@ -34,7 +34,7 @@ use UmiTop\UmiCore\Util\ConverterTrait;
 use UmiTop\UmiCore\Util\ValidatorTrait;
 
 /**
- * Class Transaction
+ * Класс для работы с транзакциями.
  * @package UmiTop\UmiCore\Transaction
  */
 class Transaction implements TransactionInterface
@@ -42,10 +42,10 @@ class Transaction implements TransactionInterface
     use ValidatorTrait;
     use ConverterTrait;
 
-    /** @var int */
+    /** @var int Длина транзакции в байтах. */
     public const LENGTH = 150;
 
-    /** @var string */
+    /** @var string Транзакция в бинарном виде. */
     private $bytes;
 
     /**
@@ -58,7 +58,8 @@ class Transaction implements TransactionInterface
     }
 
     /**
-     * @param string $bytes Транзакция в бинарном виде.
+     * Статический метод, создает объект из массива байтов.
+     * @param string $bytes Транзакция в бинарном виде, длина 150 байт.
      * @return TransactionInterface
      * @throws Exception
      */
@@ -70,6 +71,7 @@ class Transaction implements TransactionInterface
     }
 
     /**
+     * Транзакция в бинарном виде, длина 150 байт.
      * @return string
      */
     public function getBytes(): string
@@ -78,14 +80,15 @@ class Transaction implements TransactionInterface
     }
 
     /**
-     * @param string $bytes
+     * Устанавливает транзакцию из бинарной строки и возвращает $this.
+     * @param string $bytes Транзакция в бинарном виде, длина 150 байт.
      * @return TransactionInterface
      * @throws Exception
      */
     public function setBytes(string $bytes): TransactionInterface
     {
         if (strlen($bytes) !== self::LENGTH) {
-            throw new Exception('bytes length must be 150 bytes');
+            throw new Exception('length must be 150 bytes');
         }
         $this->bytes = $bytes;
 
@@ -93,6 +96,9 @@ class Transaction implements TransactionInterface
     }
 
     /**
+     * Комиссия в сотых долях процента с шагом в 0.01%.
+     * Принимает значения от 0 до 2000 (соответственно от 0% до 20%).
+     * Доступно только для CreateStructure и UpdateStructure.
      * @return int
      * @throws Exception
      */
@@ -104,8 +110,10 @@ class Transaction implements TransactionInterface
     }
 
     /**
+     * Устанавливает размер комиссии и возвращает this.
+     * Доступно только для CreateStructure и UpdateStructure.
      * @param int $percent Комиссия в сотых долях процента с шагом в 0.01%.
-     * Валидные значения от 0 до 2000 (соответственно от 0% до 20%).
+     * Принимает значения от 0 до 2000 (соответственно от 0% до 20%).
      * @return TransactionInterface
      * @throws Exception
      */
@@ -119,6 +127,7 @@ class Transaction implements TransactionInterface
     }
 
     /**
+     * Хэш (txid) транзакции в бинарном виде.
      * @return string
      */
     public function getHash(): string
@@ -127,6 +136,8 @@ class Transaction implements TransactionInterface
     }
 
     /**
+     * Название структуры в кодировке UTF-8.
+     * Доступно только для CreateStructure и UpdateStructure.
      * @return string
      * @throws Exception
      */
@@ -139,7 +150,9 @@ class Transaction implements TransactionInterface
     }
 
     /**
-     * @param string $name Название структуры.
+     * Устанавливает название структуры и возвращает this.
+     * Доступно только для CreateStructure и UpdateStructure.
+     * @param string $name Название структуры в кодировке UTF-8.
      * @return TransactionInterface
      * @throws Exception
      */
@@ -156,6 +169,8 @@ class Transaction implements TransactionInterface
     }
 
     /**
+     * Nonce, целое число в промежутке от 0 до 18446744073709551615.
+     * Генерируется автоматически при вызове sign().
      * @return int
      */
     public function getNonce(): int
@@ -164,7 +179,8 @@ class Transaction implements TransactionInterface
     }
 
     /**
-     * @param int $nonce Nonce.
+     * Устанавливает nonce и возвращает this.
+     * @param int $nonce Целое число в промежутке от 0 до 18446744073709551615.
      * @return TransactionInterface
      */
     public function setNonce(int $nonce): TransactionInterface
@@ -175,6 +191,8 @@ class Transaction implements TransactionInterface
     }
 
     /**
+     * Префикс адресов, принадлежащих структуре.
+     * Доступно только для CreateStructure и UpdateStructure.
      * @return string
      * @throws Exception
      */
@@ -186,7 +204,9 @@ class Transaction implements TransactionInterface
     }
 
     /**
-     * @param string $prefix Префикс. Три символа латиницы в нижнем регистре.
+     * Устанавливает префикс и возвращает $this.
+     * Доступно только для CreateStructure и UpdateStructure.
+     * @param string $prefix Три символа латиницы в нижнем регистре.
      * @return TransactionInterface
      * @throws Exception
      */
@@ -199,6 +219,9 @@ class Transaction implements TransactionInterface
     }
 
     /**
+     * Профита в сотых долях процента с шагом в 0.01%.
+     * Принимает значения от 100 до 500 (соответственно от 1% до 5%).
+     * Доступно только для CreateStructure и UpdateStructure.
      * @return int
      * @throws Exception
      */
@@ -210,8 +233,10 @@ class Transaction implements TransactionInterface
     }
 
     /**
-     * @param integer $percent Профит в сотых долях процента с шагом в 0.01%.
-     * Валидные значения от 100 до 500 (соответственно от 1% до 5%).
+     * Устанавливает процент профита и возвращает $this.
+     * Доступно только для CreateStructure и UpdateStructure.
+     * @param int $percent Профит в сотых долях процента с шагом в 0.01%.
+     * Принимает значения от 100 до 500 (соответственно от 1% до 5%).
      * @return TransactionInterface
      * @throws Exception
      */
@@ -225,6 +250,8 @@ class Transaction implements TransactionInterface
     }
 
     /**
+     * Получатель.
+     * Недоступно для транзакций CreateStructure и UpdateStructure.
      * @return AddressInterface
      * @throws Exception
      */
@@ -237,7 +264,9 @@ class Transaction implements TransactionInterface
     }
 
     /**
-     * @param AddressInterface $address
+     * Устанавливает получателя и возвращает $this.
+     * Недоступно для транзакций CreateStructure и UpdateStructure.
+     * @param AddressInterface $address Адрес получателя.
      * @return TransactionInterface
      * @throws Exception
      */
@@ -250,6 +279,8 @@ class Transaction implements TransactionInterface
     }
 
     /**
+     * Отправитель.
+     * Доступно для всех типов транзакций.
      * @return AddressInterface
      * @throws Exception
      */
@@ -261,7 +292,8 @@ class Transaction implements TransactionInterface
     }
 
     /**
-     * @param AddressInterface $address
+     * Устанавливает отправителя и возвращает $this.
+     * @param AddressInterface $address Адрес отправителя.
      * @return TransactionInterface
      */
     public function setSender(AddressInterface $address): TransactionInterface
@@ -272,6 +304,7 @@ class Transaction implements TransactionInterface
     }
 
     /**
+     * Цифровая подпись транзакции, длина 64 байта.
      * @return string
      */
     public function getSignature(): string
@@ -280,7 +313,8 @@ class Transaction implements TransactionInterface
     }
 
     /**
-     * @param string $signature
+     * Устанавливает цифровую подпись и возвращает $this.
+     * @param string $signature Подпись, длина 64 байта.
      * @return TransactionInterface
      */
     public function setSignature(string $signature): TransactionInterface
@@ -291,6 +325,8 @@ class Transaction implements TransactionInterface
     }
 
     /**
+     * Сумма перевода в UMI-центах, цело число в промежутке от 1 до 18446744073709551615.
+     * Доступно только для Genesis и Basic транзакций.
      * @return int
      * @throws Exception
      */
@@ -302,7 +338,10 @@ class Transaction implements TransactionInterface
     }
 
     /**
-     * @param int $value
+     * Устанавливает сумму и возвращает $this.
+     * Принимает значения в промежутке от 1 до 18446744073709551615.
+     * Доступно только для Genesis и Basic транзакций.
+     * @param int $value Целое число от 1 до 18446744073709551615.
      * @return TransactionInterface
      * @throws Exception
      */
@@ -315,6 +354,7 @@ class Transaction implements TransactionInterface
     }
 
     /**
+     * Версия (тип) транзакции.
      * @return int
      */
     public function getVersion(): int
@@ -323,7 +363,8 @@ class Transaction implements TransactionInterface
     }
 
     /**
-     * @param int $version
+     * Устанавливает версию и возвращает $this.
+     * @param int $version Версия (тип) транзакции.
      * @return TransactionInterface
      * @throws Exception
      */
@@ -336,72 +377,26 @@ class Transaction implements TransactionInterface
     }
 
     /**
-     * @return int
-     * @throws Exception
-     */
-    public function getPowBits(): int
-    {
-        // Unsigned length = 85.
-        $hash = hash('sha256', substr($this->bytes, 0, 85), true);
-        $tail = ((ord($hash[29]) << 16) + (ord($hash[30]) << 8) + ord($hash[31]));
-
-        $mask = 0xffffff;
-        $bits = 24;
-
-        while ($tail & $mask) {
-            $bits -= 1;
-            $mask >>= 1;
-        }
-
-        return $bits;
-    }
-
-    /**
-     * @param SecretKeyInterface $secretKey
-     * @param int $powBits
+     * Подписать транзакцию приватным ключом.
+     * @param SecretKeyInterface $secretKey Приватный ключ.
      * @return TransactionInterface
      * @throws Exception
      */
-    public function sign(SecretKeyInterface $secretKey, int $powBits = null): TransactionInterface
+    public function sign(SecretKeyInterface $secretKey): TransactionInterface
     {
-        $powBits = (int)$powBits;
-        $this->validateInt($powBits, 0, 24);
+        $this->setNonce((int)(microtime(true) * 100));
+        $this->setSignature($secretKey->sign(substr($this->bytes, 0, 85)));
 
-        $mask = 0xffffff >> (24 - $powBits);
-        do {
-            $csec = (int)(microtime(true) * 100);
-
-            // Nonce offset - 77.
-            $this->bytes[80] = chr(($csec >> 32) & 0xff);
-            $this->bytes[81] = chr(($csec >> 24) & 0xff);
-            $this->bytes[82] = chr(($csec >> 16) & 0xff);
-            $this->bytes[83] = chr(($csec >> 8) & 0xff);
-            $this->bytes[84] = chr($csec & 0xff);
-
-            $iter = 0;
-            do {
-                $this->bytes[77] = chr(($iter >> 16) & 0xff);
-                $this->bytes[78] = chr(($iter >> 8) & 0xff);
-                $this->bytes[79] = chr($iter & 0xff);
-
-                $hash = hash('sha256', substr($this->bytes, 0, 85), true);
-                $tail = (ord($hash[29]) << 16) + (ord($hash[30]) << 8) + ord($hash[31]);
-
-                $iter++;
-            } while (($tail & $mask) && ($iter < 0xffffff));
-        } while ($iter === 0xffffff);
-
-        // Unsigned length = 85.
-        return $this->setSignature($secretKey->sign(substr($this->bytes, 0, 85)));
+        return $this;
     }
 
     /**
+     * Проверить транзакцию на соответствие формальным правилам.
      * @return bool
      * @throws Exception
      */
     public function verify(): bool
     {
-        // Unsigned length = 85.
         return $this->getSender()
             ->getPublicKey()
             ->verifySignature($this->getSignature(), substr($this->bytes, 0, 85));
@@ -414,7 +409,7 @@ class Transaction implements TransactionInterface
     private function checkVersion(array $versions): void
     {
         if (!in_array($this->getVersion(), $versions, true)) {
-            throw new Exception('incorrect version');
+            throw new Exception('invalid version');
         }
     }
 }

@@ -33,6 +33,7 @@ namespace UmiTop\UmiCore\Key;
 interface SecretKeyInterface extends KeyInterface
 {
     /**
+     * Создает цифровую подпись сообщения.
      * @param string $message Сообщение в бинарном виде.
      * @return string
      */
