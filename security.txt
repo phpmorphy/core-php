@@ -1,0 +1,14 @@
+# Our security address
+Contact: mailto:dev+security@umi.top
+
+# Our PGP key
+Encryption: https://umi-top.github.io/.well-known/pgp-key.txt
+
+Preferred-Languages: en, ru
+Canonical: https://umi-top.github.io/.well-known/security.txt
+
+# Verify canonical security.txt file
+Signature: https://umi-top.github.io/.well-known/security.txt.sig
+
+# Our security policy
+Policy: https://github.com/umi-top/umi-core-php/blob/master/README.md

@@ -1,5 +1,5 @@
 <h1 align="center">
-  <a href="https://umi.top"><img src="https://umi-top.github.io/umi-core-js/logo.svg" alt="UMI" width="200"></a>
+  <a href="https://umi.top"><img src="https://umi-top.github.io/logo.svg" alt="UMI" width="200"></a>
   <br>
   UMI Core - PHP Library
   <br>
